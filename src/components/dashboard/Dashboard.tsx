@@ -38,7 +38,7 @@ interface ProcessingActivity {
   id: string;
   serial_number: string;
   product_type: string;
-  processing_stage: string;
+  status: string;
   last_updated: string;
   assigned_to: string;
 }
@@ -192,23 +192,23 @@ export function Dashboard() {
 
       const activities: ProcessingActivity[] = (activityRes.data || [])
         .filter((asset: any) =>
-          asset.processing_stage !== 'sold' &&
-          asset.processing_stage !== 'scrapped' &&
-          asset.processing_stage !== 'harvested'
+          asset.status !== 'sold' &&
+          asset.status !== 'scrapped' &&
+          asset.status !== 'harvested'
         )
         .slice(0, 8)
         .map((asset: any) => ({
           id: asset.id,
           serial_number: asset.serial_number,
           product_type: asset.product_types?.name || 'Unknown',
-          processing_stage: asset.processing_stage || 'received',
+          status: asset.status || 'received',
           last_updated: asset.updated_at,
           assigned_to: 'Unassigned',
         }));
 
       const processingStages = ['received', 'testing', 'refurbishing', 'qc_grading', 'ready'];
       const assetsInProcessing = (assetsRes.data || []).filter((asset: any) =>
-        processingStages.includes(asset.processing_stage)
+        processingStages.includes(asset.status)
       );
 
       const { data: itemsData } = await supabase
@@ -497,7 +497,7 @@ export function Dashboard() {
                     qc_grading: 'bg-blue-100 text-blue-700',
                     ready: 'bg-emerald-100 text-emerald-700',
                   };
-                  const stageColor = stageColors[activity.processing_stage as keyof typeof stageColors] || 'bg-slate-100 text-slate-600';
+                  const stageColor = stageColors[activity.status as keyof typeof stageColors] || 'bg-slate-100 text-slate-600';
 
                   return (
                     <div key={activity.id} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-xl hover:bg-slate-50 transition-colors border border-slate-100">
@@ -511,7 +511,7 @@ export function Dashboard() {
                       </div>
                       <div className="text-right">
                         <div className={`text-xs font-semibold px-2 py-1 rounded-lg ${stageColor} whitespace-nowrap`}>
-                          {activity.processing_stage.replace('_', ' ')}
+                          {activity.status.replace('_', ' ')}
                         </div>
                         <div className="text-xs text-slate-500 mt-1">
                           {new Date(activity.last_updated).toLocaleDateString()}

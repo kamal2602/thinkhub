@@ -480,11 +480,11 @@ export function Processing() {
 
   const calculateDashboardStats = () => {
     const stats = {
-      received: assets.filter(a => a.processing_stage === 'received').length,
-      testing: assets.filter(a => a.processing_stage === 'testing').length,
-      refurbishing: assets.filter(a => a.processing_stage === 'refurbishing').length,
-      qc_grading: assets.filter(a => a.processing_stage === 'qc_grading').length,
-      ready: assets.filter(a => a.processing_stage === 'ready').length,
+      received: assets.filter(a => a.status === 'received').length,
+      testing: assets.filter(a => a.status === 'testing').length,
+      refurbishing: assets.filter(a => a.status === 'refurbishing').length,
+      qc_grading: assets.filter(a => a.status === 'qc_grading').length,
+      ready: assets.filter(a => a.status === 'ready').length,
       totalValue: assets.reduce((sum, a) => sum + (a.purchase_price || 0) + (a.refurbishment_cost || 0), 0),
       avgDays: 0,
       staleCount: 0,
