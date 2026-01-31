@@ -191,3 +191,126 @@ export function downloadPOTemplate() {
 export function downloadAssetTemplate() {
   generateExcelTemplate(ASSET_TEMPLATE_COLUMNS, 'Asset_Import_Template.xlsx', 'Assets');
 }
+
+export const SUPPLIER_TEMPLATE_COLUMNS: TemplateColumn[] = [
+  {
+    header: 'Name',
+    example: 'TechSource LLC',
+    required: true,
+    description: 'Supplier company name'
+  },
+  {
+    header: 'Email',
+    example: 'contact@techsource.com',
+    required: true,
+    description: 'Primary contact email'
+  },
+  {
+    header: 'Phone',
+    example: '+1-555-0123',
+    description: 'Contact phone number'
+  },
+  {
+    header: 'Address',
+    example: '123 Tech Street',
+    description: 'Street address'
+  },
+  {
+    header: 'City',
+    example: 'San Francisco',
+    description: 'City name'
+  },
+  {
+    header: 'State',
+    example: 'CA',
+    description: 'State or province'
+  },
+  {
+    header: 'Postal Code',
+    example: '94105',
+    description: 'ZIP or postal code'
+  },
+  {
+    header: 'Country',
+    example: 'USA',
+    description: 'Country name'
+  },
+  {
+    header: 'Payment Terms',
+    example: 'Net 30',
+    description: 'Default payment terms'
+  },
+  {
+    header: 'Notes',
+    example: 'Preferred supplier for laptops',
+    description: 'Any additional notes'
+  }
+];
+
+export const CUSTOMER_TEMPLATE_COLUMNS: TemplateColumn[] = [
+  {
+    header: 'Name',
+    example: 'Enterprise Solutions Inc',
+    required: true,
+    description: 'Customer company name'
+  },
+  {
+    header: 'Email',
+    example: 'purchasing@enterprise.com',
+    required: true,
+    description: 'Primary contact email'
+  },
+  {
+    header: 'Phone',
+    example: '+1-555-9876',
+    description: 'Contact phone number'
+  },
+  {
+    header: 'Billing Address',
+    example: '456 Business Ave',
+    description: 'Billing street address'
+  },
+  {
+    header: 'Billing City',
+    example: 'New York',
+    description: 'Billing city'
+  },
+  {
+    header: 'Billing State',
+    example: 'NY',
+    description: 'Billing state'
+  },
+  {
+    header: 'Billing Postal Code',
+    example: '10001',
+    description: 'Billing ZIP code'
+  },
+  {
+    header: 'Billing Country',
+    example: 'USA',
+    description: 'Billing country'
+  },
+  {
+    header: 'Payment Terms',
+    example: 'Net 15',
+    description: 'Payment terms'
+  },
+  {
+    header: 'Customer Type',
+    example: 'Reseller',
+    description: 'Type of customer (Reseller, End User, etc.)'
+  },
+  {
+    header: 'Notes',
+    example: 'High-volume customer',
+    description: 'Any additional notes'
+  }
+];
+
+export function downloadSupplierTemplate() {
+  generateExcelTemplate(SUPPLIER_TEMPLATE_COLUMNS, 'Supplier_Import_Template.xlsx', 'Suppliers');
+}
+
+export function downloadCustomerTemplate() {
+  generateExcelTemplate(CUSTOMER_TEMPLATE_COLUMNS, 'Customer_Import_Template.xlsx', 'Customers');
+}
