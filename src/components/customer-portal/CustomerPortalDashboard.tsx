@@ -23,7 +23,7 @@ interface Project {
 
 interface Asset {
   id: string;
-  internal_id: string;
+  internal_asset_id: string;
   serial_number: string;
   brand: string;
   model: string;
@@ -71,7 +71,7 @@ export function CustomerPortalDashboard() {
 
       const { data: assetsData } = await supabase
         .from('assets')
-        .select('id, internal_id, serial_number, brand, model, processing_stage, disposal_method, created_at')
+        .select('id, internal_asset_id, serial_number, brand, model, processing_stage, disposal_method, created_at')
         .in('itad_project_id', projectIds)
         .order('created_at', { ascending: false })
         .limit(50);
@@ -263,7 +263,7 @@ export function CustomerPortalDashboard() {
                   <div className="flex-1">
                     <div className="font-medium text-gray-900">{asset.brand} {asset.model}</div>
                     <div className="text-sm text-gray-600">S/N: {asset.serial_number}</div>
-                    <div className="text-xs text-gray-500 mt-1">ID: {asset.internal_id}</div>
+                    <div className="text-xs text-gray-500 mt-1">ID: {asset.internal_asset_id}</div>
                   </div>
                   <div>
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(asset.processing_stage)}`}>
