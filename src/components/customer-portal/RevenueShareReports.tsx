@@ -15,7 +15,7 @@ interface RevenueTransaction {
   settlement_status: string;
   settled_at: string;
   asset: {
-    internal_id: string;
+    internal_asset_id: string;
     serial_number: string;
     brand: string;
     model: string;
@@ -48,7 +48,7 @@ export function RevenueShareReports({ customerId }: RevenueShareReportsProps) {
         .select(`
           *,
           asset:assets (
-            internal_id,
+            internal_asset_id,
             serial_number,
             brand,
             model
