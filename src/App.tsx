@@ -1,15 +1,52 @@
-function App() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">StockFlow ITAD</h1>
-        <p className="text-gray-600 mb-6">IT Asset Refurbishment & Inventory Management</p>
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <p className="text-blue-900 font-medium">Application is loading...</p>
-          <p className="text-blue-700 text-sm mt-2">If you see this, React is working!</p>
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { CompanyProvider } from './contexts/CompanyContext';
+import { ToastProvider } from './contexts/ToastContext';
+import { CustomerPortalAuthProvider } from './contexts/CustomerPortalAuthContext';
+import { AuthPage } from './pages/AuthPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { CustomerPortalPage } from './pages/CustomerPortalPage';
+
+function AppContent() {
+  const { user, loading } = useAuth();
+  const isCustomerPortal = window.location.pathname.startsWith('/portal');
+
+  if (isCustomerPortal) {
+    return (
+      <CustomerPortalAuthProvider>
+        <CustomerPortalPage />
+      </CustomerPortalAuthProvider>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
-    </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthPage />;
+  }
+
+  return (
+    <CompanyProvider>
+      <DashboardPage />
+    </CompanyProvider>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
+    </AuthProvider>
   );
 }
 
