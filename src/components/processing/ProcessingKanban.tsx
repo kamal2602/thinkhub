@@ -3,7 +3,6 @@ import { Clock, User, DollarSign, AlertCircle, Edit2, Eye, Copy, Trash2, ArrowRi
 import { supabase } from '../../lib/supabase';
 import { useCompany } from '../../contexts/CompanyContext';
 import { useToast } from '../../contexts/ToastContext';
-import { SourceTypeBadge } from '../common/SourceTypeBadge';
 
 interface Asset {
   id: string;
@@ -22,23 +21,12 @@ interface Asset {
   cpu?: string;
   ram?: string;
   storage?: string;
-  purchase_lot_id?: string | null;
-  itad_project_id?: string | null;
   product_types?: {
     name: string;
   };
   profiles?: {
     full_name: string;
   };
-  purchase_lots?: {
-    lot_number: string;
-  } | null;
-  itad_projects?: {
-    project_number: string;
-    customers: {
-      name: string;
-    };
-  } | null;
 }
 
 interface ProcessingKanbanProps {
@@ -198,10 +186,6 @@ export function ProcessingKanban({ assets, onAssetClick, onStageChange, gradeCol
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1 min-w-0" onClick={() => !isDragging && onAssetClick(asset)}>
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <SourceTypeBadge
-                            type={asset.itad_project_id ? 'itad' : asset.purchase_lot_id ? 'lot' : 'resell'}
-                            size="sm"
-                          />
                           {asset.cosmetic_grade && (
                             <span
                               className="px-2 py-0.5 rounded text-xs font-medium text-white"
@@ -232,28 +216,6 @@ export function ProcessingKanban({ assets, onAssetClick, onStageChange, gradeCol
                           {asset.ram && <span className="bg-gray-100 px-2 py-0.5 rounded">{asset.ram}</span>}
                           {asset.storage && <span className="bg-gray-100 px-2 py-0.5 rounded">{asset.storage}</span>}
                         </div>
-                      </div>
-                    )}
-
-                    {(asset.itad_project_id || asset.purchase_lot_id) && (
-                      <div className="mb-2 pb-2 border-b border-gray-100">
-                        {asset.itad_project_id && asset.itad_projects && (
-                          <div className="space-y-1">
-                            <div className="text-xs text-gray-600">
-                              <span className="font-medium">Project:</span> {asset.itad_projects.project_number}
-                            </div>
-                            {asset.itad_projects.customers && (
-                              <div className="text-xs text-gray-600">
-                                <span className="font-medium">Customer:</span> {asset.itad_projects.customers.name}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        {asset.purchase_lot_id && asset.purchase_lots && (
-                          <div className="text-xs text-gray-600">
-                            <span className="font-medium">Lot:</span> {asset.purchase_lots.lot_number}
-                          </div>
-                        )}
                       </div>
                     )}
 

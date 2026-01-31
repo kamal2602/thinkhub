@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Plus, Building2, Edit2, Trash2, Calendar, DollarSign, FileText, CheckCircle, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Building2, Edit2, Trash2, Calendar, DollarSign, FileText, CheckCircle, Clock } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useCompany } from '../../contexts/CompanyContext';
 import { Database } from '../../lib/database.types';
-import { ITADProjectProgress } from './ITADProjectProgress';
 
 type ITADProject = Database['public']['Tables']['itad_projects']['Row'];
 type ITADProjectInsert = Database['public']['Tables']['itad_projects']['Insert'];
@@ -16,7 +15,6 @@ export function ITADProjects() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingProject, setEditingProject] = useState<ITADProject | null>(null);
-  const [expandedProgress, setExpandedProgress] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<ITADProjectInsert>>({
     project_name: '',
     itad_customer_id: '',
@@ -344,29 +342,6 @@ export function ITADProjects() {
 
               {project.notes && (
                 <p className="text-sm text-gray-500 mt-3 border-t pt-3 line-clamp-2">{project.notes}</p>
-              )}
-
-              <button
-                onClick={() => setExpandedProgress(expandedProgress === project.id ? null : project.id)}
-                className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg transition border border-gray-200"
-              >
-                {expandedProgress === project.id ? (
-                  <>
-                    <ChevronUp className="w-4 h-4" />
-                    <span className="text-sm font-medium">Hide Progress</span>
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="w-4 h-4" />
-                    <span className="text-sm font-medium">View Progress</span>
-                  </>
-                )}
-              </button>
-
-              {expandedProgress === project.id && (
-                <div className="mt-4 pt-4 border-t">
-                  <ITADProjectProgress currentStatus={project.status} size="sm" />
-                </div>
               )}
             </div>
           ))}

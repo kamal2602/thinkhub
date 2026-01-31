@@ -31,8 +31,6 @@ interface Asset {
   stage_started_at: string;
   is_priority: boolean;
   processing_notes: string;
-  purchase_lot_id?: string | null;
-  itad_project_id?: string | null;
   product_types?: {
     name: string;
   };
@@ -42,15 +40,6 @@ interface Asset {
   profiles?: {
     full_name: string;
   };
-  purchase_lots?: {
-    lot_number: string;
-  } | null;
-  itad_projects?: {
-    project_number: string;
-    customers: {
-      name: string;
-    };
-  } | null;
 }
 
 export function Processing() {
@@ -127,9 +116,7 @@ export function Processing() {
         .select(`
           *,
           product_types(name),
-          locations(name),
-          purchase_lots(lot_number),
-          itad_projects(project_number, customers(name))
+          locations(name)
         `)
         .eq('company_id', selectedCompany?.id)
         .order('created_at', { ascending: false });
