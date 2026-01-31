@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useCompany } from '../../contexts/CompanyContext';
 import AssetComponents from '../assets/AssetComponents';
+import { ActivityFeed } from '../common/ActivityFeed';
 
 // Helper function to format field names for display
 function formatFieldName(key: string, customLabels: Record<string, string> = {}): string {
@@ -1184,6 +1185,10 @@ export function AssetDetails({ asset, onClose, onEdit }: AssetDetailsProps) {
           </div>
         </div>
       )}
+
+      <div className="mt-6">
+        <ActivityFeed assetId={asset.id} />
+      </div>
     </div>
   );
 }

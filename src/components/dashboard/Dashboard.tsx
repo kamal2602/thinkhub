@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Package, DollarSign, TrendingUp, Building2, Activity, BarChart3, CheckCircle, Wrench, Clock, ShoppingCart } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useCompany } from '../../contexts/CompanyContext';
+import { DashboardWidgets } from './DashboardWidgets';
 
 interface DashboardStats {
   assetsInProcessing: number;
@@ -272,6 +273,10 @@ export function Dashboard() {
               <p className="text-slate-500">{selectedCompany.name}</p>
             </div>
           </div>
+        </div>
+
+        <div className="mb-8">
+          <DashboardWidgets />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">

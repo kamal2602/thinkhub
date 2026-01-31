@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Clock, User, DollarSign, AlertCircle } from 'lucide-react';
+import { Clock, User, DollarSign, AlertCircle, Edit2, Eye, Copy, Trash2, ArrowRight, CheckCircle2, Flag } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useCompany } from '../../contexts/CompanyContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -17,6 +17,10 @@ interface Asset {
   assigned_technician_id: string | null;
   stage_started_at: string;
   is_priority: boolean;
+  processing_notes?: string;
+  cpu?: string;
+  ram?: string;
+  storage?: string;
   product_types?: {
     name: string;
   };
@@ -31,6 +35,10 @@ interface ProcessingKanbanProps {
   onStageChange: (assetId: string, newStage: string) => void;
   gradeColors: Record<string, string>;
   stages?: ProcessingStage[];
+  onEdit?: (asset: Asset) => void;
+  onClone?: (asset: Asset) => void;
+  onDelete?: (assetId: string) => void;
+  onTogglePriority?: (assetId: string, isPriority: boolean) => void;
 }
 
 interface ProcessingStage {
@@ -57,9 +65,11 @@ const getStageColorClasses = (color: string) => {
   return colorMap[color] || colorMap.gray;
 };
 
-export function ProcessingKanban({ assets, onAssetClick, onStageChange, gradeColors, stages: propStages }: ProcessingKanbanProps) {
+export function ProcessingKanban({ assets, onAssetClick, onStageChange, gradeColors, stages: propStages, onEdit, onClone, onDelete, onTogglePriority }: ProcessingKanbanProps) {
   const [draggedAsset, setDraggedAsset] = useState<Asset | null>(null);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const toast = useToast();
 
   const stages = propStages || [];
 
@@ -162,8 +172,9 @@ export function ProcessingKanban({ assets, onAssetClick, onStageChange, gradeCol
                     draggable
                     onDragStart={(e) => handleDragStart(e, asset)}
                     onDragEnd={handleDragEnd}
-                    onClick={() => !isDragging && onAssetClick(asset)}
-                    className={`bg-white rounded-lg shadow-sm border border-gray-200 p-3 cursor-move hover:shadow-md transition-all ${isDragging ? 'opacity-50 scale-95' : ''}`}
+                    onMouseEnter={() => setHoveredCard(asset.id)}
+                    onMouseLeave={() => setHoveredCard(null)}
+                    className={`bg-white rounded-lg shadow-sm border border-gray-200 p-3 cursor-move hover:shadow-lg transition-all relative group ${isDragging ? 'opacity-50 scale-95' : ''}`}
                   >
                     {asset.is_priority && (
                       <div className="flex items-center gap-1 text-red-600 text-xs font-medium mb-2">
@@ -173,7 +184,7 @@ export function ProcessingKanban({ assets, onAssetClick, onStageChange, gradeCol
                     )}
 
                     <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0" onClick={() => !isDragging && onAssetClick(asset)}>
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           {asset.cosmetic_grade && (
                             <span
@@ -198,7 +209,17 @@ export function ProcessingKanban({ assets, onAssetClick, onStageChange, gradeCol
                       </div>
                     </div>
 
-                    <div className="space-y-1.5 mt-3">
+                    {(asset.cpu || asset.ram || asset.storage) && (
+                      <div className="mb-2 pb-2 border-b border-gray-100">
+                        <div className="flex flex-wrap gap-1 text-xs text-gray-600">
+                          {asset.cpu && <span className="bg-gray-100 px-2 py-0.5 rounded">{asset.cpu}</span>}
+                          {asset.ram && <span className="bg-gray-100 px-2 py-0.5 rounded">{asset.ram}</span>}
+                          {asset.storage && <span className="bg-gray-100 px-2 py-0.5 rounded">{asset.storage}</span>}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-1.5">
                       {asset.profiles && (
                         <div className="flex items-center gap-1.5 text-xs text-gray-600">
                           <User className="w-3 h-3" />
@@ -223,6 +244,63 @@ export function ProcessingKanban({ assets, onAssetClick, onStageChange, gradeCol
                         <span className="text-xs text-gray-500 truncate block">
                           {asset.functional_status}
                         </span>
+                      </div>
+                    )}
+
+                    {asset.processing_notes && (
+                      <div className="mt-2 pt-2 border-t border-gray-100">
+                        <p className="text-xs text-gray-600 line-clamp-2">{asset.processing_notes}</p>
+                      </div>
+                    )}
+
+                    {hoveredCard === asset.id && (
+                      <div className="absolute top-2 right-2 flex gap-1 bg-white border border-gray-200 rounded-lg shadow-lg p-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAssetClick(asset);
+                          }}
+                          className="p-1.5 hover:bg-blue-50 text-blue-600 rounded transition"
+                          title="View details"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                        {onEdit && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEdit(asset);
+                            }}
+                            className="p-1.5 hover:bg-green-50 text-green-600 rounded transition"
+                            title="Edit"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {onTogglePriority && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onTogglePriority(asset.id, !asset.is_priority);
+                            }}
+                            className={`p-1.5 hover:bg-red-50 rounded transition ${asset.is_priority ? 'text-red-600' : 'text-gray-400'}`}
+                            title={asset.is_priority ? 'Remove priority' : 'Mark as priority'}
+                          >
+                            <Flag className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {onClone && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onClone(asset);
+                            }}
+                            className="p-1.5 hover:bg-gray-50 text-gray-600 rounded transition"
+                            title="Clone"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>

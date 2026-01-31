@@ -42,7 +42,7 @@ interface AppModule {
 export function AppBar({ currentPage, onNavigate }: AppBarProps) {
   const [activeModule, setActiveModule] = useState<string | null>(null);
   const [showAppSwitcher, setShowAppSwitcher] = useState(false);
-  const moduleMenuRef = useRef<HTMLDivElement>(null);
+  const moduleMenuRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
   const appSwitcherRef = useRef<HTMLDivElement>(null);
   const { userRole, isSuperAdmin } = useAuth();
   const { selectedCompany } = useCompany();
@@ -174,9 +174,17 @@ export function AppBar({ currentPage, onNavigate }: AppBarProps) {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (moduleMenuRef.current && !moduleMenuRef.current.contains(event.target as Node)) {
+      let clickedInsideModule = false;
+      moduleMenuRefs.current.forEach((ref) => {
+        if (ref && ref.contains(event.target as Node)) {
+          clickedInsideModule = true;
+        }
+      });
+
+      if (!clickedInsideModule) {
         setActiveModule(null);
       }
+
       if (appSwitcherRef.current && !appSwitcherRef.current.contains(event.target as Node)) {
         setShowAppSwitcher(false);
       }
@@ -262,7 +270,17 @@ export function AppBar({ currentPage, onNavigate }: AppBarProps) {
             const pages = getFilteredPages(module);
 
             return (
-              <div key={module.id} className="relative" ref={isActive ? moduleMenuRef : undefined}>
+              <div
+                key={module.id}
+                className="relative"
+                ref={(el) => {
+                  if (el) {
+                    moduleMenuRefs.current.set(module.id, el);
+                  } else {
+                    moduleMenuRefs.current.delete(module.id);
+                  }
+                }}
+              >
                 <button
                   onClick={() => handleModuleClick(module.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${

@@ -10,6 +10,8 @@ import { AssetGridView } from './AssetGridView';
 import { ProcessingKanban } from './ProcessingKanban';
 import { ProcessingDashboard } from './ProcessingDashboard';
 import { ScannerBar } from './ScannerBar';
+import { ActionBar } from './ActionBar';
+import { FilterPanel, FilterState } from './FilterPanel';
 
 interface Asset {
   id: string;
@@ -56,6 +58,18 @@ export function Processing() {
   const [cosmeticGrades, setCosmeticGrades] = useState<any[]>([]);
   const [cosmeticGradeColors, setCosmeticGradeColors] = useState<Record<string, string>>({});
   const [stages, setStages] = useState<any[]>([]);
+  const [productTypes, setProductTypes] = useState<any[]>([]);
+  const [technicians, setTechnicians] = useState<any[]>([]);
+  const [filters, setFilters] = useState<FilterState>({
+    search: '',
+    grades: [],
+    stages: [],
+    productTypes: [],
+    assignedTo: [],
+    isPriority: null,
+    isStale: null,
+    dateRange: null,
+  });
 
   const [showForm, setShowForm] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -66,6 +80,8 @@ export function Processing() {
       fetchAssets();
       fetchCosmeticGrades();
       fetchStages();
+      fetchProductTypes();
+      fetchTechnicians();
 
       const channel = supabase
         .channel(`assets-${selectedCompany.id}`)
@@ -92,7 +108,7 @@ export function Processing() {
 
   useEffect(() => {
     filterAssets();
-  }, [assets, searchTerm, statusFilter, gradeFilter]);
+  }, [assets, filters]);
 
   const fetchAssets = async () => {
     try {
@@ -157,26 +173,86 @@ export function Processing() {
     setStages(data || []);
   };
 
+  const fetchProductTypes = async () => {
+    const { data } = await supabase
+      .from('product_types')
+      .select('*')
+      .eq('company_id', selectedCompany?.id)
+      .order('name');
+    setProductTypes(data || []);
+  };
+
+  const fetchTechnicians = async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .eq('company_id', selectedCompany?.id)
+      .order('full_name');
+    setTechnicians(data || []);
+  };
+
 
   const filterAssets = () => {
     let filtered = assets;
 
-    if (searchTerm) {
+    if (filters.search) {
       filtered = filtered.filter(
         (asset) =>
-          asset.serial_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          asset.imei?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          asset.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          asset.model?.toLowerCase().includes(searchTerm.toLowerCase())
+          asset.serial_number?.toLowerCase().includes(filters.search.toLowerCase()) ||
+          asset.imei?.toLowerCase().includes(filters.search.toLowerCase()) ||
+          asset.brand?.toLowerCase().includes(filters.search.toLowerCase()) ||
+          asset.model?.toLowerCase().includes(filters.search.toLowerCase())
       );
     }
 
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter((asset) => asset.status === statusFilter);
+    if (filters.grades.length > 0) {
+      filtered = filtered.filter((asset) => filters.grades.includes(asset.cosmetic_grade));
     }
 
-    if (gradeFilter !== 'all') {
-      filtered = filtered.filter((asset) => asset.cosmetic_grade === gradeFilter);
+    if (filters.stages.length > 0) {
+      filtered = filtered.filter((asset) => filters.stages.includes(asset.processing_stage));
+    }
+
+    if (filters.productTypes.length > 0) {
+      filtered = filtered.filter((asset) =>
+        asset.product_types && filters.productTypes.includes((asset.product_types as any).id)
+      );
+    }
+
+    if (filters.assignedTo.length > 0) {
+      filtered = filtered.filter((asset) =>
+        asset.assigned_technician_id && filters.assignedTo.includes(asset.assigned_technician_id)
+      );
+    }
+
+    if (filters.isPriority === true) {
+      filtered = filtered.filter((asset) => asset.is_priority);
+    }
+
+    if (filters.isStale === true) {
+      filtered = filtered.filter((asset) => {
+        if (!asset.stage_started_at) return false;
+        const start = new Date(asset.stage_started_at);
+        const now = new Date();
+        const days = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        return days > 7;
+      });
+    }
+
+    if (filters.dateRange?.from) {
+      filtered = filtered.filter((asset) => {
+        const assetDate = new Date(asset.created_at);
+        const fromDate = new Date(filters.dateRange!.from);
+        return assetDate >= fromDate;
+      });
+    }
+
+    if (filters.dateRange?.to) {
+      filtered = filtered.filter((asset) => {
+        const assetDate = new Date(asset.created_at);
+        const toDate = new Date(filters.dateRange!.to);
+        return assetDate <= toDate;
+      });
     }
 
     setFilteredAssets(filtered);
@@ -251,26 +327,79 @@ export function Processing() {
     }
   };
 
-  const bulkUpdateStatus = async (newStatus: string) => {
+  const bulkUpdateStage = async (newStage: string) => {
     if (selectedAssets.size === 0) return;
 
     try {
       const { error } = await supabase
         .from('assets')
-        .update({ status: newStatus })
+        .update({ processing_stage: newStage, stage_started_at: new Date().toISOString() })
         .in('id', Array.from(selectedAssets));
 
       if (error) throw error;
 
-      toast.success(`Updated ${selectedAssets.size} asset(s) to ${newStatus}`, {
-        label: 'Undo',
-        onClick: () => toast.info('Undo feature coming soon'),
-      });
-
+      toast.success(`Updated ${selectedAssets.size} asset(s) to new stage`);
       setSelectedAssets(new Set());
       fetchAssets();
     } catch (error: any) {
       toast.error('Failed to update assets: ' + error.message);
+    }
+  };
+
+  const bulkUpdateGrade = async (newGrade: string) => {
+    if (selectedAssets.size === 0) return;
+
+    try {
+      const { error } = await supabase
+        .from('assets')
+        .update({ cosmetic_grade: newGrade })
+        .in('id', Array.from(selectedAssets));
+
+      if (error) throw error;
+
+      toast.success(`Updated ${selectedAssets.size} asset(s) grade`);
+      setSelectedAssets(new Set());
+      fetchAssets();
+    } catch (error: any) {
+      toast.error('Failed to update assets: ' + error.message);
+    }
+  };
+
+  const bulkAssignTechnician = async (technicianId: string) => {
+    if (selectedAssets.size === 0) return;
+
+    try {
+      const { error } = await supabase
+        .from('assets')
+        .update({ assigned_technician_id: technicianId })
+        .in('id', Array.from(selectedAssets));
+
+      if (error) throw error;
+
+      toast.success(`Assigned ${selectedAssets.size} asset(s) to technician`);
+      setSelectedAssets(new Set());
+      fetchAssets();
+    } catch (error: any) {
+      toast.error('Failed to assign assets: ' + error.message);
+    }
+  };
+
+  const bulkSetPriority = async (isPriority: boolean) => {
+    if (selectedAssets.size === 0) return;
+
+    try {
+      const { error } = await supabase
+        .from('assets')
+        .update({ is_priority: isPriority })
+        .in('id', Array.from(selectedAssets));
+
+      if (error) throw error;
+
+      toast.success(`Updated ${selectedAssets.size} asset(s) priority`);
+      setSelectedAssets(new Set());
+      fetchAssets();
+    } catch (error: any) {
+      toast.error('Failed to update priority: ' + error.message);
     }
   };
 
@@ -322,7 +451,7 @@ export function Processing() {
     try {
       const { error } = await supabase
         .from('assets')
-        .update({ processing_stage: newStage })
+        .update({ processing_stage: newStage, stage_started_at: new Date().toISOString() })
         .eq('id', assetId);
 
       if (error) throw error;
@@ -331,6 +460,22 @@ export function Processing() {
       fetchAssets();
     } catch (error: any) {
       toast.error('Failed to update stage: ' + error.message);
+    }
+  };
+
+  const handleTogglePriority = async (assetId: string, isPriority: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('assets')
+        .update({ is_priority: isPriority })
+        .eq('id', assetId);
+
+      if (error) throw error;
+
+      toast.success(`Priority ${isPriority ? 'enabled' : 'disabled'}`);
+      fetchAssets();
+    } catch (error: any) {
+      toast.error('Failed to update priority: ' + error.message);
     }
   };
 
@@ -476,48 +621,26 @@ export function Processing() {
         </div>
       </div>
 
-      {selectedAssets.size > 0 && (
-        <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-blue-900">
-                {selectedAssets.size} asset(s) selected
-              </span>
-              <button
-                onClick={() => setSelectedAssets(new Set())}
-                className="text-sm text-blue-600 hover:text-blue-700 underline"
-              >
-                Clear selection
-              </button>
-            </div>
-            <div className="flex items-center gap-2">
-              <select
-                onChange={(e) => {
-                  if (e.target.value) {
-                    bulkUpdateStatus(e.target.value);
-                    e.target.value = '';
-                  }
-                }}
-                className="px-3 py-1.5 text-sm border border-blue-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Update Status...</option>
-                <option value="In Stock">In Stock</option>
-                <option value="Refurbishment">Refurbishment</option>
-                <option value="Listed">Listed</option>
-                <option value="Reserved">Reserved</option>
-                <option value="Sold">Sold</option>
-                <option value="RMA">RMA</option>
-              </select>
-              <button
-                onClick={bulkDelete}
-                className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-              >
-                Delete Selected
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <FilterPanel
+        onFilterChange={setFilters}
+        grades={cosmeticGrades}
+        stages={stages}
+        productTypes={productTypes}
+        technicians={technicians}
+      />
+
+      <ActionBar
+        selectedCount={selectedAssets.size}
+        onClearSelection={() => setSelectedAssets(new Set())}
+        onBulkUpdateStage={bulkUpdateStage}
+        onBulkUpdateGrade={bulkUpdateGrade}
+        onBulkAssignTechnician={bulkAssignTechnician}
+        onBulkSetPriority={bulkSetPriority}
+        onBulkDelete={bulkDelete}
+        stages={stages}
+        grades={cosmeticGrades}
+        technicians={technicians}
+      />
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
@@ -530,6 +653,9 @@ export function Processing() {
           onStageChange={handleStageChange}
           gradeColors={cosmeticGradeColors}
           stages={stages}
+          onEdit={openForm}
+          onClone={cloneAsset}
+          onTogglePriority={handleTogglePriority}
         />
       ) : viewMode === 'grid' ? (
         <AssetGridView
