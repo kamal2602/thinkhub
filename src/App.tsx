@@ -1,22 +1,11 @@
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CompanyProvider } from './contexts/CompanyContext';
 import { ToastProvider } from './contexts/ToastContext';
-import { CustomerPortalAuthProvider } from './contexts/CustomerPortalAuthContext';
 import { AuthPage } from './pages/AuthPage';
 import { DashboardPage } from './pages/DashboardPage';
-import { CustomerPortalPage } from './pages/CustomerPortalPage';
 
 function AppContent() {
   const { user, loading } = useAuth();
-  const isCustomerPortal = window.location.pathname.startsWith('/portal');
-
-  if (isCustomerPortal) {
-    return (
-      <CustomerPortalAuthProvider>
-        <CustomerPortalPage />
-      </CustomerPortalAuthProvider>
-    );
-  }
 
   if (loading) {
     return (
