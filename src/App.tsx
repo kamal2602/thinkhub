@@ -5,6 +5,8 @@ import { CustomerPortalAuthProvider } from './contexts/CustomerPortalAuthContext
 import { AuthPage } from './pages/AuthPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { CustomerPortalPage } from './pages/CustomerPortalPage';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { KeyboardShortcutsHelp } from './components/common/KeyboardShortcutsHelp';
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -12,9 +14,11 @@ function AppContent() {
 
   if (isCustomerPortal) {
     return (
-      <CustomerPortalAuthProvider>
-        <CustomerPortalPage />
-      </CustomerPortalAuthProvider>
+      <ErrorBoundary>
+        <CustomerPortalAuthProvider>
+          <CustomerPortalPage />
+        </CustomerPortalAuthProvider>
+      </ErrorBoundary>
     );
   }
 
@@ -35,18 +39,23 @@ function AppContent() {
 
   return (
     <CompanyProvider>
-      <DashboardPage />
+      <ErrorBoundary>
+        <DashboardPage />
+        <KeyboardShortcutsHelp />
+      </ErrorBoundary>
     </CompanyProvider>
   );
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <AppContent />
-      </ToastProvider>
-    </AuthProvider>
+    <ErrorBoundary showDetails={import.meta.env.DEV}>
+      <AuthProvider>
+        <ToastProvider>
+          <AppContent />
+        </ToastProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

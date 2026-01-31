@@ -138,6 +138,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+
+    let timeout: NodeJS.Timeout;
+    const SESSION_TIMEOUT = 8 * 60 * 60 * 1000;
+
+    const resetTimeout = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        signOut();
+        window.location.reload();
+      }, SESSION_TIMEOUT);
+    };
+
+    const events = ['mousemove', 'keypress', 'click', 'scroll', 'touchstart'];
+    events.forEach(event => {
+      window.addEventListener(event, resetTimeout);
+    });
+
+    resetTimeout();
+
+    return () => {
+      clearTimeout(timeout);
+      events.forEach(event => {
+        window.removeEventListener(event, resetTimeout);
+      });
+    };
+  }, [user]);
+
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
       const { error } = await supabase.auth.signUp({

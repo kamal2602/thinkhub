@@ -49,12 +49,29 @@ export class ImportIntelligenceService {
   private valueLookupRules: Map<string, ImportIntelligenceRule[]> = new Map();
   private componentPatternRules: Map<string, ImportIntelligenceRule[]> = new Map();
 
+  private static cache: Map<string, ImportIntelligenceRule[]> = new Map();
+  private static lastFetch: Map<string, number> = new Map();
+  private static readonly CACHE_TTL = 5 * 60 * 1000;
+
   constructor(companyId: string) {
     this.companyId = companyId;
   }
 
   async loadRules(): Promise<void> {
-    console.log('[Intelligence] Loading rules for company:', this.companyId);
+    const now = Date.now();
+    const lastFetch = ImportIntelligenceService.lastFetch.get(this.companyId) || 0;
+
+    if (now - lastFetch < ImportIntelligenceService.CACHE_TTL) {
+      const cached = ImportIntelligenceService.cache.get(this.companyId);
+      if (cached) {
+        console.log('[Intelligence] Using cached rules for company:', this.companyId);
+        this.rules = cached;
+        this.organizeRules();
+        return;
+      }
+    }
+
+    console.log('[Intelligence] Loading rules from database for company:', this.companyId);
 
     const { data, error } = await supabase
       .from('import_intelligence_rules')
@@ -68,10 +85,15 @@ export class ImportIntelligenceService {
       return;
     }
 
-    console.log('[Intelligence] Loaded rules from database:', data);
     this.rules = data || [];
+    ImportIntelligenceService.cache.set(this.companyId, this.rules);
+    ImportIntelligenceService.lastFetch.set(this.companyId, now);
     this.organizeRules();
-    console.log('[Intelligence] Organized value lookup rules:', this.valueLookupRules);
+  }
+
+  private invalidateCache(): void {
+    ImportIntelligenceService.cache.delete(this.companyId);
+    ImportIntelligenceService.lastFetch.delete(this.companyId);
   }
 
   private organizeRules(): void {
@@ -263,6 +285,7 @@ export class ImportIntelligenceService {
       throw error;
     }
 
+    this.invalidateCache();
     await this.loadRules();
   }
 
@@ -277,6 +300,7 @@ export class ImportIntelligenceService {
       throw error;
     }
 
+    this.invalidateCache();
     await this.loadRules();
   }
 
@@ -291,6 +315,7 @@ export class ImportIntelligenceService {
       throw error;
     }
 
+    this.invalidateCache();
     await this.loadRules();
   }
 
@@ -324,6 +349,7 @@ export class ImportIntelligenceService {
       throw error;
     }
 
+    this.invalidateCache();
     await this.loadRules();
   }
 }
