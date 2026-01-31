@@ -36,7 +36,7 @@ export function ScannerBar({ onAssetScanned, onAssetOpened }: ScannerBarProps) {
 
     const { data: assetBySerial, error: serialError } = await supabase
       .from('assets')
-      .select('id, serial_number, internal_asset_id, brand, model, processing_stage, assigned_technician_id')
+      .select('id, serial_number, internal_asset_id, brand, model, status, assigned_technician_id')
       .eq('company_id', selectedCompany?.id)
       .eq('serial_number', searchValue)
       .maybeSingle();
@@ -57,7 +57,7 @@ export function ScannerBar({ onAssetScanned, onAssetOpened }: ScannerBarProps) {
     if (internalIds) {
       const { data: asset, error: assetError } = await supabase
         .from('assets')
-        .select('id, serial_number, internal_asset_id, brand, model, processing_stage, assigned_technician_id')
+        .select('id, serial_number, internal_asset_id, brand, model, status, assigned_technician_id')
         .eq('id', internalIds.asset_id)
         .maybeSingle();
 
@@ -73,7 +73,7 @@ export function ScannerBar({ onAssetScanned, onAssetOpened }: ScannerBarProps) {
       .from('assets')
       .update({
         assigned_technician_id: user?.id,
-        processing_stage: 'refurbishing',
+        status: 'refurbishing',
         stage_started_at: new Date().toISOString()
       })
       .eq('id', assetId);

@@ -11,7 +11,7 @@ interface Asset {
   model: string;
   cosmetic_grade: string;
   functional_status: string;
-  processing_stage: string;
+  status: string;
   refurbishment_cost: number;
   purchase_price: number;
   assigned_technician_id: string | null;
@@ -75,7 +75,7 @@ export function ProcessingKanban({ assets, onAssetClick, onStageChange, gradeCol
 
   const getAssetsByStage = (stage: string) => {
     const filtered = assets.filter(asset => {
-      const assetStage = asset.processing_stage || 'received';
+      const assetStage = asset.status || 'received';
       return assetStage === stage;
     });
     return filtered;
@@ -117,7 +117,7 @@ export function ProcessingKanban({ assets, onAssetClick, onStageChange, gradeCol
     e.preventDefault();
     setDragOverStage(null);
 
-    if (draggedAsset && draggedAsset.processing_stage !== stageId) {
+    if (draggedAsset && draggedAsset.status !== stageId) {
       onStageChange(draggedAsset.id, stageId);
     }
     setDraggedAsset(null);

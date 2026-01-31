@@ -26,7 +26,34 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const supabaseClient = createClient(
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header');
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+
+    const supabaseUser = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
+
+    const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
+
+    if (userError || !user) {
+      throw new Error('Unauthorized');
+    }
+
+    const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
@@ -37,19 +64,7 @@ Deno.serve(async (req: Request) => {
       }
     );
 
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header');
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
-    
-    if (userError || !user) {
-      throw new Error('Unauthorized');
-    }
-
-    const { data: profile } = await supabaseClient
+    const { data: profile } = await supabaseAdmin
       .from('profiles')
       .select('is_super_admin, role')
       .eq('id', user.id)
@@ -63,7 +78,7 @@ Deno.serve(async (req: Request) => {
     const path = url.pathname;
 
     if (path.includes('/list-users') && req.method === 'GET') {
-      const { data: authUsers, error } = await supabaseClient.auth.admin.listUsers();
+      const { data: authUsers, error } = await supabaseAdmin.auth.admin.listUsers();
       
       if (error) throw error;
 
@@ -76,7 +91,7 @@ Deno.serve(async (req: Request) => {
     if (path.includes('/create-user') && req.method === 'POST') {
       const body: CreateUserRequest = await req.json();
 
-      const { data: authData, error: createError } = await supabaseClient.auth.admin.createUser({
+      const { data: authData, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email: body.email,
         password: body.password,
         email_confirm: true,
@@ -87,13 +102,13 @@ Deno.serve(async (req: Request) => {
 
       if (createError) throw createError;
 
-      await supabaseClient
+      await supabaseAdmin
         .from('profiles')
         .update({ role: body.role })
         .eq('id', authData.user.id);
 
       if (body.companyId) {
-        await supabaseClient
+        await supabaseAdmin
           .from('user_company_access')
           .insert({
             user_id: authData.user.id,
@@ -111,7 +126,7 @@ Deno.serve(async (req: Request) => {
     if (path.includes('/assign-company') && req.method === 'POST') {
       const body: AssignCompanyRequest = await req.json();
 
-      const { error } = await supabaseClient
+      const { error } = await supabaseAdmin
         .from('user_company_access')
         .upsert({
           user_id: body.userId,
@@ -134,7 +149,7 @@ Deno.serve(async (req: Request) => {
 
       const body: { userId: string; isSuperAdmin: boolean } = await req.json();
 
-      const { error } = await supabaseClient
+      const { error } = await supabaseAdmin
         .from('profiles')
         .update({ is_super_admin: body.isSuperAdmin })
         .eq('id', body.userId);

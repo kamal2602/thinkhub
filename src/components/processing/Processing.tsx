@@ -27,7 +27,6 @@ interface Asset {
   refurbishment_cost: number;
   selling_price: number;
   created_at: string;
-  processing_stage: string;
   assigned_technician_id: string | null;
   stage_started_at: string;
   is_priority: boolean;
@@ -210,7 +209,7 @@ export function Processing() {
     }
 
     if (filters.stages.length > 0) {
-      filtered = filtered.filter((asset) => filters.stages.includes(asset.processing_stage));
+      filtered = filtered.filter((asset) => filters.stages.includes(asset.status));
     }
 
     if (filters.productTypes.length > 0) {
@@ -333,7 +332,7 @@ export function Processing() {
     try {
       const { error } = await supabase
         .from('assets')
-        .update({ processing_stage: newStage, stage_started_at: new Date().toISOString() })
+        .update({ status: newStage, stage_started_at: new Date().toISOString() })
         .in('id', Array.from(selectedAssets));
 
       if (error) throw error;
@@ -451,7 +450,7 @@ export function Processing() {
     try {
       const { error } = await supabase
         .from('assets')
-        .update({ processing_stage: newStage, stage_started_at: new Date().toISOString() })
+        .update({ status: newStage, stage_started_at: new Date().toISOString() })
         .eq('id', assetId);
 
       if (error) throw error;

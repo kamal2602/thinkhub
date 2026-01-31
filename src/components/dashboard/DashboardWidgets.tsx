@@ -71,8 +71,8 @@ export function DashboardWidgets() {
 
       setData({
         totalAssets: assets?.length || 0,
-        assetsInProcess: assets?.filter((a) => a.processing_stage !== 'ready').length || 0,
-        readyForSale: assets?.filter((a) => a.processing_stage === 'ready').length || 0,
+        assetsInProcess: assets?.filter((a) => a.status !== 'ready').length || 0,
+        readyForSale: assets?.filter((a) => a.status === 'ready').length || 0,
         totalValue: assets?.reduce((sum, a) => sum + (a.purchase_price || 0) + (a.refurbishment_cost || 0), 0) || 0,
         avgProcessingTime: countWithDays > 0 ? totalDays / countWithDays : 0,
         priorityItems: assets?.filter((a) => a.is_priority).length || 0,

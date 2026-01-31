@@ -86,7 +86,7 @@ export function Dashboard() {
       const [assetsRes, salesRes, lotsRes, activityRes] = await Promise.all([
         supabase
           .from('assets')
-          .select('id, processing_stage, purchase_price, refurbishment_cost, selling_price')
+          .select('id, status, purchase_price, refurbishment_cost, selling_price')
           .eq('company_id', selectedCompany?.id),
 
         Promise.resolve({ data: [], error: null }),
@@ -110,7 +110,7 @@ export function Dashboard() {
           .select(`
             id,
             serial_number,
-            processing_stage,
+            status,
             updated_at,
             product_types(name)
           `)
@@ -138,8 +138,8 @@ export function Dashboard() {
       let marginCount = 0;
 
       (assetsRes.data || []).forEach((asset: any) => {
-        if (asset.processing_stage && processingByStage.hasOwnProperty(asset.processing_stage)) {
-          processingByStage[asset.processing_stage as keyof typeof processingByStage]++;
+        if (asset.status && processingByStage.hasOwnProperty(asset.status)) {
+          processingByStage[asset.status as keyof typeof processingByStage]++;
         }
 
         if (isAdminRole && asset.selling_price && asset.purchase_price) {
@@ -164,11 +164,11 @@ export function Dashboard() {
         for (const lot of lotsRes.data) {
           const { data: lotAssets } = await supabase
             .from('assets')
-            .select('id, selling_price, purchase_price, refurbishment_cost, processing_stage')
+            .select('id, selling_price, purchase_price, refurbishment_cost, status')
             .eq('purchase_lot_id', lot.id);
 
           const itemsCount = lotAssets?.length || 0;
-          const itemsSold = lotAssets?.filter((a: any) => a.processing_stage === 'sold').length || 0;
+          const itemsSold = lotAssets?.filter((a: any) => a.status === 'sold').length || 0;
           const totalRevenue = lotAssets?.reduce((sum: number, a: any) => sum + (a.selling_price || 0), 0) || 0;
           const totalCosts = lotAssets?.reduce((sum: number, a: any) =>
             sum + (a.purchase_price || 0) + (a.refurbishment_cost || 0), 0) || 0;

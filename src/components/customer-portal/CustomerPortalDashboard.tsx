@@ -27,7 +27,7 @@ interface Asset {
   serial_number: string;
   brand: string;
   model: string;
-  processing_stage: string;
+  status: string;
   disposal_method?: string;
   created_at: string;
 }
@@ -71,7 +71,7 @@ export function CustomerPortalDashboard() {
 
       const { data: assetsData } = await supabase
         .from('assets')
-        .select('id, internal_asset_id, serial_number, brand, model, processing_stage, disposal_method, created_at')
+        .select('id, internal_asset_id, serial_number, brand, model, status, disposal_method, created_at')
         .in('itad_project_id', projectIds)
         .order('created_at', { ascending: false })
         .limit(50);
@@ -266,8 +266,8 @@ export function CustomerPortalDashboard() {
                     <div className="text-xs text-gray-500 mt-1">ID: {asset.internal_asset_id}</div>
                   </div>
                   <div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(asset.processing_stage)}`}>
-                      {getProcessingStageDisplay(asset.processing_stage)}
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(asset.status)}`}>
+                      {getProcessingStageDisplay(asset.status)}
                     </span>
                   </div>
                 </div>

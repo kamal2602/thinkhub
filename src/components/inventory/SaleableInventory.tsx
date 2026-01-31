@@ -8,7 +8,7 @@ interface Asset {
   serial_number: string;
   brand: string;
   model: string;
-  processing_stage: string;
+  status: string;
   cosmetic_grade: string;
   functional_status: string;
   status: string;
@@ -61,7 +61,7 @@ export function SaleableInventory() {
           purchase_lots(lot_number)
         `)
         .eq('company_id', selectedCompany?.id)
-        .ilike('processing_stage', 'ready')
+        .ilike('status', 'ready')
         .order('brand')
         .order('model');
 

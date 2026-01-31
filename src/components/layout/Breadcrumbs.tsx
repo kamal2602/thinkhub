@@ -52,6 +52,10 @@ export function Breadcrumbs({ currentPage, onNavigate }: BreadcrumbsProps) {
     const currentPageData = pageMapping[currentPage];
     if (!currentPageData) return breadcrumbs;
 
+    if (currentPage === 'dashboard') {
+      return breadcrumbs;
+    }
+
     if (currentPageData.parent) {
       const parentData = pageMapping[currentPageData.parent];
       if (parentData) {
@@ -74,7 +78,7 @@ export function Breadcrumbs({ currentPage, onNavigate }: BreadcrumbsProps) {
           const isFirst = index === 0;
 
           return (
-            <div key={crumb.page} className="flex items-center gap-2">
+            <div key={`${crumb.page}-${index}`} className="flex items-center gap-2">
               {index > 0 && <ChevronRight className="w-4 h-4 text-gray-400" />}
               {isFirst ? (
                 <button

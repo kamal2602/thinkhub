@@ -102,7 +102,7 @@ export function AssetDetails({ asset, onClose, onEdit }: AssetDetailsProps) {
   const { user } = useAuth();
   const { selectedCompany } = useCompany();
   const toast = useToast();
-  const [currentStage, setCurrentStage] = useState(asset.processing_stage || 'received');
+  const [currentStage, setCurrentStage] = useState(asset.status || 'received');
   const [assignedTechnician, setAssignedTechnician] = useState(asset.assigned_technician_id || '');
   const [isPriority, setIsPriority] = useState(asset.is_priority || false);
   const [processingNotes, setProcessingNotes] = useState(asset.processing_notes || '');
@@ -196,7 +196,7 @@ export function AssetDetails({ asset, onClose, onEdit }: AssetDetailsProps) {
 
   const fetchStages = async () => {
     const { data } = await supabase
-      .from('processing_stages')
+      .from('statuss')
       .select('*')
       .eq('company_id', selectedCompany?.id)
       .eq('is_active', true)
@@ -354,7 +354,7 @@ export function AssetDetails({ asset, onClose, onEdit }: AssetDetailsProps) {
     try {
       const { error } = await supabase
         .from('assets')
-        .update({ processing_stage: newStage })
+        .update({ status: newStage })
         .eq('id', asset.id);
 
       if (error) throw error;
@@ -472,8 +472,7 @@ export function AssetDetails({ asset, onClose, onEdit }: AssetDetailsProps) {
       const { error } = await supabase
         .from('assets')
         .update({
-          status: 'Scrapped',
-          processing_stage: 'scrapped',
+          status: 'scrapped',
           scrap_date: scrapData.scrap_date,
           scrap_reason: scrapData.scrap_reason,
           scrap_value: scrapValue

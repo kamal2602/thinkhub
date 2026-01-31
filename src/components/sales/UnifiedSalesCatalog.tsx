@@ -91,7 +91,7 @@ export function UnifiedSalesCatalog({ onAddToInvoice, selectedCustomerName }: Un
           status,
           product_type_id,
           cosmetic_grade,
-          processing_stage,
+          status,
           product_types!inner (
             id,
             name,
