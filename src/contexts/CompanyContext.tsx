@@ -36,15 +36,29 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
   const loadCompanies = async () => {
     try {
       const { data, error } = await supabase
-        .from('companies')
-        .select('id, name, type')
-        .order('name');
+        .from('user_company_access')
+        .select(`
+          company_id,
+          role,
+          companies (
+            id,
+            name,
+            type
+          )
+        `)
+        .eq('user_id', user?.id);
 
       if (error) throw error;
 
-      setCompanies(data || []);
-      if (data && data.length > 0 && !selectedCompany) {
-        setSelectedCompany(data[0]);
+      const companiesData = data?.map((access: any) => ({
+        id: access.companies.id,
+        name: access.companies.name,
+        type: access.companies.type
+      })) || [];
+
+      setCompanies(companiesData);
+      if (companiesData.length > 0 && !selectedCompany) {
+        setSelectedCompany(companiesData[0]);
       }
     } catch (error) {
       console.error('Error loading companies:', error);
