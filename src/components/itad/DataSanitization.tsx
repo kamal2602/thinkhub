@@ -7,7 +7,7 @@ import { useToast } from '../../contexts/ToastContext';
 
 interface Asset {
   id: string;
-  internal_asset_id: string;
+  internal_id: string;
   serial_number: string;
   brand: string;
   model: string;
@@ -93,7 +93,7 @@ export function DataSanitization() {
           *,
           assets (
             id,
-            internal_asset_id,
+            internal_id,
             serial_number,
             brand,
             model,
@@ -119,9 +119,9 @@ export function DataSanitization() {
     try {
       const { data, error } = await supabase
         .from('assets')
-        .select('id, internal_asset_id, serial_number, brand, model, product_type')
+        .select('id, internal_id, serial_number, brand, model, product_type')
         .eq('company_id', selectedCompany?.id)
-        .order('internal_asset_id', { ascending: true });
+        .order('internal_id', { ascending: true });
 
       if (error) throw error;
       setAssets(data || []);
@@ -217,7 +217,7 @@ export function DataSanitization() {
 
   const filteredRecords = records.filter(record => {
     const matchesSearch =
-      record.assets.internal_asset_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.assets.internal_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.assets.serial_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.assets.brand?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.assets.model?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -341,7 +341,7 @@ export function DataSanitization() {
                 <tr key={record.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
-                      {record.assets.internal_asset_id}
+                      {record.assets.internal_id}
                     </div>
                     <div className="text-sm text-gray-500">
                       {record.assets.serial_number}
@@ -438,7 +438,7 @@ export function DataSanitization() {
                     <option value="">Select Asset</option>
                     {assets.map(asset => (
                       <option key={asset.id} value={asset.id}>
-                        {asset.internal_asset_id} - {asset.serial_number} ({asset.brand} {asset.model})
+                        {asset.internal_id} - {asset.serial_number} ({asset.brand} {asset.model})
                       </option>
                     ))}
                   </select>
