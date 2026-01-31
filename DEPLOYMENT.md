@@ -1,8 +1,36 @@
-# DigitalOcean Deployment Guide
+# Deployment Guide
 
-This application is now configured for deployment on DigitalOcean App Platform.
+This application supports multiple environments (development, staging, production) and is configured for deployment on various platforms including DigitalOcean App Platform.
 
-## What's Been Configured
+## Environment Management
+
+### Environment Files
+
+The application uses separate environment files for different deployment stages:
+
+- `.env.development` - Local development (git-ignored)
+- `.env.staging` - Staging environment (git-ignored, optional)
+- `.env.production` - Production environment (git-ignored)
+- `.env.example` - Template file (committed to git)
+
+**First Time Setup:**
+```bash
+# Copy the example file
+cp .env.example .env.development
+
+# Add your Supabase credentials
+# Get them from: https://supabase.com/dashboard → Settings → API
+```
+
+### Build Commands
+
+- **Development:** `npm run dev` (uses `.env.development`)
+- **Staging Build:** `npm run build:staging` (uses `.env.staging`)
+- **Production Build:** `npm run build` (uses `.env.production`)
+
+## DigitalOcean App Platform
+
+### What's Been Configured
 
 1. **package.json** - Added `serve` package and `start` script that runs on port 8080
 2. **Procfile** - Specifies how to start the web process

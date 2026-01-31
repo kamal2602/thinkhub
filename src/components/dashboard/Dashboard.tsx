@@ -3,6 +3,11 @@ import { Package, DollarSign, TrendingUp, Building2, Activity, BarChart3, CheckC
 import { supabase } from '../../lib/supabase';
 import { useCompany } from '../../contexts/CompanyContext';
 import { DashboardWidgets } from './DashboardWidgets';
+import { dashboardService } from '../../services/dashboardService';
+import { AgingInventoryWidget } from './AgingInventoryWidget';
+import { ExceptionsWidget } from './ExceptionsWidget';
+import { TopSuppliersWidget } from './TopSuppliersWidget';
+import { TopCustomersWidget } from './TopCustomersWidget';
 
 interface DashboardStats {
   assetsInProcessing: number;
@@ -63,6 +68,12 @@ export function Dashboard() {
   const [topLots, setTopLots] = useState<LotPerformance[]>([]);
   const [recentActivity, setRecentActivity] = useState<ProcessingActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [enhancedMetrics, setEnhancedMetrics] = useState<{
+    agingInventory: { over30Days: number; over60Days: number; over90Days: number; };
+    exceptions: { duplicateSerials: number; stuckInProcessing: number; negativeStock: number; recentReturnsSpike: boolean; };
+    topSuppliers: Array<{ id: string; name: string; total_purchases: number; total_spent: number; }>;
+    topCustomers: Array<{ id: string; name: string; total_orders: number; total_revenue: number; }>;
+  } | null>(null);
 
   const isAdmin = selectedCompany?.role === 'admin' || selectedCompany?.role === 'manager';
 
@@ -233,6 +244,20 @@ export function Dashboard() {
 
       setTopLots(lotsData);
       setRecentActivity(activities);
+
+      if (isAdminRole && selectedCompany?.id) {
+        try {
+          const metrics = await dashboardService.getMetrics(selectedCompany.id);
+          setEnhancedMetrics({
+            agingInventory: metrics.agingInventory,
+            exceptions: metrics.exceptions,
+            topSuppliers: metrics.topSuppliers,
+            topCustomers: metrics.topCustomers
+          });
+        } catch (error) {
+          console.error('Error fetching enhanced metrics:', error);
+        }
+      }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -524,6 +549,15 @@ export function Dashboard() {
             )}
           </div>
         </div>
+
+        {isAdmin && enhancedMetrics && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <AgingInventoryWidget data={enhancedMetrics.agingInventory} />
+            <ExceptionsWidget exceptions={enhancedMetrics.exceptions} />
+            <TopSuppliersWidget suppliers={enhancedMetrics.topSuppliers} />
+            <TopCustomersWidget customers={enhancedMetrics.topCustomers} />
+          </div>
+        )}
 
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-8 text-white shadow-xl shadow-blue-500/20">
           <div className="flex items-center gap-6">

@@ -3,6 +3,7 @@ import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Download, X } from '
 import { supabase } from '../../lib/supabase';
 import { useCompany } from '../../contexts/CompanyContext';
 import { useToast } from '../../contexts/ToastContext';
+import { downloadAssetTemplate } from '../../lib/templateGenerator';
 
 interface BulkImportProps {
   onClose: () => void;
@@ -38,20 +39,6 @@ export function BulkImport({ onClose, onSuccess }: BulkImportProps) {
   const [importing, setImporting] = useState(false);
   const [parsedData, setParsedData] = useState<ParsedRow[]>([]);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
-
-  const downloadTemplate = () => {
-    const template = `Serial Number,Brand,Model,Processor,RAM,Storage,Screen,Graphics,OS,Cosmetic Grade,Functional Status,Purchase Price,Selling Price,Location,Status,Notes
-ABC12345,Dell,Latitude 5420,Intel i5-11th Gen,16GB DDR4,512GB NVMe SSD,14" FHD,Intel Iris Xe,Windows 11 Pro,A,Fully Working,850,1200,Warehouse A,In Stock,
-ABC12346,HP,EliteBook 840 G8,Intel i7-11th Gen,32GB DDR4,1TB NVMe SSD,14" FHD,Intel Iris Xe,Windows 11 Pro,B,Fully Working,1200,1800,Warehouse B,In Stock,Minor scratch`;
-
-    const blob = new Blob([template], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'bulk_import_template.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -291,11 +278,11 @@ ABC12346,HP,EliteBook 840 G8,Intel i7-11th Gen,32GB DDR4,1TB NVMe SSD,14" FHD,In
               <li>Upload the completed CSV file below</li>
             </ol>
             <button
-              onClick={downloadTemplate}
+              onClick={downloadAssetTemplate}
               className="mt-3 flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
             >
               <Download className="w-4 h-4" />
-              Download Template
+              Download Excel Template
             </button>
           </div>
 

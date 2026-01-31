@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Upload, X, ArrowRight, Save, RefreshCw, Plus, AlertTriangle, Lock, Edit2, Zap } from 'lucide-react';
+import { Upload, X, ArrowRight, Save, RefreshCw, Plus, AlertTriangle, Lock, Edit2, Zap, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { supabase } from '../../lib/supabase';
 import { useCompany } from '../../contexts/CompanyContext';
@@ -11,6 +11,7 @@ import { isPassthroughSpec } from '../../lib/passthroughFields';
 import { EntityNormalizationService, EntityGroup, NormalizationDecision, NormalizedMapping } from '../../lib/entityNormalization';
 import EntityNormalizationModal from '../common/EntityNormalizationModal';
 import { CANONICAL_FIELDS, CORE_FIELDS, SPEC_FIELDS, type CanonicalField } from '../../lib/canonicalFields';
+import { downloadPOTemplate } from '../../lib/templateGenerator';
 
 interface SmartPOImportProps {
   supplierId?: string;
@@ -914,6 +915,19 @@ export function SmartPOImport({ supplierId, onClose, onImport }: SmartPOImportPr
                 <p className="text-xs text-gray-400 mt-1">
                   Any column format accepted - we'll help you map them
                 </p>
+
+                <button
+                  onClick={downloadPOTemplate}
+                  className="mt-6 inline-flex items-center gap-2 px-4 py-2 border-2 border-blue-200 text-blue-700 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors font-medium"
+                  type="button"
+                >
+                  <Download className="w-4 h-4" />
+                  Download Sample Template
+                </button>
+                <p className="text-xs text-gray-500 mt-2">
+                  Not sure what format to use? Download our template with examples
+                </p>
+
                 {loading && (
                   <div className="mt-4">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
