@@ -57,7 +57,7 @@ const SOFTWARE_OPTIONS = [
 ];
 
 export function DataSanitization() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { selectedCompany } = useCompany();
   const { showToast } = useToast();
   const [records, setRecords] = useState<SanitizationRecord[]>([]);
