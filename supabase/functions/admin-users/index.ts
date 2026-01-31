@@ -162,6 +162,22 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    if (path.includes('/reset-password') && req.method === 'POST') {
+      const body: { userId: string; newPassword: string } = await req.json();
+
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(
+        body.userId,
+        { password: body.newPassword }
+      );
+
+      if (error) throw error;
+
+      return new Response(
+        JSON.stringify({ success: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     return new Response(
       JSON.stringify({ error: 'Not found' }),
       { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

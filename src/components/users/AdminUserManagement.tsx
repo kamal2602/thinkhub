@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Plus, Trash2, Building2 } from 'lucide-react';
+import { Shield, Plus, Trash2, Building2, Key } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../lib/database.types';
@@ -47,6 +47,10 @@ export function AdminUserManagement() {
   });
   const [createError, setCreateError] = useState('');
   const [creating, setCreating] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordResetUser, setPasswordResetUser] = useState<User | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [resettingPassword, setResettingPassword] = useState(false);
 
   useEffect(() => {
     if (isSuperAdmin || userRole === 'admin') {
@@ -260,6 +264,55 @@ export function AdminUserManagement() {
     }
   };
 
+  const openPasswordModal = (targetUser: User) => {
+    setPasswordResetUser(targetUser);
+    setNewPassword('');
+    setShowPasswordModal(true);
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passwordResetUser || !newPassword) return;
+
+    if (newPassword.length < 6) {
+      alert('Password must be at least 6 characters long');
+      return;
+    }
+
+    setResettingPassword(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-users/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: passwordResetUser.id,
+          newPassword: newPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to reset password');
+      }
+
+      alert(`Password reset successfully for ${passwordResetUser.email}!\n\nNew Password: ${newPassword}\n\nPlease share this with the user.`);
+      setShowPasswordModal(false);
+      setPasswordResetUser(null);
+      setNewPassword('');
+    } catch (error: any) {
+      alert('Error resetting password: ' + error.message);
+    } finally {
+      setResettingPassword(false);
+    }
+  };
+
   if (!isSuperAdmin && userRole !== 'admin') {
     return (
       <div className="p-6">
@@ -324,13 +377,20 @@ export function AdminUserManagement() {
                   {new Date(listUser.created_at).toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4 text-sm">
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <button
                       onClick={() => openAccessModal(listUser)}
                       className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
                     >
                       <Building2 className="w-4 h-4" />
                       Manage Access
+                    </button>
+                    <button
+                      onClick={() => openPasswordModal(listUser)}
+                      className="text-purple-600 hover:text-purple-800 flex items-center gap-1"
+                    >
+                      <Key className="w-4 h-4" />
+                      Reset Password
                     </button>
                     {isSuperAdmin && (
                       <button
@@ -572,6 +632,64 @@ export function AdminUserManagement() {
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {creating ? 'Creating...' : 'Create User'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showPasswordModal && passwordResetUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Key className="w-6 h-6 text-purple-600" />
+              Reset Password
+            </h2>
+
+            <p className="text-gray-600 mb-4">
+              Reset password for: <strong>{passwordResetUser.email}</strong>
+            </p>
+
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  New Password
+                </label>
+                <input
+                  type="text"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Enter new password (min 6 characters)"
+                  autoFocus
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  The password will be shown in a popup after reset
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPasswordModal(false);
+                    setPasswordResetUser(null);
+                    setNewPassword('');
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                  disabled={resettingPassword}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={resettingPassword || newPassword.length < 6}
+                  className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {resettingPassword ? 'Resetting...' : 'Reset Password'}
                 </button>
               </div>
             </form>
