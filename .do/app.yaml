@@ -1,0 +1,16 @@
+name: stockpro-app
+services:
+  - name: web
+    github:
+      branch: main
+      deploy_on_push: true
+    build_command: npm install && npm run build
+    run_command: npm start
+    http_port: 8080
+    environment_slug: node-js
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    envs:
+      - key: NODE_ENV
+        scope: RUN_TIME
+        value: "production"
