@@ -1,4 +1,4 @@
-import { CheckCircle, Circle, ArrowRight } from 'lucide-react';
+import { CheckCircle, Circle } from 'lucide-react';
 
 interface ITADProjectProgressProps {
   currentStatus: string;
@@ -52,7 +52,6 @@ export function ITADProjectProgress({ currentStatus, size = 'md' }: ITADProjectP
         {ITAD_STAGES.map((stage, index) => {
           const isCompleted = index < currentStageIndex;
           const isCurrent = index === currentStageIndex;
-          const isPending = index > currentStageIndex;
 
           return (
             <div key={stage.key} className="flex items-center flex-1">
