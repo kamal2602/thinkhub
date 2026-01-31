@@ -31,10 +31,12 @@ export function DashboardPage() {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'processing', label: 'Processing', icon: Package },
+    { id: 'itad-projects', label: 'ITAD Projects', icon: Package },
     { id: 'data-sanitization', label: 'Data Sanitization', icon: Shield },
     { id: 'certificates', label: 'Certificates', icon: FileText },
     { id: 'downstream-vendors', label: 'Downstream Vendors', icon: Award },
-    { id: 'company-certifications', label: 'Certifications', icon: SettingsIcon },
+    { id: 'environmental-compliance', label: 'Environmental', icon: Award },
+    { id: 'company-certifications', label: 'Company Certifications', icon: SettingsIcon },
   ];
 
   return (
