@@ -19,7 +19,8 @@ import {
   Wrench,
   Award,
   Truck,
-  Edit3
+  Edit3,
+  Gavel
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -99,6 +100,7 @@ export function AppBar({ currentPage, onNavigate }: AppBarProps) {
       pages: [
         { name: 'Sales Invoices', page: 'sales' },
         { name: 'Component Sales', page: 'component-sales' },
+        { name: 'Auctions', page: 'auctions', roles: ['admin', 'manager'] },
         { name: 'Customers', page: 'customers' },
         { name: 'Returns', page: 'returns' },
         { name: 'Repairs', page: 'repairs' },
@@ -112,6 +114,7 @@ export function AppBar({ currentPage, onNavigate }: AppBarProps) {
       roles: ['admin', 'manager'],
       pages: [
         { name: 'ITAD Projects', page: 'itad-projects' },
+        { name: 'Revenue Settlements', page: 'itad-revenue-settlements', roles: ['admin', 'manager'] },
         { name: 'Data Sanitization', page: 'data-sanitization' },
         { name: 'ITAD Certificates', page: 'certificates' },
         { name: 'Downstream Vendors', page: 'downstream-vendors' },

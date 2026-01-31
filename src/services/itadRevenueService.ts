@@ -260,7 +260,7 @@ export const itadRevenueService = {
       .in('status', ['harvested', 'scrapped']);
 
     const serviceFeeAmount = project.service_fee || 0;
-    const revenueShar ePercentage = project.revenue_share_percentage || 0;
+    const revenueSharePercentage = project.revenue_share_percentage || 0;
     const revenueShareThreshold = project.revenue_share_threshold || 0;
 
     const revenueSubjectToSharing = Math.max(0, revenue.totalRevenue - revenueShareThreshold);

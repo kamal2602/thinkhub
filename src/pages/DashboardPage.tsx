@@ -41,6 +41,8 @@ import { DownstreamVendors } from '../components/itad/DownstreamVendors';
 import { Repairs } from '../components/repairs/Repairs';
 import { CompanyCertifications } from '../components/settings/CompanyCertifications';
 import { AssetBulkUpdate } from '../components/processing/AssetBulkUpdate';
+import { AuctionManagement } from '../components/auctions/AuctionManagement';
+import { ITADRevenueSettlements } from '../components/itad/ITADRevenueSettlements';
 import { useCompany } from '../contexts/CompanyContext';
 import { useAuth } from '../contexts/AuthContext';
 import { CommandPalette } from '../components/common/CommandPalette';
@@ -134,6 +136,8 @@ export function DashboardPage() {
         {currentPage === 'certificates' && <Certificates />}
         {currentPage === 'downstream-vendors' && <DownstreamVendors />}
         {currentPage === 'environmental-compliance' && <EnvironmentalCompliance />}
+        {currentPage === 'auctions' && <AuctionManagement />}
+        {currentPage === 'itad-revenue-settlements' && <ITADRevenueSettlements />}
       </main>
     </div>
   );
