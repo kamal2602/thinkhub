@@ -37,6 +37,10 @@ import { DataSanitization } from '../components/itad/DataSanitization';
 import { Certificates } from '../components/itad/Certificates';
 import { EnvironmentalCompliance } from '../components/itad/EnvironmentalCompliance';
 import { ITADProjects } from '../components/itad/ITADProjects';
+import { DownstreamVendors } from '../components/itad/DownstreamVendors';
+import { Repairs } from '../components/repairs/Repairs';
+import { CompanyCertifications } from '../components/settings/CompanyCertifications';
+import { AssetBulkUpdate } from '../components/processing/AssetBulkUpdate';
 import { useCompany } from '../contexts/CompanyContext';
 import { useAuth } from '../contexts/AuthContext';
 import { CommandPalette } from '../components/common/CommandPalette';
@@ -94,6 +98,7 @@ export function DashboardPage() {
       <main className="flex-1 overflow-y-auto">
         {currentPage === 'dashboard' && <Dashboard />}
         {currentPage === 'processing' && <Processing />}
+        {currentPage === 'asset-bulk-update' && <AssetBulkUpdate />}
         {currentPage === 'product-types' && <ProductTypes />}
         {currentPage === 'purchase-lots' && <PurchaseLots />}
         {currentPage === 'saleable-inventory' && <SaleableInventory />}
@@ -110,6 +115,7 @@ export function DashboardPage() {
         {currentPage === 'sales-catalog' && <UnifiedSalesCatalog />}
         {currentPage === 'sales' && <SalesInvoices />}
         {currentPage === 'returns' && <Returns />}
+        {currentPage === 'repairs' && <Repairs />}
         {currentPage === 'reports' && <Reports />}
         {currentPage === 'grades-conditions' && <GradesConditions />}
         {currentPage === 'payment-terms' && <PaymentTerms />}
@@ -120,12 +126,13 @@ export function DashboardPage() {
         {currentPage === 'model-aliases' && <ModelAliases />}
         {currentPage === 'product-type-aliases' && <ProductTypes initialTab="all-aliases" />}
         {currentPage === 'component-market-prices' && <ComponentMarketPrices />}
+        {currentPage === 'company-certifications' && <CompanyCertifications />}
         {currentPage === 'component-sales' && <ComponentSales />}
         {currentPage === 'processing-stages' && <ProcessingStages />}
         {currentPage === 'data-sanitization' && <DataSanitization />}
         {currentPage === 'itad-projects' && <ITADProjects />}
-        {currentPage === 'data-sanitization' && <DataSanitization />}
         {currentPage === 'certificates' && <Certificates />}
+        {currentPage === 'downstream-vendors' && <DownstreamVendors />}
         {currentPage === 'environmental-compliance' && <EnvironmentalCompliance />}
       </main>
     </div>

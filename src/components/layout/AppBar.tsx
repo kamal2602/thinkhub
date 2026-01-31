@@ -15,7 +15,11 @@ import {
   Settings,
   Grid3x3,
   Building2,
-  Shield
+  Shield,
+  Wrench,
+  Award,
+  Truck,
+  Edit3
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -56,6 +60,7 @@ export function AppBar({ currentPage, onNavigate }: AppBarProps) {
       roles: ['admin', 'manager', 'technician'],
       pages: [
         { name: 'Processing Dashboard', page: 'processing' },
+        { name: 'Asset Bulk Update', page: 'asset-bulk-update', roles: ['admin', 'manager'] },
         { name: 'Processing Stages', page: 'processing-stages', roles: ['admin', 'manager'] },
       ]
     },
@@ -96,6 +101,7 @@ export function AppBar({ currentPage, onNavigate }: AppBarProps) {
         { name: 'Component Sales', page: 'component-sales' },
         { name: 'Customers', page: 'customers' },
         { name: 'Returns', page: 'returns' },
+        { name: 'Repairs', page: 'repairs' },
       ]
     },
     {
@@ -108,6 +114,7 @@ export function AppBar({ currentPage, onNavigate }: AppBarProps) {
         { name: 'ITAD Projects', page: 'itad-projects' },
         { name: 'Data Sanitization', page: 'data-sanitization' },
         { name: 'ITAD Certificates', page: 'certificates' },
+        { name: 'Downstream Vendors', page: 'downstream-vendors' },
         { name: 'Environmental Compliance', page: 'environmental-compliance' },
       ]
     },
@@ -138,6 +145,7 @@ export function AppBar({ currentPage, onNavigate }: AppBarProps) {
         { name: 'Import Field Mappings', page: 'import-field-mappings' },
         { name: 'Import Intelligence', page: 'import-intelligence' },
         { name: 'Model Normalization', page: 'model-aliases' },
+        { name: 'Company Certifications', page: 'company-certifications', roles: ['admin'] },
         { name: 'Companies', page: 'companies' },
         { name: 'Users', page: 'users', roles: ['admin'] },
       ]
