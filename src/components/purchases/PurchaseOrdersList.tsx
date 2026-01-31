@@ -5,6 +5,7 @@ import { useCompany } from '../../contexts/CompanyContext';
 import { useToast } from '../../contexts/ToastContext';
 import { PurchaseOrderForm } from './PurchaseOrderForm';
 import { checkPOReceivingStatus } from '../../lib/purchaseOrderUtils';
+import { SourceTypeBadge } from '../common/SourceTypeBadge';
 
 interface PO {
   id: string;
@@ -15,9 +16,20 @@ interface PO {
   total_amount: number;
   total_items_ordered: number;
   total_items_received: number;
+  purchase_lot_id?: string;
+  itad_project_id?: string;
   suppliers: {
     name: string;
   };
+  itad_projects?: {
+    project_number: string;
+    customers: {
+      name: string;
+    };
+  } | null;
+  purchase_lots?: {
+    lot_number: string;
+  } | null;
 }
 
 export function PurchaseOrdersList() {
@@ -43,7 +55,9 @@ export function PurchaseOrdersList() {
         .from('purchase_orders')
         .select(`
           *,
-          suppliers(name)
+          suppliers(name),
+          itad_projects(project_number, customers(name)),
+          purchase_lots(lot_number)
         `)
         .eq('company_id', selectedCompany?.id)
         .order('created_at', { ascending: false });
@@ -275,6 +289,7 @@ export function PurchaseOrdersList() {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">PO Number</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Type</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Supplier</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Order Date</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Expected</th>
@@ -285,15 +300,36 @@ export function PurchaseOrdersList() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {pos.map((po) => (
-                <tr key={po.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">
-                    <span className="font-medium text-gray-900">{po.po_number}</span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-700">{po.suppliers?.name}</td>
-                  <td className="px-4 py-3 text-gray-700">
-                    {new Date(po.order_date).toLocaleDateString()}
-                  </td>
+              {pos.map((po) => {
+                const poType = po.itad_project_id ? 'itad' : po.purchase_lot_id ? 'lot' : 'resell';
+                const displayName = po.itad_project_id
+                  ? po.itad_projects?.customers?.name || 'ITAD Customer'
+                  : po.suppliers?.name;
+
+                return (
+                  <tr key={po.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium text-gray-900">{po.po_number}</span>
+                        {po.itad_project_id && po.itad_projects && (
+                          <span className="text-xs text-gray-500">
+                            Project: {po.itad_projects.project_number}
+                          </span>
+                        )}
+                        {po.purchase_lot_id && po.purchase_lots && (
+                          <span className="text-xs text-gray-500">
+                            Lot: {po.purchase_lots.lot_number}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <SourceTypeBadge type={poType} size="sm" />
+                    </td>
+                    <td className="px-4 py-3 text-gray-700">{displayName}</td>
+                    <td className="px-4 py-3 text-gray-700">
+                      {new Date(po.order_date).toLocaleDateString()}
+                    </td>
                   <td className="px-4 py-3 text-gray-700">
                     {po.expected_delivery_date
                       ? new Date(po.expected_delivery_date).toLocaleDateString()
@@ -354,7 +390,8 @@ export function PurchaseOrdersList() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
