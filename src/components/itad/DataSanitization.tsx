@@ -11,7 +11,6 @@ interface Asset {
   serial_number: string;
   brand: string;
   model: string;
-  product_type: string;
 }
 
 interface SanitizationRecord {
@@ -96,8 +95,7 @@ export function DataSanitization() {
             internal_asset_id,
             serial_number,
             brand,
-            model,
-            product_type
+            model
           ),
           profiles (
             email
@@ -119,7 +117,7 @@ export function DataSanitization() {
     try {
       const { data, error } = await supabase
         .from('assets')
-        .select('id, internal_asset_id, serial_number, brand, model, product_type')
+        .select('id, internal_asset_id, serial_number, brand, model')
         .eq('company_id', selectedCompany?.id)
         .order('internal_asset_id', { ascending: true });
 
