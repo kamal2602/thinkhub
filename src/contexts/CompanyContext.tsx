@@ -1,11 +1,13 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
+import { UserRole } from '../lib/database.types';
 
 interface Company {
   id: string;
   name: string;
-  type: string;
+  description: string;
+  role: UserRole;
 }
 
 interface CompanyContextType {
@@ -13,62 +15,99 @@ interface CompanyContextType {
   selectedCompany: Company | null;
   setSelectedCompany: (company: Company | null) => void;
   loading: boolean;
+  refreshCompanies: () => Promise<void>;
 }
 
 const CompanyContext = createContext<CompanyContextType | undefined>(undefined);
 
-export function CompanyProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+export function CompanyProvider({ children }: { children: ReactNode }) {
+  const { user, isSuperAdmin } = useAuth();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      loadCompanies();
-    } else {
+  const fetchCompanies = async () => {
+    if (!user) {
       setCompanies([]);
       setSelectedCompany(null);
       setLoading(false);
+      return;
     }
-  }, [user]);
 
-  const loadCompanies = async () => {
     try {
-      const { data, error } = await supabase
-        .from('user_company_access')
-        .select(`
-          company_id,
-          role,
-          companies (
-            id,
-            name,
-            type
-          )
-        `)
-        .eq('user_id', user?.id);
+      let companiesList: Company[] = [];
 
-      if (error) throw error;
+      if (isSuperAdmin) {
+        const { data: allCompanies, error: companiesError } = await supabase
+          .from('companies')
+          .select('id, name, description')
+          .order('name');
 
-      const companiesData = data?.map((access: any) => ({
-        id: access.companies.id,
-        name: access.companies.name,
-        type: access.companies.type
-      })) || [];
+        if (companiesError) throw companiesError;
 
-      setCompanies(companiesData);
-      if (companiesData.length > 0 && !selectedCompany) {
-        setSelectedCompany(companiesData[0]);
+        companiesList = (allCompanies || []).map((company: any) => ({
+          id: company.id,
+          name: company.name,
+          description: company.description || '',
+          role: 'admin' as UserRole,
+        }));
+      } else {
+        const { data: accessData, error: accessError } = await supabase
+          .from('user_company_access')
+          .select('company_id, role, companies(id, name, description)')
+          .eq('user_id', user.id);
+
+        if (accessError) throw accessError;
+
+        companiesList = (accessData || []).map((access: any) => ({
+          id: access.companies.id,
+          name: access.companies.name,
+          description: access.companies.description,
+          role: access.role as UserRole,
+        }));
+      }
+
+      setCompanies(companiesList);
+
+      if (companiesList.length > 0 && !selectedCompany) {
+        const savedCompanyId = localStorage.getItem('selectedCompanyId');
+        const company = savedCompanyId
+          ? companiesList.find(c => c.id === savedCompanyId) || companiesList[0]
+          : companiesList[0];
+        setSelectedCompany(company);
       }
     } catch (error) {
-      console.error('Error loading companies:', error);
+      console.error('Error fetching companies:', error);
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchCompanies();
+  }, [user, isSuperAdmin]);
+
+  useEffect(() => {
+    if (selectedCompany) {
+      localStorage.setItem('selectedCompanyId', selectedCompany.id);
+    }
+  }, [selectedCompany]);
+
+  const refreshCompanies = async () => {
+    setLoading(true);
+    await fetchCompanies();
+  };
+
   return (
-    <CompanyContext.Provider value={{ companies, selectedCompany, setSelectedCompany, loading }}>
+    <CompanyContext.Provider
+      value={{
+        companies,
+        selectedCompany,
+        setSelectedCompany,
+        loading,
+        refreshCompanies,
+      }}
+    >
       {children}
     </CompanyContext.Provider>
   );

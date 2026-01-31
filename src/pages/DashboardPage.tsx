@@ -1,83 +1,131 @@
-import { useState } from 'react';
-import { useCompany } from '../contexts/CompanyContext';
+import { useState, useEffect } from 'react';
+import { AppBar } from '../components/layout/AppBar';
+import { Breadcrumbs } from '../components/layout/Breadcrumbs';
+import { SearchBar } from '../components/layout/SearchBar';
+import { Header } from '../components/layout/Header';
 import { Dashboard } from '../components/dashboard/Dashboard';
 import { Processing } from '../components/processing/Processing';
+import { ProductTypes } from '../components/product-types/ProductTypes';
+import { PurchaseLots } from '../components/purchase-lots/PurchaseLots';
+import { Inventory } from '../components/inventory/Inventory';
+import { SaleableInventory } from '../components/inventory/SaleableInventory';
+import HarvestedComponentsEnhanced from '../components/inventory/HarvestedComponentsEnhanced';
+import { StockMovements } from '../components/movements/StockMovements';
+import { Locations } from '../components/locations/Locations';
+import { Companies } from '../components/companies/Companies';
+import { Users } from '../components/users/Users';
+import { AdminUserManagement } from '../components/users/AdminUserManagement';
+import { Suppliers } from '../components/suppliers/Suppliers';
+import { Customers } from '../components/customers/Customers';
+import { PurchaseOrdersList } from '../components/purchases/PurchaseOrdersList';
+import SmartReceivingWorkflow from '../components/receiving/SmartReceivingWorkflow';
+import { SalesInvoices } from '../components/sales/SalesInvoices';
+import { UnifiedSalesCatalog } from '../components/sales/UnifiedSalesCatalog';
+import { Returns } from '../components/returns/Returns';
+import { Reports } from '../components/reports/Reports';
+import { GradesConditions } from '../components/settings/GradesConditions';
+import { PaymentTerms } from '../components/settings/PaymentTerms';
+import { ReturnReasons } from '../components/settings/ReturnReasons';
+import { WarrantyTypes } from '../components/settings/WarrantyTypes';
+import { ImportFieldMappings } from '../components/settings/ImportFieldMappings';
+import { ImportIntelligence } from '../components/settings/ImportIntelligence';
+import { ModelAliases } from '../components/settings/ModelAliases';
+import ComponentMarketPrices from '../components/settings/ComponentMarketPrices';
+import ComponentSales from '../components/inventory/ComponentSales';
+import ProcessingStages from '../components/settings/ProcessingStages';
 import { DataSanitization } from '../components/itad/DataSanitization';
 import { Certificates } from '../components/itad/Certificates';
-import { DownstreamVendors } from '../components/itad/DownstreamVendors';
-import { CompanyCertifications } from '../components/settings/CompanyCertifications';
-import { ITADProjects } from '../components/itad/ITADProjects';
 import { EnvironmentalCompliance } from '../components/itad/EnvironmentalCompliance';
+import { ITADProjects } from '../components/itad/ITADProjects';
+import { useCompany } from '../contexts/CompanyContext';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Menu, X, Home, Package, Shield, FileText, Award, Settings as SettingsIcon } from 'lucide-react';
+import { CommandPalette } from '../components/common/CommandPalette';
 
 export function DashboardPage() {
   const [currentPage, setCurrentPage] = useState('dashboard');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const { signOut } = useAuth();
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const { selectedCompany, loading } = useCompany();
+  const { isSuperAdmin } = useAuth();
 
-  const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home },
-    { id: 'processing', label: 'Processing', icon: Package },
-    { id: 'itad-projects', label: 'ITAD Projects', icon: Package },
-    { id: 'data-sanitization', label: 'Data Sanitization', icon: Shield },
-    { id: 'certificates', label: 'Certificates', icon: FileText },
-    { id: 'downstream-vendors', label: 'Downstream Vendors', icon: Award },
-    { id: 'environmental-compliance', label: 'Environmental', icon: Award },
-    { id: 'company-certifications', label: 'Company Certifications', icon: SettingsIcon },
-  ];
+  useEffect(() => {
+    if (!loading && !selectedCompany) {
+      setCurrentPage('companies');
+    } else if (!loading && selectedCompany && currentPage === 'companies') {
+      setCurrentPage('dashboard');
+    }
+  }, [loading, selectedCompany]);
 
-  return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-white border-r border-gray-200 transition-all duration-300 flex flex-col`}>
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-          {sidebarOpen && <h1 className="text-xl font-bold text-gray-900">Asset Manager</h1>}
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-lg hover:bg-gray-100">
-            {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-        </div>
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCommandPaletteOpen(true);
+      }
+    };
 
-        <nav className="flex-1 p-4 space-y-1">
-          {menuItems.map(item => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setCurrentPage(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                  currentPage === item.id
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <Icon className="w-5 h-5 flex-shrink-0" />
-                {sidebarOpen && <span>{item.label}</span>}
-              </button>
-            );
-          })}
-        </nav>
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
-        <div className="p-4 border-t border-gray-200">
-          <button
-            onClick={signOut}
-            className="w-full flex items-center gap-3 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <LogOut className="w-5 h-5 flex-shrink-0" />
-            {sidebarOpen && <span>Sign Out</span>}
-          </button>
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
+    );
+  }
 
-      {/* Main Content */}
+  return (
+    <div className="flex flex-col h-screen bg-gray-50">
+      <AppBar currentPage={currentPage} onNavigate={setCurrentPage} />
+      <Header />
+      <Breadcrumbs currentPage={currentPage} onNavigate={setCurrentPage} />
+      <SearchBar currentPage={currentPage} onNavigate={setCurrentPage} />
+
+      <CommandPalette
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onNavigate={(page) => setCurrentPage(page.replace('/', ''))}
+      />
+
       <main className="flex-1 overflow-y-auto">
         {currentPage === 'dashboard' && <Dashboard />}
         {currentPage === 'processing' && <Processing />}
+        {currentPage === 'product-types' && <ProductTypes />}
+        {currentPage === 'purchase-lots' && <PurchaseLots />}
+        {currentPage === 'saleable-inventory' && <SaleableInventory />}
+        {currentPage === 'inventory' && <Inventory />}
+        {currentPage === 'harvested-components' && <HarvestedComponentsEnhanced />}
+        {currentPage === 'suppliers' && <Suppliers />}
+        {currentPage === 'customers' && <Customers />}
+        {currentPage === 'movements' && <StockMovements />}
+        {currentPage === 'locations' && <Locations />}
+        {currentPage === 'companies' && <Companies />}
+        {currentPage === 'users' && (isSuperAdmin ? <AdminUserManagement /> : <Users />)}
+        {currentPage === 'purchases' && <PurchaseOrdersList />}
+        {currentPage === 'smart-receiving' && <SmartReceivingWorkflow />}
+        {currentPage === 'sales-catalog' && <UnifiedSalesCatalog />}
+        {currentPage === 'sales' && <SalesInvoices />}
+        {currentPage === 'returns' && <Returns />}
+        {currentPage === 'reports' && <Reports />}
+        {currentPage === 'grades-conditions' && <GradesConditions />}
+        {currentPage === 'payment-terms' && <PaymentTerms />}
+        {currentPage === 'return-reasons' && <ReturnReasons />}
+        {currentPage === 'warranty-types' && <WarrantyTypes />}
+        {currentPage === 'import-field-mappings' && <ImportFieldMappings />}
+        {currentPage === 'import-intelligence' && <ImportIntelligence />}
+        {currentPage === 'model-aliases' && <ModelAliases />}
+        {currentPage === 'product-type-aliases' && <ProductTypes initialTab="all-aliases" />}
+        {currentPage === 'component-market-prices' && <ComponentMarketPrices />}
+        {currentPage === 'component-sales' && <ComponentSales />}
+        {currentPage === 'processing-stages' && <ProcessingStages />}
+        {currentPage === 'data-sanitization' && <DataSanitization />}
+        {currentPage === 'itad-projects' && <ITADProjects />}
         {currentPage === 'data-sanitization' && <DataSanitization />}
         {currentPage === 'certificates' && <Certificates />}
-        {currentPage === 'downstream-vendors' && <DownstreamVendors />}
-        {currentPage === 'company-certifications' && <CompanyCertifications />}
-        {currentPage === 'itad-projects' && <ITADProjects />}
         {currentPage === 'environmental-compliance' && <EnvironmentalCompliance />}
       </main>
     </div>
