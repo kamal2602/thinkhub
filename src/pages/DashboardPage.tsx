@@ -39,11 +39,9 @@ import { EnvironmentalCompliance } from '../components/itad/EnvironmentalComplia
 import { ITADProjects } from '../components/itad/ITADProjects';
 import { useCompany } from '../contexts/CompanyContext';
 import { useAuth } from '../contexts/AuthContext';
-import { CommandPalette } from '../components/common/CommandPalette';
 
 export function DashboardPage() {
   const [currentPage, setCurrentPage] = useState('dashboard');
-  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const { selectedCompany, loading } = useCompany();
   const { isSuperAdmin } = useAuth();
 
@@ -54,18 +52,6 @@ export function DashboardPage() {
       setCurrentPage('dashboard');
     }
   }, [loading, selectedCompany]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setCommandPaletteOpen(true);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
   if (loading) {
     return (
@@ -84,13 +70,6 @@ export function DashboardPage() {
       <Header />
       <Breadcrumbs currentPage={currentPage} onNavigate={setCurrentPage} />
       <SearchBar currentPage={currentPage} onNavigate={setCurrentPage} />
-
-      <CommandPalette
-        isOpen={commandPaletteOpen}
-        onClose={() => setCommandPaletteOpen(false)}
-        onNavigate={(page) => setCurrentPage(page.replace('/', ''))}
-      />
-
       <main className="flex-1 overflow-y-auto">
         {currentPage === 'dashboard' && <Dashboard />}
         {currentPage === 'processing' && <Processing />}

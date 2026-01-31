@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Save, Plus, AlertTriangle, Package, Wrench, DollarSign, Calendar, FileText, Shield } from 'lucide-react';
+import { ArrowLeft, Save, Plus, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useCompany } from '../../contexts/CompanyContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -18,7 +18,6 @@ export function AssetForm({ asset, onClose }: AssetFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [duplicateWarning, setDuplicateWarning] = useState('');
-  const [activeTab, setActiveTab] = useState<'basic' | 'specs' | 'pricing' | 'dates' | 'compliance' | 'notes'>('basic');
 
   const [productTypes, setProductTypes] = useState<any[]>([]);
   const [locations, setLocations] = useState<any[]>([]);
@@ -272,35 +271,7 @@ export function AssetForm({ asset, onClose }: AssetFormProps) {
         </div>
       )}
 
-      <div className="mb-6 border-b border-gray-200">
-        <div className="flex gap-1 overflow-x-auto">
-          {[
-            { key: 'basic', label: 'Basic Info', icon: Package },
-            { key: 'specs', label: 'Specifications', icon: Wrench },
-            { key: 'pricing', label: 'Pricing', icon: DollarSign },
-            { key: 'dates', label: 'Dates & Warranty', icon: Calendar },
-            { key: 'compliance', label: 'Compliance', icon: Shield },
-            { key: 'notes', label: 'Notes', icon: FileText },
-          ].map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setActiveTab(key as any)}
-              className={`flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm transition whitespace-nowrap ${
-                activeTab === key
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       <form onSubmit={handleSubmit} className="space-y-6">
-        {activeTab === 'basic' && (
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -381,9 +352,7 @@ export function AssetForm({ asset, onClose }: AssetFormProps) {
             </div>
           </div>
         </div>
-        )}
 
-        {activeTab === 'specs' && (
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Specifications</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -446,8 +415,10 @@ export function AssetForm({ asset, onClose }: AssetFormProps) {
               />
             </div>
           </div>
+        </div>
 
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 mt-6">Condition & Status</h2>
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Condition & Status</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Cosmetic Grade</label>
@@ -517,9 +488,7 @@ export function AssetForm({ asset, onClose }: AssetFormProps) {
             </div>
           </div>
         </div>
-        )}
 
-        {activeTab === 'pricing' && (
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Pricing</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -555,9 +524,7 @@ export function AssetForm({ asset, onClose }: AssetFormProps) {
             </div>
           </div>
         </div>
-        )}
 
-        {activeTab === 'dates' && (
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Warranty & Dates</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -599,9 +566,7 @@ export function AssetForm({ asset, onClose }: AssetFormProps) {
             </div>
           </div>
         </div>
-        )}
 
-        {activeTab === 'compliance' && (
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Environmental / ITAD Compliance</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -732,9 +697,7 @@ export function AssetForm({ asset, onClose }: AssetFormProps) {
             </div>
           </div>
         </div>
-        )}
 
-        {activeTab === 'notes' && (
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Notes</h2>
           <textarea
@@ -745,7 +708,6 @@ export function AssetForm({ asset, onClose }: AssetFormProps) {
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
-        )}
 
         <div className="flex gap-3">
           <button
