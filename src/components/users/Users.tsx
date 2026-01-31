@@ -52,6 +52,8 @@ export function Users() {
 
   const fetchData = async () => {
     try {
+      console.log('Fetching users for company:', selectedCompany?.id);
+
       const [usersRes, locationsRes] = await Promise.all([
         supabase
           .from('user_company_access')
@@ -68,13 +70,24 @@ export function Users() {
           .order('name'),
       ]);
 
-      if (usersRes.error) throw usersRes.error;
-      if (locationsRes.error) throw locationsRes.error;
+      console.log('Users response:', usersRes);
+      console.log('Locations response:', locationsRes);
 
+      if (usersRes.error) {
+        console.error('Users query error:', usersRes.error);
+        throw usersRes.error;
+      }
+      if (locationsRes.error) {
+        console.error('Locations query error:', locationsRes.error);
+        throw locationsRes.error;
+      }
+
+      console.log('Users data:', usersRes.data);
       setUsers(usersRes.data || []);
       setLocations(locationsRes.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
+      setError('Failed to load users. Please check console for details.');
     } finally {
       setLoading(false);
     }
@@ -263,6 +276,12 @@ export function Users() {
           Add User
         </button>
       </div>
+
+      {error && !showModal && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+          {error}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
