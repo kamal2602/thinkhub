@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Download, Calendar, CheckCircle, Package, Search } from 'lucide-react';
+import { FileText, Download, Calendar, CheckCircle, Package, Search, Mail } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 interface Certificate {

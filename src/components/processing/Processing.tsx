@@ -45,7 +45,6 @@ interface Asset {
 
 export function Processing() {
   const { selectedCompany } = useCompany();
-  const { userRole } = useAuth();
   const toast = useToast();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [filteredAssets, setFilteredAssets] = useState<Asset[]>([]);
@@ -437,10 +436,7 @@ export function Processing() {
 
       if (error) throw error;
 
-      toast.success('Asset cloned successfully', {
-        label: 'View',
-        onClick: () => fetchAssets(),
-      });
+      toast.success('Asset cloned successfully');
       fetchAssets();
     } catch (error: any) {
       toast.error('Failed to clone asset: ' + error.message);
