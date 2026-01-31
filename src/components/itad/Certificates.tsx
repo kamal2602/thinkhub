@@ -23,7 +23,7 @@ interface Certificate {
 
 interface Asset {
   id: string;
-  internal_id: string;
+  internal_asset_id: string;
   serial_number: string;
   brand: string;
   model: string;
