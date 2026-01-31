@@ -126,9 +126,9 @@ export function Certificates() {
     try {
       const { data, error } = await supabase
         .from('assets')
-        .select('id, internal_asset_id, serial_number, brand, model, weight_kg, disposal_method')
+        .select('id, internal_id, serial_number, brand, model, weight_kg, disposal_method')
         .eq('company_id', selectedCompany?.id)
-        .order('internal_asset_id');
+        .order('internal_id');
 
       if (error) throw error;
       setAssets(data || []);
@@ -482,7 +482,7 @@ export function Certificates() {
                           className="rounded text-blue-600 focus:ring-blue-500"
                         />
                         <span className="text-sm">
-                          {asset.internal_asset_id} - {asset.serial_number} ({asset.brand} {asset.model})
+                          {asset.internal_id} - {asset.serial_number} ({asset.brand} {asset.model})
                           {asset.weight_kg && ` - ${asset.weight_kg}kg`}
                         </span>
                       </label>
