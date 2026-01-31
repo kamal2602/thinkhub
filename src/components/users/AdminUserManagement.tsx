@@ -10,6 +10,7 @@ interface User {
   full_name: string;
   created_at: string;
   is_super_admin: boolean;
+  role?: string;
 }
 
 interface Company {
@@ -60,49 +61,21 @@ export function AdminUserManagement() {
 
   const fetchData = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No session');
-
-      const [usersRes, companiesRes] = await Promise.all([
-        fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-users/list-users`, {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-        }),
+      const [profilesRes, companiesRes] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id, email, full_name, is_super_admin, role, created_at')
+          .order('created_at', { ascending: false }),
         supabase
           .from('companies')
           .select('id, name')
           .order('name'),
       ]);
 
-      if (!usersRes.ok) {
-        throw new Error('Failed to fetch users');
-      }
-
-      const { users: authUsers } = await usersRes.json();
-
+      if (profilesRes.error) throw profilesRes.error;
       if (companiesRes.error) throw companiesRes.error;
 
-      const userIds = authUsers.map((u: any) => u.id);
-
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, is_super_admin')
-        .in('id', userIds);
-
-      const usersWithProfiles = authUsers.map((u: any) => {
-        const profile = profiles?.find(p => p.id === u.id);
-        return {
-          id: u.id,
-          email: u.email || '',
-          full_name: u.user_metadata?.full_name || 'Unknown',
-          created_at: u.created_at,
-          is_super_admin: profile?.is_super_admin || false,
-        };
-      });
-
-      setUsers(usersWithProfiles);
+      setUsers(profilesRes.data || []);
       setCompanies(companiesRes.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -352,6 +325,7 @@ export function AdminUserManagement() {
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Super Admin</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -363,13 +337,18 @@ export function AdminUserManagement() {
                 <td className="px-6 py-4 text-sm text-gray-900">{listUser.email}</td>
                 <td className="px-6 py-4 text-sm text-gray-700">{listUser.full_name}</td>
                 <td className="px-6 py-4 text-sm">
+                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium capitalize">
+                    {listUser.role || 'N/A'}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-sm">
                   {listUser.is_super_admin ? (
                     <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
-                      Super Admin
+                      Yes
                     </span>
                   ) : (
                     <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
-                      Regular User
+                      No
                     </span>
                   )}
                 </td>
