@@ -93,7 +93,7 @@ export function DataSanitization() {
           *,
           assets (
             id,
-            internal_asset_id,
+            internal_id,
             serial_number,
             brand,
             model,
