@@ -195,12 +195,22 @@ export function Processing() {
   };
 
   const fetchTechnicians = async () => {
+    if (!selectedCompany) return;
+
     const { data } = await supabase
-      .from('profiles')
-      .select('id, full_name')
-      .eq('company_id', selectedCompany?.id)
-      .order('full_name');
-    setTechnicians(data || []);
+      .from('user_company_access')
+      .select('user_id, profiles(id, full_name)')
+      .eq('company_id', selectedCompany.id);
+
+    const techs = (data || [])
+      .filter(item => item.profiles)
+      .map(item => ({
+        id: item.profiles.id,
+        full_name: item.profiles.full_name
+      }))
+      .sort((a, b) => a.full_name.localeCompare(b.full_name));
+
+    setTechnicians(techs);
   };
 
 
