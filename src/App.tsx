@@ -1,13 +1,14 @@
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CompanyProvider } from './contexts/CompanyContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { WorkspaceProvider } from './contexts/WorkspaceContext';
 import { CustomerPortalAuthProvider } from './contexts/CustomerPortalAuthContext';
 import { AuthPage } from './pages/AuthPage';
-import { DashboardPage } from './pages/DashboardPage';
 import { CustomerPortalPage } from './pages/CustomerPortalPage';
 import { PublicSitePage } from './pages/PublicSitePage';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { KeyboardShortcutsHelp } from './components/common/KeyboardShortcutsHelp';
+import { ModularAppShell } from './components/layout/ModularAppShell';
 
 function AppContent() {
   const { user, loading } = useAuth();
@@ -56,10 +57,12 @@ function AppContent() {
 
   return (
     <CompanyProvider>
-      <ErrorBoundary>
-        <DashboardPage />
-        <KeyboardShortcutsHelp />
-      </ErrorBoundary>
+      <WorkspaceProvider>
+        <ErrorBoundary>
+          <ModularAppShell />
+          <KeyboardShortcutsHelp />
+        </ErrorBoundary>
+      </WorkspaceProvider>
     </CompanyProvider>
   );
 }
