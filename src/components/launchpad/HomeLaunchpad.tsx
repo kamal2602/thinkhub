@@ -135,7 +135,7 @@ export function HomeLaunchpad({ onNavigate }: { onNavigate: (path: string) => vo
   ];
 
   const sellTiles: ProcessTileProps[] = [
-    engines.auction_enabled && {
+    engines?.auction_enabled && {
       id: 'auctions',
       label: 'Auctions',
       description: 'Live and online auction management',
