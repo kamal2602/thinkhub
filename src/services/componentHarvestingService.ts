@@ -1,6 +1,16 @@
 import { supabase } from '../lib/supabase';
 import type { Database } from '../lib/database.types';
 
+/**
+ * Component Harvesting Service
+ *
+ * REQUIRES ENGINE: recycling_enabled
+ *
+ * This service manages component harvesting and recycling operations.
+ * All UI components using this service must be wrapped with:
+ * <EngineGuard engine="recycling_enabled">
+ */
+
 type ComponentHarvesting = Database['public']['Tables']['component_harvesting']['Row'];
 type ComponentHarvestingInsert = Database['public']['Tables']['component_harvesting']['Insert'];
 type ComponentHarvestingItem = Database['public']['Tables']['component_harvesting_items']['Row'];

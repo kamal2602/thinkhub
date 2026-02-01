@@ -1,6 +1,16 @@
 import { supabase } from '../lib/supabase';
 import type { Database } from '../lib/database.types';
 
+/**
+ * Auction Service
+ *
+ * REQUIRES ENGINE: auction_enabled
+ *
+ * This service manages auction houses, events, lots, bids, and settlements.
+ * All UI components using this service must be wrapped with:
+ * <EngineGuard engine="auction_enabled">
+ */
+
 type AuctionHouse = Database['public']['Tables']['auction_houses']['Row'];
 type AuctionHouseInsert = Database['public']['Tables']['auction_houses']['Insert'];
 type AuctionEvent = Database['public']['Tables']['auction_events']['Row'];

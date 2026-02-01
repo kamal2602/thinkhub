@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useCompany } from '../../contexts/CompanyContext';
 import { useEngines } from '../../hooks/useEngines';
 import { WORKSPACES, getWorkspacePages, WorkspaceConfig, PageConfig } from '../../config/workspaces';
+import { filterPagesByRoleAndEngine } from '../../lib/engineHelpers';
 
 interface SimplifiedAppBarProps {
   currentPage: string;
@@ -18,7 +19,7 @@ export function SimplifiedAppBar({ currentPage, onNavigate }: SimplifiedAppBarPr
   const appSwitcherRef = useRef<HTMLDivElement>(null);
   const { userRole, isSuperAdmin } = useAuth();
   const { selectedCompany } = useCompany();
-  const { isEnabled, loading: enginesLoading } = useEngines();
+  const { engines, isEnabled, loading: enginesLoading } = useEngines();
 
   const filteredWorkspaces = WORKSPACES.filter(workspace => {
     if (workspace.requiredEngine && !isEnabled(workspace.requiredEngine)) {
@@ -33,12 +34,7 @@ export function SimplifiedAppBar({ currentPage, onNavigate }: SimplifiedAppBarPr
 
   const getFilteredPages = (workspace: WorkspaceConfig): PageConfig[] => {
     const allPages = getWorkspacePages(workspace);
-    return allPages.filter(page => {
-      if (!page.requiredRoles) return true;
-      if (isSuperAdmin) return true;
-      if (!userRole) return false;
-      return page.requiredRoles.includes(userRole);
-    });
+    return filterPagesByRoleAndEngine(allPages, userRole, isSuperAdmin, engines);
   };
 
   const getCurrentWorkspace = (): WorkspaceConfig | null => {

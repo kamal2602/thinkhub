@@ -116,26 +116,26 @@ export const WORKSPACES: WorkspaceConfig[] = [
         id: 'itad-projects',
         name: 'Project Management',
         pages: [
-          { name: 'ITAD Projects', page: 'itad-projects' },
+          { name: 'ITAD Projects', page: 'itad-projects', requiredEngine: 'itad_enabled' },
         ],
       },
       {
         id: 'itad-compliance',
         name: 'Compliance',
         pages: [
-          { name: 'Data Sanitization', page: 'data-sanitization' },
-          { name: 'Certificates', page: 'certificates' },
-          { name: 'Environmental', page: 'environmental-compliance' },
-          { name: 'ITAD Compliance', page: 'itad-compliance' },
-          { name: 'Company Certifications', page: 'company-certifications', requiredRoles: ['admin'] },
+          { name: 'Data Sanitization', page: 'data-sanitization', requiredEngine: 'itad_enabled' },
+          { name: 'Certificates', page: 'certificates', requiredEngine: 'itad_enabled' },
+          { name: 'Environmental', page: 'environmental-compliance', requiredEngine: 'itad_enabled' },
+          { name: 'ITAD Compliance', page: 'itad-compliance', requiredEngine: 'itad_enabled' },
+          { name: 'Company Certifications', page: 'company-certifications', requiredRoles: ['admin'], requiredEngine: 'itad_enabled' },
         ],
       },
       {
         id: 'itad-revenue',
         name: 'Revenue Settlement',
         pages: [
-          { name: 'Revenue Settlements', page: 'itad-revenue-settlements' },
-          { name: 'Downstream Vendors', page: 'downstream-vendors' },
+          { name: 'Revenue Settlements', page: 'itad-revenue-settlements', requiredEngine: 'itad_enabled' },
+          { name: 'Downstream Vendors', page: 'downstream-vendors', requiredEngine: 'itad_enabled' },
         ],
       },
     ],
@@ -152,9 +152,9 @@ export const WORKSPACES: WorkspaceConfig[] = [
         id: 'harvesting',
         name: 'Component Harvesting',
         pages: [
-          { name: 'Harvested Inventory', page: 'harvested-components' },
-          { name: 'Component Sales', page: 'component-sales' },
-          { name: 'Component Prices', page: 'component-market-prices', requiredRoles: ['admin', 'manager'] },
+          { name: 'Harvested Inventory', page: 'harvested-components', requiredEngine: 'recycling_enabled' },
+          { name: 'Component Sales', page: 'component-sales', requiredEngine: 'recycling_enabled' },
+          { name: 'Component Prices', page: 'component-market-prices', requiredRoles: ['admin', 'manager'], requiredEngine: 'recycling_enabled' },
         ],
       },
     ],
@@ -167,7 +167,7 @@ export const WORKSPACES: WorkspaceConfig[] = [
     requiredEngine: 'auction_enabled',
     requiredRoles: ['admin', 'manager', 'staff'],
     pages: [
-      { name: 'Auctions', page: 'auctions' },
+      { name: 'Auctions', page: 'auctions', requiredEngine: 'auction_enabled' },
     ],
   },
   {

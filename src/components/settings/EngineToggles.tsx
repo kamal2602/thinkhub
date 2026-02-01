@@ -3,6 +3,7 @@ import { useCompany } from '../../contexts/CompanyContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { engineService, EngineToggles as EngineTogglesType } from '../../services/engineService';
 import { useToast } from '../../contexts/ToastContext';
+import { useEngines } from '../../hooks/useEngines';
 import { getWorkspacesForEngine } from '../../config/workspaces';
 import {
   ShoppingBag,
@@ -131,6 +132,7 @@ export function EngineToggles() {
   const { selectedCompany } = useCompany();
   const { userRole } = useAuth();
   const { showToast } = useToast();
+  const { refresh: refreshEngines } = useEngines();
   const [toggles, setToggles] = useState<EngineTogglesType | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -168,6 +170,10 @@ export function EngineToggles() {
       });
 
       setToggles({ ...toggles, [engine]: newValue });
+
+      // Refresh global engine state so navigation updates immediately
+      await refreshEngines();
+
       showToast(
         `${ENGINE_CONFIGS.find(e => e.key === engine)?.name} ${newValue ? 'enabled' : 'disabled'}`,
         'success'

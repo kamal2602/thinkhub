@@ -3,6 +3,7 @@ import { Search, Command, ArrowRight, Clock, Star, Settings, FileText, Package, 
 import { useEngines } from '../../hooks/useEngines';
 import { WORKSPACES, getWorkspacePages } from '../../config/workspaces';
 import { useAuth } from '../../contexts/AuthContext';
+import { filterPagesByRoleAndEngine } from '../../lib/engineHelpers';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -24,7 +25,7 @@ export function CommandPalette({ isOpen, onClose, onNavigate }: CommandPalettePr
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { isEnabled } = useEngines();
+  const { engines, isEnabled } = useEngines();
   const { userRole, isSuperAdmin } = useAuth();
 
   const commands: CommandItem[] = WORKSPACES.flatMap(workspace => {
@@ -38,23 +39,18 @@ export function CommandPalette({ isOpen, onClose, onNavigate }: CommandPalettePr
       }
     }
 
-    const pages = getWorkspacePages(workspace);
-    return pages
-      .filter(page => {
-        if (!page.requiredRoles) return true;
-        if (isSuperAdmin) return true;
-        if (!userRole) return false;
-        return page.requiredRoles.includes(userRole);
-      })
-      .map(page => ({
-        id: `nav-${page.page}`,
-        label: page.name,
-        description: `${workspace.name} → ${page.name}`,
-        icon: workspace.icon,
-        action: () => onNavigate(`/${page.page}`),
-        keywords: [workspace.name.toLowerCase(), page.name.toLowerCase(), page.page],
-        category: 'navigation' as const,
-      }));
+    const allPages = getWorkspacePages(workspace);
+    const filteredPages = filterPagesByRoleAndEngine(allPages, userRole, isSuperAdmin, engines);
+
+    return filteredPages.map(page => ({
+      id: `nav-${page.page}`,
+      label: page.name,
+      description: `${workspace.name} → ${page.name}`,
+      icon: workspace.icon,
+      action: () => onNavigate(`/${page.page}`),
+      keywords: [workspace.name.toLowerCase(), page.name.toLowerCase(), page.page],
+      category: 'navigation' as const,
+    }));
   });
 
   const filteredCommands = search

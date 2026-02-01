@@ -1,6 +1,16 @@
 import { supabase } from '../lib/supabase';
 import type { Database } from '../lib/database.types';
 
+/**
+ * ITAD Revenue Service
+ *
+ * REQUIRES ENGINE: itad_enabled
+ *
+ * This service manages ITAD intakes and revenue settlements.
+ * All UI components using this service must be wrapped with:
+ * <EngineGuard engine="itad_enabled">
+ */
+
 type ITADIntake = Database['public']['Tables']['itad_intakes']['Row'];
 type ITADIntakeInsert = Database['public']['Tables']['itad_intakes']['Insert'];
 type ITADRevenueSettlement = Database['public']['Tables']['itad_revenue_settlements']['Row'];

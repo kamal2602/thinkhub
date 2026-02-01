@@ -76,3 +76,42 @@ export function getEngineName(engine: keyof EngineToggles): string {
 export function getEngineDescription(engine: keyof EngineToggles): string {
   return ENGINE_DESCRIPTIONS[engine];
 }
+
+/**
+ * Filter pages by role and engine requirements
+ */
+export function filterPagesByRoleAndEngine<T extends { requiredRoles?: string[]; requiredEngine?: keyof EngineToggles }>(
+  pages: T[],
+  userRole: string | null,
+  isSuperAdmin: boolean,
+  engines: EngineToggles | null
+): T[] {
+  return pages.filter(page => {
+    // Check engine requirement
+    if (page.requiredEngine && !requireEngine(engines, page.requiredEngine)) {
+      return false;
+    }
+
+    // Check role requirement
+    if (!page.requiredRoles) return true;
+    if (isSuperAdmin) return true;
+    if (!userRole) return false;
+    return page.requiredRoles.includes(userRole);
+  });
+}
+
+/**
+ * Assert that a specific engine is enabled, throw error if not
+ */
+export function assertEngineEnabled(
+  engines: EngineToggles | null,
+  engine: keyof EngineToggles,
+  context?: string
+): void {
+  if (!requireEngine(engines, engine)) {
+    const message = context
+      ? `${getEngineName(engine)} engine is not enabled for this company. Context: ${context}`
+      : `${getEngineName(engine)} engine is not enabled for this company`;
+    throw new Error(message);
+  }
+}

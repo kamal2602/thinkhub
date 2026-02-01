@@ -25,8 +25,10 @@ export function useEngines() {
       setEngines(toggles);
     } catch (error) {
       console.error('Failed to load engine toggles:', error);
+      // SAFE DEFAULT: All engines disabled if loading fails
+      // Admin can refresh or check settings
       setEngines({
-        reseller_enabled: true,
+        reseller_enabled: false,
         itad_enabled: false,
         recycling_enabled: false,
         auction_enabled: false,
