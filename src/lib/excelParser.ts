@@ -1,5 +1,9 @@
 import * as XLSX from 'xlsx';
 
+type ExcelCellValue = string | number | boolean | null | undefined;
+type ExcelRow = ExcelCellValue[];
+type ExcelData = ExcelRow[];
+
 export interface SheetInfo {
   name: string;
   rowCount: number;
@@ -12,6 +16,25 @@ export interface ParseResult {
   totalRows: number;
   hasMultipleSheets?: boolean;
   sheets?: SheetInfo[];
+}
+
+function isExcelData(data: unknown): data is ExcelData {
+  if (!Array.isArray(data)) return false;
+  return data.every(row =>
+    Array.isArray(row) &&
+    row.every(cell =>
+      cell === null ||
+      cell === undefined ||
+      typeof cell === 'string' ||
+      typeof cell === 'number' ||
+      typeof cell === 'boolean'
+    )
+  );
+}
+
+function normalizeExcelCell(cell: ExcelCellValue): string {
+  if (cell === null || cell === undefined) return '';
+  return String(cell).trim();
 }
 
 export class ExcelParser {
@@ -45,15 +68,19 @@ export class ExcelParser {
       throw new Error(`Sheet "${sheetName}" not found`);
     }
 
-    const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' }) as any[][];
+    const rawData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
 
-    if (jsonData.length < 2) {
+    if (!isExcelData(rawData)) {
+      throw new Error('Invalid Excel data format');
+    }
+
+    if (rawData.length < 2) {
       throw new Error('Sheet is empty or has no data rows');
     }
 
-    const headers = jsonData[0].map(h => String(h || '').trim()).filter(h => h);
-    const rows = jsonData.slice(1)
-      .map(row => row.map(cell => String(cell || '').trim()))
+    const headers = rawData[0].map(normalizeExcelCell).filter(h => h);
+    const rows = rawData.slice(1)
+      .map(row => row.map(normalizeExcelCell))
       .filter(row => row.some(cell => cell !== ''));
 
     return {
@@ -70,11 +97,16 @@ export class ExcelParser {
 
     return this.workbook.SheetNames.map((sheetName: string) => {
       const sheet = this.workbook!.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' }) as any[][];
-      const preview = jsonData.slice(0, 6).map(row =>
-        row.map((cell: any) => String(cell || '').trim())
+      const rawData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+      if (!isExcelData(rawData)) {
+        return { name: sheetName, rowCount: 0, preview: [] };
+      }
+
+      const preview = rawData.slice(0, 6).map(row =>
+        row.map(normalizeExcelCell)
       );
-      const rowCount = Math.max(0, jsonData.length - 1);
+      const rowCount = Math.max(0, rawData.length - 1);
 
       return { name: sheetName, rowCount, preview };
     });
@@ -93,11 +125,16 @@ export async function parseExcelFile(file: File, sheetName?: string): Promise<Pa
 export function getSheetInfo(workbook: XLSX.WorkBook): SheetInfo[] {
   return workbook.SheetNames.map((sheetName: string) => {
     const sheet = workbook.Sheets[sheetName];
-    const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' }) as any[][];
-    const preview = jsonData.slice(0, 6).map(row =>
-      row.map((cell: any) => String(cell || '').trim())
+    const rawData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+    if (!isExcelData(rawData)) {
+      return { name: sheetName, rowCount: 0, preview: [] };
+    }
+
+    const preview = rawData.slice(0, 6).map(row =>
+      row.map(normalizeExcelCell)
     );
-    const rowCount = Math.max(0, jsonData.length - 1);
+    const rowCount = Math.max(0, rawData.length - 1);
 
     return { name: sheetName, rowCount, preview };
   });
