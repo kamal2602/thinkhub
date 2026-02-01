@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
-import { SimplifiedAppBar } from '../components/layout/SimplifiedAppBar';
-import { Breadcrumbs } from '../components/layout/Breadcrumbs';
-import { SearchBar } from '../components/layout/SearchBar';
-import { Header } from '../components/layout/Header';
+import { AppShell } from '../components/layout/AppShell';
+import { HomeLaunchpad } from '../components/launchpad/HomeLaunchpad';
 import { EngineGuard } from '../components/common/EngineGuard';
 import { SimplifiedDashboard } from '../components/dashboard/SimplifiedDashboard';
 import { Processing } from '../components/processing/Processing';
@@ -62,11 +60,9 @@ import { NavigationMenus } from '../components/website/NavigationMenus';
 import { WebsiteSettings } from '../components/website/WebsiteSettings';
 import { useCompany } from '../contexts/CompanyContext';
 import { useAuth } from '../contexts/AuthContext';
-import { CommandPalette } from '../components/common/CommandPalette';
 
 export function DashboardPage() {
   const [currentPage, setCurrentPage] = useState('dashboard');
-  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const { selectedCompany, loading } = useCompany();
   const { isSuperAdmin } = useAuth();
 
@@ -78,50 +74,35 @@ export function DashboardPage() {
     }
   }, [loading, selectedCompany]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setCommandPaletteOpen(true);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-background)' }}>
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-secondary">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      <SimplifiedAppBar currentPage={currentPage} onNavigate={setCurrentPage} />
-      <Header />
-      <Breadcrumbs currentPage={currentPage} onNavigate={setCurrentPage} />
-      <SearchBar currentPage={currentPage} onNavigate={setCurrentPage} />
-
-      <CommandPalette
-        isOpen={commandPaletteOpen}
-        onClose={() => setCommandPaletteOpen(false)}
-        onNavigate={(page) => setCurrentPage(page.replace('/', ''))}
-      />
-
-      <main className="flex-1 overflow-y-auto">
-        {currentPage === 'dashboard' && <SimplifiedDashboard />}
+    <AppShell
+      currentView={currentPage}
+      onNavigate={setCurrentPage}
+      isAdmin={isSuperAdmin}
+    >
+      {currentPage === 'dashboard' && <HomeLaunchpad onNavigate={setCurrentPage} />}
         {currentPage === 'processing' && <Processing />}
         {currentPage === 'asset-bulk-update' && <AssetBulkUpdate />}
         {currentPage === 'product-types' && <ProductTypes />}
         {currentPage === 'purchase-lots' && <PurchaseLots />}
         {currentPage === 'saleable-inventory' && <SaleableInventory />}
         {currentPage === 'inventory' && <Inventory />}
+        {currentPage === 'component-harvesting' && (
+          <EngineGuard engine="recycling_enabled">
+            <HarvestedComponentsEnhanced />
+          </EngineGuard>
+        )}
         {currentPage === 'harvested-components' && (
           <EngineGuard engine="recycling_enabled">
             <HarvestedComponentsEnhanced />
@@ -134,8 +115,11 @@ export function DashboardPage() {
         {currentPage === 'companies' && <Companies />}
         {currentPage === 'users' && (isSuperAdmin ? <AdminUserManagement /> : <Users />)}
         {currentPage === 'purchases' && <PurchaseOrdersList />}
+        {currentPage === 'receiving' && <SmartReceivingWorkflow />}
         {currentPage === 'smart-receiving' && <SmartReceivingWorkflow />}
         {currentPage === 'sales-catalog' && <UnifiedSalesCatalog />}
+        {currentPage === 'sales-orders' && <UnifiedSalesCatalog />}
+        {currentPage === 'sales-invoices' && <SalesInvoices />}
         {currentPage === 'sales' && <SalesInvoices />}
         {currentPage === 'returns' && <Returns />}
         {currentPage === 'repairs' && <Repairs />}
@@ -208,8 +192,10 @@ export function DashboardPage() {
             <ITADCompliance />
           </EngineGuard>
         )}
+        {currentPage === 'accounting' && <ChartOfAccounts />}
         {currentPage === 'chart-of-accounts' && <ChartOfAccounts />}
         {currentPage === 'journal-entries' && <JournalEntries />}
+        {currentPage === 'settings' && <SystemConfig />}
         {currentPage === 'engine-toggles' && <EngineToggles />}
         {currentPage === 'crm' && (
           <EngineGuard engine="crm_enabled">
@@ -251,7 +237,6 @@ export function DashboardPage() {
             <WebsiteSettings />
           </EngineGuard>
         )}
-      </main>
-    </div>
+    </AppShell>
   );
 }
