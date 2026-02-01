@@ -7,6 +7,7 @@ import { useCompany } from '../../contexts/CompanyContext';
 import { moduleRegistryService } from '../../services/moduleRegistryService';
 import { ModularHomeDashboard } from '../dashboard/ModularHomeDashboard';
 import { CompanyOnboardingWizard } from '../onboarding/CompanyOnboardingWizard';
+import { InitialSetup } from '../onboarding/InitialSetup';
 import { ESGDashboard } from '../compliance/ESGDashboard';
 import { SystemConfig } from '../settings/SystemConfig';
 
@@ -15,7 +16,7 @@ interface ModularAppShellProps {
 }
 
 export function ModularAppShell({ children }: ModularAppShellProps) {
-  const { selectedCompany, refreshCompanies } = useCompany();
+  const { companies, selectedCompany, refreshCompanies, loading } = useCompany();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -44,6 +45,23 @@ export function ModularAppShell({ children }: ModularAppShellProps) {
   const handleNavigate = (path: string) => {
     navigate(path);
   };
+
+  // Show loading while checking for companies
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show initial setup if user has no companies
+  if (companies.length === 0) {
+    return <InitialSetup onComplete={handleOnboardingComplete} />;
+  }
 
   if (showOnboarding) {
     return <CompanyOnboardingWizard onComplete={handleOnboardingComplete} />;

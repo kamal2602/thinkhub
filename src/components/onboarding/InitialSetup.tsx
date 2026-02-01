@@ -50,6 +50,9 @@ export function InitialSetup({ onComplete }: InitialSetupProps) {
 
       if (companyError) throw companyError;
 
+      // Wait a moment for the auto-grant trigger to fire
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       localStorage.setItem('selectedCompanyId', company.id);
 
       const allModules = await moduleRegistryService.getAllModules();
