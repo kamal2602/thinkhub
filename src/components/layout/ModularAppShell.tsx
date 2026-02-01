@@ -85,7 +85,7 @@ export function ModularAppShell({ children }: ModularAppShellProps) {
             <Route path="/dashboard" element={<EngineDrivenDashboard />} />
             <Route path="/esg" element={<ESGDashboard />} />
             <Route path="/settings" element={<SystemConfig />} />
-            <Route path="/*" element={<PageRouter />} />
+            <Route path="/*" element={<PageRouter path={location.pathname} />} />
           </Routes>
         </main>
       </div>

@@ -163,8 +163,13 @@ export function PageRouter({ path, fallback }: PageRouterProps) {
         return <PageAppsManagement />;
       case '/audit-trail':
         return <PageAuditTrail />;
+      case '/company':
       case '/companies':
         return <Companies />;
+      case '/parties':
+        return <PartyDirectory />;
+      case '/accounting':
+        return <ChartOfAccounts />;
       case '/users':
         return <Users />;
       case '/product-types':
