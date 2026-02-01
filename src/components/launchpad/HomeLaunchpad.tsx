@@ -1,18 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Package, Inbox, Building2, Recycle, ClipboardCheck, Layers,
-  Archive, ShoppingBag, Box, Gavel, FileText, Users, DollarSign,
-  Receipt, CreditCard, BarChart3
-} from 'lucide-react';
 import { ProcessSection } from './ProcessSection';
 import { ProcessTileProps } from './ProcessTile';
 import { useEngines } from '../../hooks/useEngines';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { ERP_ICONS, getCategoryLabel, getCategoryColor } from '../../config/erpIcons';
 
 export function HomeLaunchpad({ onNavigate }: { onNavigate: (path: string) => void }) {
   const { engines } = useEngines();
-  const { user, userRole } = useAuth();
+  const { user } = useAuth();
   const [counts, setCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
@@ -23,15 +19,13 @@ export function HomeLaunchpad({ onNavigate }: { onNavigate: (path: string) => vo
           assetsResult,
           auctionsResult,
           salesOrdersResult,
-          suppliersResult,
-          customersResult,
+          partiesResult,
         ] = await Promise.all([
           supabase.from('purchase_lots').select('id', { count: 'exact', head: true }),
           supabase.from('assets').select('id', { count: 'exact', head: true }),
           supabase.from('auctions').select('id', { count: 'exact', head: true }),
           supabase.from('sales_orders').select('id', { count: 'exact', head: true }),
-          supabase.from('parties').select('id', { count: 'exact', head: true }).eq('is_supplier', true),
-          supabase.from('parties').select('id', { count: 'exact', head: true }).eq('is_customer', true),
+          supabase.from('parties').select('id', { count: 'exact', head: true }),
         ]);
 
         setCounts({
@@ -39,8 +33,7 @@ export function HomeLaunchpad({ onNavigate }: { onNavigate: (path: string) => vo
           assets: assetsResult.count || 0,
           auctions: auctionsResult.count || 0,
           salesOrders: salesOrdersResult.count || 0,
-          suppliers: suppliersResult.count || 0,
-          customers: customersResult.count || 0,
+          parties: partiesResult.count || 0,
         });
       } catch (error) {
         console.error('Error loading counts:', error);
@@ -50,183 +43,277 @@ export function HomeLaunchpad({ onNavigate }: { onNavigate: (path: string) => vo
     loadCounts();
   }, []);
 
-  const acquireTiles: ProcessTileProps[] = [
+  const operationsTiles: ProcessTileProps[] = [
     {
-      id: 'purchase-lots',
-      label: 'Purchase Lots',
-      description: 'Track incoming inventory and cost basis',
-      icon: Package,
-      count: counts.purchaseLots,
-      path: 'purchase-lots',
-      onNavigate,
-    },
-    {
-      id: 'receiving',
-      label: 'Receiving',
-      description: 'Process incoming shipments',
-      icon: Inbox,
+      id: 'asset-receiving',
+      label: ERP_ICONS.assetReceiving.label,
+      description: ERP_ICONS.assetReceiving.description,
+      icon: ERP_ICONS.assetReceiving.icon,
       path: 'receiving',
       onNavigate,
     },
     {
-      id: 'suppliers',
-      label: 'Suppliers',
-      description: 'Manage supplier relationships',
-      icon: Building2,
-      count: counts.suppliers,
-      path: 'suppliers',
-      onNavigate,
-    },
-  ];
-
-  const recycleTiles: ProcessTileProps[] = [
-    {
-      id: 'processing',
-      label: 'Processing',
-      description: 'QA, grading, and classification',
-      icon: ClipboardCheck,
+      id: 'processing-dismantling',
+      label: ERP_ICONS.processingDismantling.label,
+      description: ERP_ICONS.processingDismantling.description,
+      icon: ERP_ICONS.processingDismantling.icon,
       path: 'processing',
       onNavigate,
+      count: counts.assets,
     },
     {
-      id: 'component-harvesting',
-      label: 'Component Harvesting',
-      description: 'Extract and track components',
-      icon: Layers,
-      path: 'component-harvesting',
+      id: 'component-inventory',
+      label: ERP_ICONS.componentInventory.label,
+      description: ERP_ICONS.componentInventory.description,
+      icon: ERP_ICONS.componentInventory.icon,
+      path: 'component-sales',
       onNavigate,
     },
     {
-      id: 'itad-compliance',
-      label: 'ITAD Compliance',
-      description: 'Data sanitization and certificates',
-      icon: Recycle,
+      id: 'stock-valuation',
+      label: ERP_ICONS.stockValuation.label,
+      description: ERP_ICONS.stockValuation.description,
+      icon: ERP_ICONS.stockValuation.icon,
+      path: 'inventory',
+      onNavigate,
+      count: counts.assets,
+    },
+    {
+      id: 'lot-assembly',
+      label: ERP_ICONS.lotAssembly.label,
+      description: ERP_ICONS.lotAssembly.description,
+      icon: ERP_ICONS.lotAssembly.icon,
+      path: 'purchase-lots',
+      onNavigate,
+      count: counts.purchaseLots,
+    },
+    {
+      id: 'materials-recovery',
+      label: ERP_ICONS.materialsRecovery.label,
+      description: ERP_ICONS.materialsRecovery.description,
+      icon: ERP_ICONS.materialsRecovery.icon,
       path: 'itad-compliance',
       onNavigate,
     },
   ];
 
-  const inventoryTiles: ProcessTileProps[] = [
+  const salesTiles: ProcessTileProps[] = [
     {
-      id: 'inventory',
-      label: 'All Inventory',
-      description: 'Search and manage all items',
-      icon: Archive,
-      count: counts.assets,
-      path: 'inventory',
-      onNavigate,
-    },
-    {
-      id: 'saleable-inventory',
-      label: 'Saleable Items',
-      description: 'Ready-to-sell inventory',
-      icon: ShoppingBag,
-      path: 'saleable-inventory',
-      onNavigate,
-    },
-    {
-      id: 'component-sales',
-      label: 'Components',
-      description: 'Harvested components inventory',
-      icon: Box,
-      path: 'component-sales',
-      onNavigate,
-    },
-  ];
-
-  const sellTiles: ProcessTileProps[] = [
-    engines?.auction_enabled && {
-      id: 'auctions',
-      label: 'Auctions',
-      description: 'Live and online auction management',
-      icon: Gavel,
-      count: counts.auctions,
-      path: 'auctions',
-      onNavigate,
-    },
-    {
-      id: 'sales-orders',
-      label: 'Sales Orders',
-      description: 'Customer orders and commitments',
-      icon: FileText,
-      count: counts.salesOrders,
+      id: 'wholesale-sales',
+      label: ERP_ICONS.wholesaleSales.label,
+      description: ERP_ICONS.wholesaleSales.description,
+      icon: ERP_ICONS.wholesaleSales.icon,
       path: 'sales-orders',
       onNavigate,
+      count: counts.salesOrders,
     },
-    {
-      id: 'sales-invoices',
-      label: 'Sales Invoices',
-      description: 'Billing and payments',
-      icon: Receipt,
-      path: 'sales-invoices',
+    engines?.auction_enabled && {
+      id: 'auctions',
+      label: ERP_ICONS.auctions.label,
+      description: ERP_ICONS.auctions.description,
+      icon: ERP_ICONS.auctions.icon,
+      path: 'auctions',
+      onNavigate,
+      count: counts.auctions,
+    },
+    engines?.website_enabled && {
+      id: 'online-store',
+      label: ERP_ICONS.onlineStore.label,
+      description: ERP_ICONS.onlineStore.description,
+      icon: ERP_ICONS.onlineStore.icon,
+      path: 'website',
       onNavigate,
     },
     {
-      id: 'customers',
-      label: 'Customers',
-      description: 'Customer relationships',
-      icon: Users,
-      count: counts.customers,
+      id: 'customer-management',
+      label: ERP_ICONS.customerManagement.label,
+      description: ERP_ICONS.customerManagement.description,
+      icon: ERP_ICONS.customerManagement.icon,
       path: 'customers',
       onNavigate,
     },
   ].filter(Boolean) as ProcessTileProps[];
 
-  const financeTiles: ProcessTileProps[] = [
+  const businessTiles: ProcessTileProps[] = [
     {
-      id: 'accounting',
-      label: 'Accounting',
-      description: 'Financial overview and reports',
-      icon: DollarSign,
+      id: 'order-management',
+      label: ERP_ICONS.orderManagement.label,
+      description: ERP_ICONS.orderManagement.description,
+      icon: ERP_ICONS.orderManagement.icon,
+      path: 'purchase-orders',
+      onNavigate,
+    },
+    {
+      id: 'billing-invoicing',
+      label: ERP_ICONS.billingInvoicing.label,
+      description: ERP_ICONS.billingInvoicing.description,
+      icon: ERP_ICONS.billingInvoicing.icon,
+      path: 'sales-invoices',
+      onNavigate,
+    },
+    {
+      id: 'payments-settlements',
+      label: ERP_ICONS.paymentsSettlements.label,
+      description: ERP_ICONS.paymentsSettlements.description,
+      icon: ERP_ICONS.paymentsSettlements.icon,
+      path: 'payments',
+      onNavigate,
+    },
+    {
+      id: 'financial-ledger',
+      label: ERP_ICONS.financialLedger.label,
+      description: ERP_ICONS.financialLedger.description,
+      icon: ERP_ICONS.financialLedger.icon,
       path: 'accounting',
-      onNavigate,
-    },
-    {
-      id: 'chart-of-accounts',
-      label: 'Chart of Accounts',
-      description: 'Account structure and hierarchy',
-      icon: Receipt,
-      path: 'chart-of-accounts',
-      onNavigate,
-    },
-    {
-      id: 'journal-entries',
-      label: 'Journal Entries',
-      description: 'Transaction records',
-      icon: CreditCard,
-      path: 'journal-entries',
       onNavigate,
     },
   ];
 
-  const reportsTiles: ProcessTileProps[] = [
+  const complianceTiles: ProcessTileProps[] = [
     {
-      id: 'reports',
-      label: 'All Reports',
-      description: 'Analytics and insights',
-      icon: BarChart3,
-      path: 'reports',
+      id: 'sustainability-reporting',
+      label: ERP_ICONS.sustainabilityReporting.label,
+      description: ERP_ICONS.sustainabilityReporting.description,
+      icon: ERP_ICONS.sustainabilityReporting.icon,
+      path: 'esg',
+      onNavigate,
+    },
+    {
+      id: 'regulatory-compliance',
+      label: ERP_ICONS.regulatoryCompliance.label,
+      description: ERP_ICONS.regulatoryCompliance.description,
+      icon: ERP_ICONS.regulatoryCompliance.icon,
+      path: 'compliance',
+      onNavigate,
+    },
+    {
+      id: 'authority-submissions',
+      label: ERP_ICONS.authoritySubmissions.label,
+      description: ERP_ICONS.authoritySubmissions.description,
+      icon: ERP_ICONS.authoritySubmissions.icon,
+      path: 'audit-exports',
+      onNavigate,
+    },
+    {
+      id: 'compliance-certificates',
+      label: ERP_ICONS.complianceCertificates.label,
+      description: ERP_ICONS.complianceCertificates.description,
+      icon: ERP_ICONS.complianceCertificates.icon,
+      path: 'certificates',
+      onNavigate,
+    },
+    {
+      id: 'compliance-audit',
+      label: ERP_ICONS.complianceAudit.label,
+      description: ERP_ICONS.complianceAudit.description,
+      icon: ERP_ICONS.complianceAudit.icon,
+      path: 'audit-trail',
       onNavigate,
     },
   ];
+
+  const platformTiles: ProcessTileProps[] = [
+    {
+      id: 'business-directory',
+      label: ERP_ICONS.businessDirectory.label,
+      description: ERP_ICONS.businessDirectory.description,
+      icon: ERP_ICONS.businessDirectory.icon,
+      path: 'parties',
+      onNavigate,
+      count: counts.parties,
+    },
+    {
+      id: 'organizations-entities',
+      label: ERP_ICONS.organizationsEntities.label,
+      description: ERP_ICONS.organizationsEntities.description,
+      icon: ERP_ICONS.organizationsEntities.icon,
+      path: 'companies',
+      onNavigate,
+    },
+    {
+      id: 'user-role-management',
+      label: ERP_ICONS.userRoleManagement.label,
+      description: ERP_ICONS.userRoleManagement.description,
+      icon: ERP_ICONS.userRoleManagement.icon,
+      path: 'users',
+      onNavigate,
+    },
+    {
+      id: 'business-intelligence',
+      label: ERP_ICONS.businessIntelligence.label,
+      description: ERP_ICONS.businessIntelligence.description,
+      icon: ERP_ICONS.businessIntelligence.icon,
+      path: 'reports',
+      onNavigate,
+    },
+    {
+      id: 'price-intelligence',
+      label: ERP_ICONS.priceIntelligence.label,
+      description: ERP_ICONS.priceIntelligence.description,
+      icon: ERP_ICONS.priceIntelligence.icon,
+      path: 'valuation',
+      onNavigate,
+    },
+    engines?.apps_enabled && {
+      id: 'app-marketplace',
+      label: ERP_ICONS.appMarketplace.label,
+      description: ERP_ICONS.appMarketplace.description,
+      icon: ERP_ICONS.appMarketplace.icon,
+      path: 'apps',
+      onNavigate,
+    },
+    {
+      id: 'system-settings',
+      label: ERP_ICONS.systemSettings.label,
+      description: ERP_ICONS.systemSettings.description,
+      icon: ERP_ICONS.systemSettings.icon,
+      path: 'settings',
+      onNavigate,
+    },
+  ].filter(Boolean) as ProcessTileProps[];
 
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-primary mb-2">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Welcome back, {user?.email?.split('@')[0]}
         </h1>
-        <p className="text-secondary">
-          Quick access to all your workflows
+        <p className="text-gray-600">
+          Enterprise resource planning for the circular economy
         </p>
       </div>
 
-      <ProcessSection title="Acquire" tiles={acquireTiles} />
-      <ProcessSection title="Recycle" tiles={recycleTiles} />
-      <ProcessSection title="Inventory" tiles={inventoryTiles} />
-      <ProcessSection title="Sell" tiles={sellTiles} />
-      <ProcessSection title="Finance" tiles={financeTiles} />
-      <ProcessSection title="Reports" tiles={reportsTiles} />
+      <div className="space-y-8">
+        <ProcessSection
+          title={getCategoryLabel('operations')}
+          tiles={operationsTiles}
+          color="blue"
+        />
+
+        <ProcessSection
+          title={getCategoryLabel('sales')}
+          tiles={salesTiles}
+          color="amber"
+        />
+
+        <ProcessSection
+          title={getCategoryLabel('business')}
+          tiles={businessTiles}
+          color="green"
+        />
+
+        <ProcessSection
+          title={getCategoryLabel('compliance')}
+          tiles={complianceTiles}
+          color="purple"
+        />
+
+        <ProcessSection
+          title={getCategoryLabel('platform')}
+          tiles={platformTiles}
+          color="gray"
+        />
+      </div>
     </div>
   );
 }
