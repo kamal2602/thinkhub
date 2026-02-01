@@ -56,7 +56,11 @@ export function LoginForm() {
       const { error: signUpError } = await signUp(email, password, fullName);
 
       if (signUpError) {
-        setError(signUpError.message);
+        if (signUpError.message.includes('already registered') || signUpError.message.includes('already exists')) {
+          setError('This email is already registered. Please use the "Sign in" option below.');
+        } else {
+          setError(signUpError.message);
+        }
         setLoading(false);
         return;
       }
@@ -278,13 +282,31 @@ export function LoginForm() {
           ) : (
             <button
               type="button"
-              onClick={() => setIsFirstTimeSetup(false)}
+              onClick={() => {
+                setIsFirstTimeSetup(false);
+                setError('');
+              }}
               className="text-sm text-blue-600 hover:text-blue-700 font-medium"
             >
               Already have an account? Sign in
             </button>
           )}
         </div>
+
+        {!isFirstTimeSetup && (
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setIsFirstTimeSetup(true);
+                setError('');
+              }}
+              className="text-sm text-gray-600 hover:text-gray-700"
+            >
+              Need to create a new account?
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
