@@ -36,20 +36,62 @@ export function DynamicDashboard({ onNavigate }: DynamicDashboardProps) {
   };
 
   const categories = [
-    { key: 'operations', title: 'Operations', color: 'blue', emoji: '🟦' },
-    { key: 'sales', title: 'Sales Channels', color: 'yellow', emoji: '🟨' },
-    { key: 'business', title: 'Business', color: 'green', emoji: '🟩' },
-    { key: 'system', title: 'System', color: 'purple', emoji: '🟪' },
-    { key: 'admin', title: 'Admin', color: 'gray', emoji: '🟫' }
+    { key: 'operations', title: 'Operations', color: 'blue' },
+    { key: 'sales', title: 'Sales Channels', color: 'amber' },
+    { key: 'business', title: 'Business', color: 'green' },
+    { key: 'system', title: 'System', color: 'slate' },
+    { key: 'admin', title: 'Admin', color: 'gray' }
   ];
 
   const getCategoryColor = (color: string) => {
-    const colors: Record<string, { bg: string; text: string; border: string }> = {
-      blue: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-      yellow: { bg: 'bg-yellow-50', text: 'text-yellow-700', border: 'border-yellow-200' },
-      green: { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
-      purple: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-      gray: { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' }
+    const colors: Record<string, {
+      bg: string;
+      text: string;
+      border: string;
+      headerBg: string;
+      headerBorder: string;
+      headerText: string;
+    }> = {
+      blue: {
+        bg: 'bg-blue-50',
+        text: 'text-blue-700',
+        border: 'border-blue-200',
+        headerBg: 'bg-blue-50',
+        headerBorder: 'border-blue-500',
+        headerText: 'text-blue-700'
+      },
+      amber: {
+        bg: 'bg-amber-50',
+        text: 'text-amber-700',
+        border: 'border-amber-200',
+        headerBg: 'bg-amber-50',
+        headerBorder: 'border-amber-500',
+        headerText: 'text-amber-700'
+      },
+      green: {
+        bg: 'bg-green-50',
+        text: 'text-green-700',
+        border: 'border-green-200',
+        headerBg: 'bg-green-50',
+        headerBorder: 'border-green-500',
+        headerText: 'text-green-700'
+      },
+      slate: {
+        bg: 'bg-slate-50',
+        text: 'text-slate-700',
+        border: 'border-slate-200',
+        headerBg: 'bg-slate-50',
+        headerBorder: 'border-slate-500',
+        headerText: 'text-slate-700'
+      },
+      gray: {
+        bg: 'bg-gray-50',
+        text: 'text-gray-700',
+        border: 'border-gray-200',
+        headerBg: 'bg-gray-50',
+        headerBorder: 'border-gray-500',
+        headerText: 'text-gray-700'
+      }
     };
     return colors[color] || colors.blue;
   };
@@ -81,9 +123,10 @@ export function DynamicDashboard({ onNavigate }: DynamicDashboardProps) {
 
           return (
             <div key={category.key} className="space-y-4">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">{category.emoji}</span>
-                <h2 className="text-xl font-bold text-gray-900">{category.title}</h2>
+              <div className={`inline-block px-4 py-2 rounded-lg border-l-4 ${colors.headerBorder} ${colors.headerBg}`}>
+                <h2 className={`${colors.headerText} font-semibold uppercase tracking-wide text-sm`}>
+                  {category.title}
+                </h2>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

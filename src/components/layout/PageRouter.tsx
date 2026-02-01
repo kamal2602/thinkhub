@@ -53,6 +53,11 @@ const PartyDirectory = lazy(() => import('../settings/PartyDirectory').then(m =>
 const EngineToggles = lazy(() => import('../settings/EngineToggles').then(m => ({ default: m.EngineToggles })));
 const ComponentMarketPrices = lazy(() => import('../settings/ComponentMarketPrices').then(m => ({ default: m.ComponentMarketPrices })));
 const AssetBulkUpdate = lazy(() => import('../processing/AssetBulkUpdate').then(m => ({ default: m.AssetBulkUpdate })));
+const CRMSettings = lazy(() => import('../settings/CRMSettings').then(m => ({ default: m.CRMSettings })));
+const AuctionSettings = lazy(() => import('../settings/AuctionSettings').then(m => ({ default: m.AuctionSettings })));
+const RecyclingSettings = lazy(() => import('../settings/RecyclingSettings').then(m => ({ default: m.RecyclingSettings })));
+const ResellerSettings = lazy(() => import('../settings/ResellerSettings').then(m => ({ default: m.ResellerSettings })));
+const InventorySettings = lazy(() => import('../settings/InventorySettings').then(m => ({ default: m.InventorySettings })));
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-full">
@@ -181,6 +186,18 @@ export function PageRouter({ path, fallback }: PageRouterProps) {
         return <SystemConfig />;
       case '/product-type-aliases':
         return <ProductSetup />;
+      case '/settings/crm':
+        return <CRMSettings />;
+      case '/settings/auction':
+        return <AuctionSettings />;
+      case '/settings/recycling':
+        return <RecyclingSettings />;
+      case '/settings/reseller':
+        return <ResellerSettings />;
+      case '/settings/inventory':
+        return <InventorySettings />;
+      case '/settings/website':
+        return <WebsiteSettings />;
       default:
         return null;
     }

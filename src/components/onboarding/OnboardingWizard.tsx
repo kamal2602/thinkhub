@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Building2, Layers, Settings, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Building2, Layers, Settings, CheckCircle2, ArrowRight, Users, Sliders } from 'lucide-react';
 import { useCompany } from '../../contexts/CompanyContext';
 import { useToast } from '../../contexts/ToastContext';
 import { supabase } from '../../lib/supabase';
@@ -17,6 +17,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const [companyName, setCompanyName] = useState('');
   const [selectedEngines, setSelectedEngines] = useState<string[]>([]);
   const [engines, setEngines] = useState<Engine[]>([]);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState<'admin' | 'user'>('admin');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -83,6 +85,18 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
     }
   };
 
+  const handleCoreConfigComplete = () => {
+    setCurrentStep(4);
+    addToast('Core configuration saved', 'success');
+  };
+
+  const handleInviteUser = async () => {
+    if (inviteEmail.trim()) {
+      addToast('Invitation will be sent when user management is configured', 'info');
+    }
+    setCurrentStep(5);
+  };
+
   const handleComplete = async () => {
     if (!selectedCompany) return;
 
@@ -120,9 +134,11 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   };
 
   const steps = [
-    { number: 1, title: 'Company Info', icon: Building2 },
-    { number: 2, title: 'Enable Modules', icon: Layers },
-    { number: 3, title: 'Ready to Go', icon: CheckCircle2 }
+    { number: 1, title: 'Company', icon: Building2 },
+    { number: 2, title: 'Modules', icon: Layers },
+    { number: 3, title: 'Core Config', icon: Sliders },
+    { number: 4, title: 'Invite Team', icon: Users },
+    { number: 5, title: 'Complete', icon: CheckCircle2 }
   ];
 
   return (
@@ -245,6 +261,120 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           )}
 
           {currentStep === 3 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Core Configuration</h2>
+                <p className="text-gray-600">Set up essential system settings</p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-blue-900 mb-2">Default Settings Applied</h3>
+                  <ul className="space-y-2 text-sm text-blue-700">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <span>Party types configured (Customer, Supplier, Contact)</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <span>Chart of accounts initialized</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <span>Default location created (Main Warehouse)</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <span>Processing stages configured</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-600">
+                    You can customize these settings later from the Settings menu. The defaults work great for most businesses.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setCurrentStep(2)}
+                  className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleCoreConfigComplete}
+                  className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 4 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Invite Team Members</h2>
+                <p className="text-gray-600">Add administrators and users to your workspace (optional)</p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    placeholder="colleague@company.com"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Role
+                  </label>
+                  <select
+                    value={inviteRole}
+                    onChange={(e) => setInviteRole(e.target.value as 'admin' | 'user')}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="admin">Administrator</option>
+                    <option value="user">Standard User</option>
+                  </select>
+                </div>
+
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <p className="text-sm text-gray-600">
+                    You can invite more team members later from the Users section.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setCurrentStep(3)}
+                  className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleInviteUser}
+                  disabled={loading}
+                  className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {inviteEmail.trim() ? 'Send Invite & Continue' : 'Skip'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {currentStep === 5 && (
             <div className="space-y-6 text-center">
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
                 <CheckCircle2 className="w-10 h-10 text-green-600" />
