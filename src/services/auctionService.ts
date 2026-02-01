@@ -29,8 +29,7 @@ type AuctionLotItemInsert = Database['public']['Tables']['auction_lot_items']['I
 type Bid = Database['public']['Tables']['bids']['Row'];
 type BidInsert = Database['public']['Tables']['bids']['Insert'];
 
-// Legacy types - preserved for backward compatibility
-type BuyerAccount = Database['public']['Tables']['buyer_accounts']['Row'];
+// Legacy types - read-only for historical data display only
 type AuctionSettlement = Database['public']['Tables']['auction_settlements']['Row'];
 
 export const auctionService = {
@@ -166,8 +165,7 @@ export const auctionService = {
         ),
         bids(
           *,
-          party:customers(name, customer_number, email),
-          buyer:buyer_accounts(buyer_name, buyer_number)
+          party:customers(name, email)
         )
       `)
       .eq('id', id)
@@ -247,23 +245,9 @@ export const auctionService = {
   // =========================================
   // BUYERS (Party-based)
   // =========================================
-  // DEPRECATED: Use customerService for buyer management
-  // Buyers are now Parties (customers). Use party_links for legacy buyer_account mapping.
-
-  /**
-   * @deprecated Use customerService.getCustomers() instead
-   * Legacy function preserved for backward compatibility only
-   */
-  async getBuyerAccounts(companyId: string): Promise<BuyerAccount[]> {
-    const { data, error } = await supabase
-      .from('buyer_accounts')
-      .select('*')
-      .eq('company_id', companyId)
-      .order('buyer_name');
-
-    if (error) throw error;
-    return data || [];
-  },
+  // Buyers are Parties (customers table).
+  // Use customerService for all buyer/customer management.
+  // buyer_accounts table is deprecated and read-only.
 
   /**
    * Place a bid on an auction lot
@@ -315,8 +299,7 @@ export const auctionService = {
       .from('bids')
       .select(`
         *,
-        party:customers(name, customer_number, email),
-        buyer:buyer_accounts(buyer_name, buyer_number)
+        party:customers(name, email)
       `)
       .eq('auction_lot_id', lotId)
       .order('bid_amount', { ascending: false });
@@ -337,6 +320,8 @@ export const auctionService = {
   /**
    * Settle an auction lot by creating a sales invoice
    * This is the ONLY way to settle auctions - creates core financial truth
+   *
+   * Uses purchase_lots as authoritative source for lot items (not auction_lot_items)
    *
    * @param lotId - Auction lot ID
    * @param partyId - Buyer party ID (customer)
@@ -368,16 +353,12 @@ export const auctionService = {
       notes = ''
     } = params;
 
-    // 1. Get lot details and items
+    // 1. Get lot details
     const { data: lot, error: lotError } = await supabase
       .from('auction_lots')
       .select(`
         *,
-        auction_lot_items(
-          *,
-          asset:assets(*),
-          component:harvested_components_inventory(*)
-        )
+        purchase_lot:purchase_lots(lot_number, total_cost)
       `)
       .eq('id', lotId)
       .single();
@@ -385,9 +366,17 @@ export const auctionService = {
     if (lotError) throw lotError;
     if (!lot) throw new Error('Auction lot not found');
 
-    // 2. Calculate cost basis
-    const { data: costBasis } = await supabase
-      .rpc('get_auction_lot_cost_basis', { lot_id: lotId });
+    // 2. Get items from authoritative source (purchase_lots)
+    const { data: items, error: itemsError } = await supabase
+      .rpc('get_auction_lot_items_from_purchase_lot', {
+        p_auction_lot_id: lotId
+      });
+
+    if (itemsError) throw itemsError;
+
+    if (!items || items.length === 0) {
+      throw new Error('No items found for auction lot. Lot must reference a purchase_lot with available items.');
+    }
 
     // 3. Calculate totals
     const totalSalePrice = hammerPrice + buyerPremium;
@@ -414,19 +403,17 @@ export const auctionService = {
       notes: `Auction Settlement - Lot ${lot.lot_number}\nHammer Price: $${hammerPrice}\nCommission: $${commission}\nBuyer Premium: $${buyerPremium}\n${notes}`,
     });
 
-    // 6. Add line items from auction lot
-    if (lot.auction_lot_items && lot.auction_lot_items.length > 0) {
-      for (const item of lot.auction_lot_items) {
-        await salesInvoiceService.addInvoiceItem({
-          invoice_id: invoice.id,
-          description: item.description || `Auction Lot ${lot.lot_number} Item`,
-          quantity: item.quantity || 1,
-          unit_price: hammerPrice / (lot.auction_lot_items.length || 1),
-          cost_price: item.cost_basis || 0,
-          asset_id: item.asset_id,
-          component_id: item.component_id,
-        });
-      }
+    // 6. Add line items from authoritative source (purchase_lots)
+    for (const item of items) {
+      await salesInvoiceService.addInvoiceItem({
+        invoice_id: invoice.id,
+        description: item.description || `Auction Lot ${lot.lot_number} Item`,
+        quantity: item.quantity || 1,
+        unit_price: hammerPrice / items.length,
+        cost_price: item.cost_basis || 0,
+        asset_id: item.asset_id,
+        component_id: item.component_id,
+      });
     }
 
     // 7. Mark auction lot as sold
@@ -471,14 +458,14 @@ export const auctionService = {
 
   /**
    * @deprecated Legacy settlements table is read-only for historical data
+   * Note: Legacy buyer identity resolved via buyer_accounts_read_only view if needed
    */
   async getLegacySettlements(companyId: string): Promise<AuctionSettlement[]> {
     const { data, error } = await supabase
       .from('auction_settlements')
       .select(`
         *,
-        auction_lot:auction_lots(lot_number, title),
-        buyer:buyer_accounts(buyer_name, buyer_number)
+        auction_lot:auction_lots(lot_number, title)
       `)
       .eq('company_id', companyId)
       .order('settlement_date', { ascending: false });
