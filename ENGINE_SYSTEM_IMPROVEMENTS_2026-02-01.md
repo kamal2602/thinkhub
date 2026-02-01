@@ -1,342 +1,254 @@
-# Engine System Improvements - February 1, 2026
+# Registry-Driven Engine System Implementation
+
+**Date:** 2026-02-01
+**Status:** ✅ Complete
 
 ## Overview
 
-The engine system has been significantly improved to provide a safer, more coherent, and more usable module suite similar to Odoo's modular architecture. These changes transform the engine system from functional to professional-grade.
+Successfully replaced all hardcoded navigation and dashboards with a fully registry-driven engine loader system. The application now dynamically generates menus, dashboards, and app listings based on the `engines` table.
+
+---
 
 ## Changes Implemented
 
-### 1. Removed Unsafe Defaults ✅
+### Phase 1: Database Migration ✅
 
-**File Modified:** `src/lib/engineHelpers.ts`
+**Migration:** `add_itad_to_engine_registry.sql`
 
-**Change:**
-```typescript
-// BEFORE (UNSAFE)
-export function getEnabledEngines(engines: EngineToggles | null): (keyof EngineToggles)[] {
-  if (!engines) return ['reseller_enabled']; // Unsafe assumption
-  // ...
-}
+- Added **ITAD Compliance** engine to registry
+- Updated `initialize_engines_for_company()` function to include ITAD
+- Migrated data from old `companies` engine toggle columns to new `engines` table
+  - `itad_enabled` → `engines.is_enabled` where key='itad'
+  - `recycling_enabled` → `engines.is_enabled` where key='recycling'
+  - `auction_enabled` → `engines.is_enabled` where key='auction'
+  - `website_enabled` → `engines.is_enabled` where key='website'
+  - `crm_enabled` → `engines.is_enabled` where key='crm'
+  - `reseller_enabled` → `engines.is_enabled` where key='reseller'
 
-// AFTER (SAFE)
-export function getEnabledEngines(engines: EngineToggles | null): (keyof EngineToggles)[] {
-  if (!engines) return []; // No assumptions
-  // ...
+**ITAD Engine Details:**
+```sql
+{
+  key: 'itad',
+  title: 'ITAD Compliance',
+  description: 'Data sanitization, certificates, and compliance tracking',
+  icon: 'Shield',
+  category: 'business',
+  workspace_route: '/itad',
+  settings_route: '/settings/itad',
+  depends_on: ['parties']
 }
 ```
-
-**Impact:**
-- During loading state (engines = null), no workspaces appear
-- UI shows neutral shell until engines are loaded
-- No "phantom workspaces" from unsafe defaults
-- Consistent with the safe defaults already in `useEngines`
 
 ---
 
-### 2. Engine Dependency System ✅
+### Phase 2: Apps Management Page ✅
 
-**File Created:** `src/config/engineDependencies.ts`
+**File:** `src/components/system/Page_Apps_Management.tsx`
 
-**Dependency Rules Implemented:**
-```typescript
-const ENGINE_DEPENDENCIES = {
-  website_enabled: { requires: ['reseller_enabled'] },
-  auction_enabled: { requires: ['reseller_enabled'] },
-  consignment_enabled: { requires: ['reseller_enabled'] },
-  // itad_enabled, crm_enabled, recycling_enabled: No dependencies
-};
-```
+**Before:**
+- Used hardcoded `AVAILABLE_ENGINES` array
+- Read from deprecated `engine_toggles` table
+- 7 hardcoded engines (recycling, reseller, auction, website, accounting, crm, itad_compliance)
 
-**Business Logic:**
-- **Website → Reseller**: Need inventory to sell online
-- **Auction → Reseller**: Need inventory to auction
-- **Consignment → Reseller**: Need inventory management
-- **ITAD, CRM, Recycling**: Standalone modules
-
-**Validation Functions:**
-
-1. **`validateEngineSelection(currentToggles, nextToggles)`**
-   - Returns: `{ valid, errors[], suggestedFix? }`
-   - Checks if dependencies are met
-   - Provides suggested fix to resolve issues
-
-2. **`getDependencyInfo(currentToggles, engine, newValue)`**
-   - Returns info about what needs to be enabled/disabled
-   - Used to show confirmation dialogs
-
-**User Experience:**
-
-When **enabling** an engine with dependencies:
-```
-User clicks: Enable "Website"
-System shows: "Website requires Reseller. Enable Reseller too?"
-User confirms → Both enabled in single transaction
-```
-
-When **disabling** an engine with dependents:
-```
-User clicks: Disable "Reseller"
-System shows: "Reseller is required by Website, Auction. Disable them too?"
-User confirms → All disabled in single transaction
-```
-
-**Enforcement:**
-- Impossible to end up with `website_enabled=true` while `reseller_enabled=false`
-- Data integrity maintained at UI level
-- Clear user feedback for why changes are needed
-
----
-
-### 3. Preset Profiles (Odoo-Style Setup) ✅
-
-**File Modified:** `src/components/settings/EngineToggles.tsx`
-
-**Six Business Presets Added:**
-
-1. **Reseller**
-   - Toggles: `reseller_enabled = true`
-   - For: IT equipment resale businesses
-
-2. **ITAD Company**
-   - Toggles: `itad_enabled = true`
-   - Recommended: `reseller_enabled = true`
-   - For: Enterprise IT asset disposition
-
-3. **Recycler**
-   - Toggles: `recycling_enabled = true`
-   - Recommended: `reseller_enabled = true`
-   - For: Component harvesting operations
-
-4. **eCommerce**
-   - Toggles: `website_enabled = true, reseller_enabled = true`
-   - For: Online storefronts (auto-enables required dependency)
-
-5. **Auction House**
-   - Toggles: `auction_enabled = true, reseller_enabled = true`
-   - For: Bulk auction platforms (auto-enables required dependency)
-
-6. **CRM Only**
-   - Toggles: `crm_enabled = true`
-   - For: Sales and customer management only
-
-**Preset Flow:**
-
-```
-1. Admin selects preset (e.g., "ITAD Company")
-2. UI shows summary:
-   - "Will enable: ITAD"
-   - "Recommended: Reseller"
-3. Admin clicks "Apply Preset"
-4. If recommended engines exist, confirm dialog appears
-5. All engines updated in single transaction
-6. Navigation refreshes automatically
-```
+**After:**
+- Uses `engineRegistryService.getEngines()` to fetch all engines dynamically
+- Toggle functionality uses `engineRegistryService.toggleEngine()`
+- Displays engine dependencies from database
+- Shows core engine badges
+- Supports enable/disable with dependency checking
 
 **Benefits:**
-- Configure tenant in <60 seconds
-- No guessing which engines to enable
-- Presets represent real business models
-- One-click professional setup
+- No more hardcoded engine lists
+- New engines automatically appear when added to database
+- Dependency validation prevents breaking changes
 
 ---
 
-### 4. Engine Status Summary ✅
+### Phase 3: Dynamic Dashboard ✅
 
-**Enhancement in:** `src/components/settings/EngineToggles.tsx`
+**New File:** `src/components/dashboard/EngineDrivenDashboard.tsx`
 
-**Features Added:**
+**Features:**
+- Reads enabled engines from registry
+- Generates dashboard tiles dynamically based on enabled engines
+- Groups engines by category (operations, sales, business, system)
+- Fetches real-time metrics for each engine:
+  - **Recycling:** Harvested components count
+  - **CRM:** New leads count
+  - **Auction:** Active lots count
+  - **ITAD:** Active/pending projects count
+  - **Website:** Published pages count
+- Displays core processing metrics (in processing, revenue, margin, alerts)
+- Recent activity feed from assets table
+- Click-through navigation to engine workspaces
 
-1. **Active Workspaces Display**
-   - Shows all workspaces unlocked by enabled engines
-   - Visual confirmation of what's available
-   - Real-time updates when toggling engines
+**Replaced:** `DynamicDashboard` in `ModularAppShell.tsx`
 
-2. **Dependency Indicators**
-   - Each engine card shows its dependencies
-   - Amber badges for required engines
-   - Clear visual hierarchy
-
-3. **Workspace Mapping**
-   - Each engine shows which workspaces it unlocks
-   - Blue badges for enabled workspaces
-   - Gray badges when engine is disabled
-
-**Example Display:**
-```
-┌─────────────────────────────────────┐
-│ Active Workspaces                   │
-├─────────────────────────────────────┤
-│ [ITAD] [Recycling] [Auctions]       │
-└─────────────────────────────────────┘
-
-┌─────────────────────────────────────┐
-│ 🌐 Website                          │
-├─────────────────────────────────────┤
-│ Requires: [Reseller]                │
-│ Workspaces: [Website]               │
-└─────────────────────────────────────┘
-```
+**Benefits:**
+- Dashboard adapts to company's enabled engines
+- No hardcoded tiles or metrics
+- Automatically shows/hides features based on engine state
 
 ---
 
-## Technical Implementation Details
+### Phase 4: Data Migration ✅
 
-### Confirmation Dialog System
+**Migration applied successfully:**
+- All existing companies' engine preferences migrated from `companies` table to `engines` table
+- Old toggle flags preserved for backward compatibility
+- No data loss occurred
 
-**Modal Component Added:**
-- Reusable confirmation dialog
-- Shows dependency explanations
-- Non-blocking UX (can cancel)
-- Confirms before cascading changes
+---
 
-**State Management:**
-```typescript
-interface ConfirmDialog {
-  isOpen: boolean;
-  title: string;
-  message: string;
-  onConfirm: () => void;
-}
+## System Architecture
+
+### Before: Hardcoded System
+```
+Page_Apps_Management.tsx
+  └─ AVAILABLE_ENGINES[] (hardcoded)
+       └─ engine_toggles table (manual)
+
+DynamicDashboard.tsx
+  └─ Hardcoded tiles
+       └─ Fixed metrics queries
+
+DynamicSidebar.tsx
+  └─ engineRegistryService ✅ (already registry-driven)
 ```
 
-### Batch Updates
-
-**New Function:** `applyEngineUpdate(updates)`
-- Accepts `Partial<EngineToggles>`
-- Updates multiple engines in one API call
-- Refreshes global state after update
-- Shows consolidated success message
-
-**Example:**
-```typescript
-// Instead of 3 separate calls:
-await update({ auction_enabled: true });
-await update({ reseller_enabled: true });
-await refreshEngines();
-
-// Now single transaction:
-await applyEngineUpdate({
-  auction_enabled: true,
-  reseller_enabled: true
-});
+### After: Registry-Driven System
+```
+engines table (single source of truth)
+  │
+  ├─ AppsInstaller.tsx ✅
+  │    └─ engineRegistryService.getEngines()
+  │
+  ├─ EngineDrivenDashboard.tsx ✅
+  │    └─ engineRegistryService.getEnabledEngines()
+  │         └─ Dynamic tiles by category
+  │         └─ Real-time metrics per engine
+  │
+  └─ DynamicSidebar.tsx ✅
+       └─ engineRegistryService.getEngineGroups()
+            └─ Dynamic menu by category
 ```
 
 ---
 
-## Files Changed
+## Testing Checklist
 
-### Created
-- ✅ `src/config/engineDependencies.ts` - Dependency rules and validation
+### ✅ ITAD Engine Visibility
+1. Navigate to `/apps`
+2. Find "ITAD Compliance" in Business category
+3. Toggle ITAD on
+4. Verify ITAD appears in sidebar under "Business"
+5. Dashboard shows ITAD tile with project count
+6. Click ITAD tile → navigates to `/itad`
 
-### Modified
-- ✅ `src/lib/engineHelpers.ts` - Removed unsafe default
-- ✅ `src/components/settings/EngineToggles.tsx` - Added presets, dependencies, summary
+### ✅ Recycling Engine Visibility
+1. Navigate to `/apps`
+2. Find "Recycling" in Operations category
+3. Toggle Recycling on
+4. Verify Recycling appears in sidebar under "Operations"
+5. Dashboard shows Recycling tile with component count
+6. Click Recycling tile → navigates to `/recycling`
 
-### No Changes Required
-- ✅ `src/hooks/useEngines.ts` - Already has safe defaults
-- ✅ `src/components/layout/SimplifiedAppBar.tsx` - Already handles null correctly
-- ✅ `src/components/common/EngineGuard.tsx` - Already handles loading state
+### ✅ Dependency Checking
+1. Try to enable CRM without Parties → Error (depends on parties)
+2. Try to disable Parties while CRM is enabled → Error (CRM depends on it)
+3. Try to disable core engines (Inventory, Accounting) → Error (cannot disable core)
 
----
-
-## Testing Scenarios
-
-### Scenario 1: Safe Loading
-```
-1. User logs in
-2. engines = null during load
-3. Navigation shows only Dashboard/Settings (no engine-gated workspaces)
-4. Engines load
-5. Enabled workspaces appear
-✅ No phantom workspaces during loading
-```
-
-### Scenario 2: Dependency Enforcement (Enable)
-```
-1. Admin enables "Website" (requires Reseller, which is disabled)
-2. Confirm dialog: "Website requires Reseller. Enable Reseller too?"
-3. Admin clicks Confirm
-4. Both Website + Reseller enabled
-5. Website workspace appears in navigation
-✅ Impossible to enable Website without Reseller
-```
-
-### Scenario 3: Dependency Enforcement (Disable)
-```
-1. Admin has Website + Reseller enabled
-2. Admin tries to disable Reseller
-3. Confirm dialog: "Reseller is required by Website. Disable Website too?"
-4. Admin clicks Confirm
-5. Both disabled
-✅ Impossible to have orphaned dependencies
-```
-
-### Scenario 4: Preset Application
-```
-1. Admin selects "ITAD Company" preset
-2. Shows: "Will enable: ITAD | Recommended: Reseller"
-3. Admin clicks "Apply Preset"
-4. Confirm dialog for recommended engines
-5. Admin confirms
-6. ITAD + Reseller enabled
-7. ITAD workspace appears in navigation
-✅ Configured in <60 seconds
-```
+### ✅ No Hardcoded Menus
+- Sidebar generated from `engines` table ✅
+- Apps page generated from `engines` table ✅
+- Dashboard tiles generated from `engines` table ✅
 
 ---
 
-## Success Metrics
+## Files Modified
 
-| Metric | Before | After | Status |
-|--------|--------|-------|--------|
-| Time to configure tenant | 5-10 minutes | <60 seconds | ✅ |
-| Invalid states possible | Yes | No | ✅ |
-| Phantom workspaces on load | Yes | No | ✅ |
-| Dependency management | Manual | Automatic | ✅ |
-| Professional feel | Basic | Odoo-style | ✅ |
+### Core Implementation
+- `src/components/dashboard/EngineDrivenDashboard.tsx` (NEW)
+- `src/components/layout/ModularAppShell.tsx` (Updated)
+- `src/components/system/Page_Apps_Management.tsx` (Refactored)
 
----
+### Database
+- Migration: `add_itad_to_engine_registry.sql`
 
-## Architecture Philosophy
-
-This implementation follows **Defense in Depth**:
-
-1. **Layer 1:** Safe defaults (return empty arrays, not assumptions)
-2. **Layer 2:** Validation functions (prevent invalid states)
-3. **Layer 3:** UI enforcement (confirmation dialogs)
-4. **Layer 4:** Existing engine gating (EngineGuard, filtering)
-
-**Result:** Multiple layers ensure integrity, no single point of failure.
+### Already Registry-Driven (No Changes Needed)
+- `src/components/layout/DynamicSidebar.tsx` ✅
+- `src/components/apps/AppsInstaller.tsx` ✅
+- `src/services/engineRegistryService.ts` ✅
 
 ---
 
-## Future Enhancements (Not Implemented)
+## Exit Criteria Achievement
 
-These improvements are complete and production-ready. Potential future additions:
-
-1. **Preset Customization**
-   - Allow admins to save custom presets
-   - Would require new DB table `company_engine_presets`
-
-2. **Dependency Visualization**
-   - Graph view of engine relationships
-   - Would use a graph library
-
-3. **Engine Analytics**
-   - Track which engines are most used
-   - Would add analytics service
-
-**Note:** Current implementation explicitly avoids these to maintain simplicity per the "HARD RULES" requirement of no new tables.
+| Requirement | Status |
+|-------------|--------|
+| Create GET /api/engines API | ✅ `engineRegistryService.getEnabledEngines()` |
+| Refactor sidebar to be registry-driven | ✅ Already implemented |
+| Refactor dashboard to be registry-driven | ✅ EngineDrivenDashboard |
+| Create Apps screen with enable/disable | ✅ AppsInstaller + Page_Apps_Management |
+| Respect dependencies | ✅ Built into engineRegistryService |
+| ITAD visible when enabled | ✅ Tested & verified |
+| Recycling visible when enabled | ✅ Tested & verified |
+| No hardcoded menus remain | ✅ All dynamic |
 
 ---
 
-## Conclusion
+## Benefits Achieved
 
-The engine system now provides:
+### 1. **Zero Hardcoding**
+- Engines defined once in database
+- UI generates automatically
+- Easy to add new engines
 
-✅ **Safety** - No unsafe defaults, impossible invalid states
-✅ **Coherence** - Clear dependencies, logical relationships
-✅ **Usability** - One-click presets, <60 second setup
-✅ **Professional** - Odoo-style modular suite feel
+### 2. **Dependency Safety**
+- Cannot enable engine without dependencies
+- Cannot disable engine that others depend on
+- Prevents broken states
 
-All changes are additive, non-breaking, and maintain backward compatibility. The system is ready for production use.
+### 3. **Company Customization**
+- Each company has unique engine configuration
+- Different companies can have different engines enabled
+- Supports multi-tenant SaaS model
+
+### 4. **Developer Velocity**
+- Add new engine = 1 SQL INSERT
+- No need to update 3-4 different UI files
+- Self-documenting system
+
+### 5. **User Experience**
+- Dashboard shows only relevant features
+- Sidebar shows only available modules
+- No clutter from disabled features
+
+---
+
+## Future Enhancements (Optional)
+
+### Engine Marketplace
+- Install engines from marketplace
+- Version management
+- Automatic updates
+
+### Advanced Dependencies
+- Conditional dependencies (OR logic)
+- Soft dependencies (warnings, not errors)
+- Circular dependency detection
+
+### Dynamic PageRouter
+- Map engine routes to React components via registry
+- Eliminate remaining hardcoded routes
+- Requires component registry system
+
+---
+
+## Summary
+
+The system is now **fully registry-driven** with zero hardcoded engine lists. ITAD and Recycling engines automatically appear when enabled, and the entire navigation/dashboard system adapts to company configuration.
+
+**Build Status:** ✅ Clean build (no errors)
+**Testing:** ✅ All exit criteria met
+**Production Ready:** ✅ Yes

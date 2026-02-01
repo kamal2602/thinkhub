@@ -1,95 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Layers, Check, Download, Settings, Info, Search } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { Layers, Check, Download, Settings, Info, Search, AlertCircle } from 'lucide-react';
 import { useCompany } from '../../contexts/CompanyContext';
 import { useToast } from '../../contexts/ToastContext';
-
-interface Engine {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  category: 'operations' | 'finance' | 'compliance' | 'sales' | 'system';
-  status: 'installed' | 'available' | 'coming_soon';
-  enabled: boolean;
-  version?: string;
-  dependencies?: string[];
-}
-
-const AVAILABLE_ENGINES: Omit<Engine, 'enabled'>[] = [
-  {
-    id: 'recycling',
-    name: 'Recycling',
-    description: 'Dismantling workflows, component harvesting, and asset processing',
-    icon: 'Recycle',
-    category: 'operations',
-    status: 'installed',
-    version: '1.0.0'
-  },
-  {
-    id: 'reseller',
-    name: 'Reseller',
-    description: 'Fixed-price sales catalog, orders, and invoicing',
-    icon: 'Store',
-    category: 'sales',
-    status: 'installed',
-    version: '1.0.0'
-  },
-  {
-    id: 'auction',
-    name: 'Auction',
-    description: 'Live and timed auction management with bidding',
-    icon: 'Gavel',
-    category: 'sales',
-    status: 'installed',
-    version: '1.0.0'
-  },
-  {
-    id: 'website',
-    name: 'Website & CMS',
-    description: 'Public website, storefront, and content management',
-    icon: 'Globe',
-    category: 'sales',
-    status: 'installed',
-    version: '1.0.0'
-  },
-  {
-    id: 'accounting',
-    name: 'Accounting',
-    description: 'General ledger, chart of accounts, and financial reporting',
-    icon: 'Calculator',
-    category: 'finance',
-    status: 'installed',
-    version: '1.0.0'
-  },
-  {
-    id: 'crm',
-    name: 'CRM',
-    description: 'Customer relationship management, leads, and opportunities',
-    icon: 'Users',
-    category: 'sales',
-    status: 'installed',
-    version: '1.0.0'
-  },
-  {
-    id: 'itad_compliance',
-    name: 'ITAD Compliance',
-    description: 'Data sanitization, certificates, and environmental compliance',
-    icon: 'Shield',
-    category: 'compliance',
-    status: 'installed',
-    version: '1.0.0'
-  },
-  {
-    id: 'advanced_reporting',
-    name: 'Advanced Reporting',
-    description: 'Custom reports, dashboards, and business intelligence',
-    icon: 'BarChart',
-    category: 'system',
-    status: 'available',
-    version: '1.0.0'
-  }
-];
+import { engineRegistryService, Engine } from '../../services/engineRegistryService';
+import * as Icons from 'lucide-react';
 
 export function Page_Apps_Management() {
   const [engines, setEngines] = useState<Engine[]>([]);
@@ -107,21 +21,8 @@ export function Page_Apps_Management() {
     if (!selectedCompany) return;
 
     try {
-      const { data, error } = await supabase
-        .from('engine_toggles')
-        .select('*')
-        .eq('company_id', selectedCompany.id)
-        .maybeSingle();
-
-      if (error && error.code !== 'PGRST116') throw error;
-
-      const engineStates = data || {};
-      const mappedEngines = AVAILABLE_ENGINES.map(engine => ({
-        ...engine,
-        enabled: engineStates[`${engine.id}_enabled`] !== false
-      }));
-
-      setEngines(mappedEngines);
+      const data = await engineRegistryService.getEngines(selectedCompany.id);
+      setEngines(data);
     } catch (error) {
       console.error('Error loading engines:', error);
       addToast('Failed to load engines', 'error');
@@ -130,37 +31,35 @@ export function Page_Apps_Management() {
     }
   };
 
-  const toggleEngine = async (engineId: string, currentState: boolean) => {
+  const toggleEngine = async (engineKey: string, currentState: boolean) => {
     if (!selectedCompany) return;
 
     try {
-      const { error } = await supabase
-        .from('engine_toggles')
-        .upsert({
-          company_id: selectedCompany.id,
-          [`${engineId}_enabled`]: !currentState,
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) throw error;
+      await engineRegistryService.toggleEngine(selectedCompany.id, engineKey, !currentState);
 
       setEngines(prev => prev.map(e =>
-        e.id === engineId ? { ...e, enabled: !currentState } : e
+        e.key === engineKey ? { ...e, is_enabled: !currentState } : e
       ));
 
+      const engine = engines.find(e => e.key === engineKey);
       addToast(
-        `${engineId} ${!currentState ? 'enabled' : 'disabled'}`,
+        `${engine?.title} ${!currentState ? 'enabled' : 'disabled'}`,
         'success'
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error toggling engine:', error);
-      addToast('Failed to update engine', 'error');
+      addToast(error.message || 'Failed to update engine', 'error');
     }
   };
 
+  const getIcon = (iconName: string) => {
+    const IconComponent = (Icons as any)[iconName];
+    return IconComponent || Icons.Box;
+  };
+
   const filteredEngines = engines.filter(engine => {
-    const matchesSearch = engine.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      engine.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = engine.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (engine.description || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || engine.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -169,18 +68,18 @@ export function Page_Apps_Management() {
     { id: 'all', name: 'All Apps' },
     { id: 'operations', name: 'Operations' },
     { id: 'sales', name: 'Sales' },
-    { id: 'finance', name: 'Finance' },
-    { id: 'compliance', name: 'Compliance' },
-    { id: 'system', name: 'System' }
+    { id: 'business', name: 'Business' },
+    { id: 'system', name: 'System' },
+    { id: 'admin', name: 'Admin' }
   ];
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
       operations: 'bg-green-100 text-green-800',
       sales: 'bg-blue-100 text-blue-800',
-      finance: 'bg-emerald-100 text-emerald-800',
-      compliance: 'bg-purple-100 text-purple-800',
-      system: 'bg-gray-100 text-gray-800'
+      business: 'bg-emerald-100 text-emerald-800',
+      system: 'bg-gray-100 text-gray-800',
+      admin: 'bg-slate-100 text-slate-800'
     };
     return colors[category] || 'bg-gray-100 text-gray-800';
   };
@@ -231,58 +130,80 @@ export function Page_Apps_Management() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEngines.map((engine) => (
-            <div key={engine.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                      <span className="text-2xl">{engine.icon.substring(0, 2)}</span>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{engine.name}</h3>
-                      {engine.version && (
+          {filteredEngines.map((engine) => {
+            const Icon = getIcon(engine.icon);
+            const canToggle = !engine.is_core;
+
+            return (
+              <div key={engine.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+                        <Icon className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{engine.title}</h3>
                         <span className="text-xs text-gray-500">v{engine.version}</span>
-                      )}
+                      </div>
                     </div>
+                    <span className={`text-xs px-2 py-1 rounded-full ${getCategoryColor(engine.category)}`}>
+                      {engine.category}
+                    </span>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${getCategoryColor(engine.category)}`}>
-                    {engine.category}
-                  </span>
-                </div>
 
-                <p className="text-sm text-gray-600 mb-4">{engine.description}</p>
+                  <p className="text-sm text-gray-600 mb-4">{engine.description || 'No description available'}</p>
 
-                <div className="flex items-center gap-2">
-                  {engine.status === 'installed' ? (
-                    <button
-                      onClick={() => toggleEngine(engine.id, engine.enabled)}
-                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                        engine.enabled
-                          ? 'bg-green-50 text-green-700 border-2 border-green-200 hover:bg-green-100'
-                          : 'bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200'
-                      }`}
-                    >
-                      {engine.enabled && <Check className="w-4 h-4" />}
-                      {engine.enabled ? 'Enabled' : 'Disabled'}
-                    </button>
-                  ) : engine.status === 'available' ? (
-                    <button className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                      <Download className="w-4 h-4" />
-                      Install
-                    </button>
-                  ) : (
-                    <button disabled className="flex-1 px-4 py-2 bg-gray-100 text-gray-400 rounded-lg font-medium cursor-not-allowed">
-                      Coming Soon
-                    </button>
+                  {engine.depends_on && engine.depends_on.length > 0 && (
+                    <div className="mb-4 flex items-start gap-2 text-xs text-gray-500">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-medium">Requires:</span> {engine.depends_on.join(', ')}
+                      </div>
+                    </div>
                   )}
-                  <button className="p-2 border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    <Info className="w-5 h-5 text-gray-600" />
-                  </button>
+
+                  <div className="flex items-center gap-2">
+                    {engine.is_installed ? (
+                      <>
+                        {canToggle ? (
+                          <button
+                            onClick={() => toggleEngine(engine.key, engine.is_enabled)}
+                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                              engine.is_enabled
+                                ? 'bg-green-50 text-green-700 border-2 border-green-200 hover:bg-green-100'
+                                : 'bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200'
+                            }`}
+                          >
+                            {engine.is_enabled && <Check className="w-4 h-4" />}
+                            {engine.is_enabled ? 'Enabled' : 'Disabled'}
+                          </button>
+                        ) : (
+                          <div className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 border-2 border-blue-200 rounded-lg font-medium">
+                            <Check className="w-4 h-4" />
+                            Core Engine
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <button className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-400 rounded-lg font-medium cursor-not-allowed" disabled>
+                        <Download className="w-4 h-4" />
+                        Not Installed
+                      </button>
+                    )}
+                    {engine.settings_route && (
+                      <button
+                        className="p-2 border-2 border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                        title="Settings"
+                      >
+                        <Settings className="w-5 h-5 text-gray-600" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

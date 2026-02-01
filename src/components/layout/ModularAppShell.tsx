@@ -3,7 +3,7 @@ import { GlobalTopBar } from './GlobalTopBar';
 import { DynamicSidebar } from './DynamicSidebar';
 import { PageRouter } from './PageRouter';
 import { useCompany } from '../../contexts/CompanyContext';
-import { DynamicDashboard } from '../dashboard/DynamicDashboard';
+import { EngineDrivenDashboard } from '../dashboard/EngineDrivenDashboard';
 import { AppsInstaller } from '../apps/AppsInstaller';
 import { OnboardingWizard } from '../onboarding/OnboardingWizard';
 import { Page_Audit_Trail } from '../system/Page_Audit_Trail';
@@ -21,6 +21,14 @@ export function ModularAppShell({ children }: ModularAppShellProps) {
   useEffect(() => {
     checkOnboarding();
   }, [selectedCompany]);
+
+  useEffect(() => {
+    const handleNavigateEvent = (e: any) => {
+      setCurrentPath(e.detail);
+    };
+    window.addEventListener('navigate', handleNavigateEvent);
+    return () => window.removeEventListener('navigate', handleNavigateEvent);
+  }, []);
 
   const checkOnboarding = () => {
     if (selectedCompany && !selectedCompany.onboarding_completed) {
@@ -44,7 +52,7 @@ export function ModularAppShell({ children }: ModularAppShellProps) {
 
   const renderContent = () => {
     if (currentPath === '/' || currentPath === '/dashboard') {
-      return <DynamicDashboard onNavigate={handleNavigate} />;
+      return <EngineDrivenDashboard />;
     }
 
     if (currentPath === '/apps') {
@@ -59,7 +67,7 @@ export function ModularAppShell({ children }: ModularAppShellProps) {
       return <Page_Payments />;
     }
 
-    return <PageRouter path={currentPath} fallback={<DynamicDashboard onNavigate={handleNavigate} />} />;
+    return <PageRouter path={currentPath} fallback={<EngineDrivenDashboard />} />;
   };
 
   return (
