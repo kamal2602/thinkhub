@@ -35,7 +35,7 @@ export function requireEngine(
  * Get list of enabled engine keys
  */
 export function getEnabledEngines(engines: EngineToggles | null): (keyof EngineToggles)[] {
-  if (!engines) return ['reseller_enabled']; // Default
+  if (!engines) return [];
   return Object.entries(engines)
     .filter(([_, enabled]) => enabled)
     .map(([engine]) => engine as keyof EngineToggles);
