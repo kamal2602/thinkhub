@@ -62,6 +62,7 @@ const AuctionSettings = lazy(() => import('../settings/AuctionSettings').then(m 
 const RecyclingSettings = lazy(() => import('../settings/RecyclingSettings').then(m => ({ default: m.RecyclingSettings })));
 const ResellerSettings = lazy(() => import('../settings/ResellerSettings').then(m => ({ default: m.ResellerSettings })));
 const InventorySettings = lazy(() => import('../settings/InventorySettings').then(m => ({ default: m.InventorySettings })));
+const ESGDashboard = lazy(() => import('../esg/ESGDashboard').then(m => ({ default: m.ESGDashboard })));
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-full">
@@ -140,6 +141,8 @@ export function PageRouter({ path, fallback }: PageRouterProps) {
         return <Certificates />;
       case '/environmental-compliance':
         return <EnvironmentalCompliance />;
+      case '/recycling':
+        return <ESGDashboard />;
       case '/itad-compliance':
         return <ITADCompliance />;
       case '/company-certifications':
