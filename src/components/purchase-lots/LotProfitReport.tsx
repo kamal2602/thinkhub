@@ -71,17 +71,28 @@ export function LotProfitReport({ lot, onClose }: LotProfitReportProps) {
         p_lot_id: lot.id
       });
 
-      const assetsWithCalcs: AssetBreakdown[] = (assetData || []).map((asset) => {
+      const assetsWithCalcs: AssetBreakdown[] = await Promise.all((assetData || []).map(async (asset) => {
         const purchasePrice = parseFloat(asset.purchase_price) || 0;
         const refurbCost = parseFloat(asset.refurbishment_cost) || 0;
         const totalCost = purchasePrice + refurbCost;
-        const sellingPrice = parseFloat(asset.selling_price) || 0;
+
+        let sellingPrice = 0;
+        if (asset.status === 'sold') {
+          const { data: saleData } = await supabase
+            .from('sales_order_lines')
+            .select('unit_price, quantity')
+            .eq('asset_id', asset.id)
+            .maybeSingle();
+
+          sellingPrice = saleData ? (parseFloat(saleData.unit_price) * (saleData.quantity || 1)) : 0;
+        }
+
         const scrapValue = parseFloat(asset.scrap_value) || 0;
 
         let profit = 0;
-        if (asset.status === 'Sold') {
+        if (asset.status === 'sold') {
           profit = sellingPrice - totalCost;
-        } else if (asset.status === 'Scrapped') {
+        } else if (asset.status === 'scrapped') {
           profit = scrapValue - totalCost;
         }
 
@@ -100,13 +111,13 @@ export function LotProfitReport({ lot, onClose }: LotProfitReportProps) {
           profit,
           created_at: asset.created_at,
         };
-      });
+      }));
 
       setAssets(assetsWithCalcs);
 
-      const soldAssets = assetsWithCalcs.filter((a) => a.status === 'Sold');
-      const scrappedAssets = assetsWithCalcs.filter((a) => a.status === 'Scrapped');
-      const remainingAssets = assetsWithCalcs.filter((a) => a.status !== 'Sold' && a.status !== 'Scrapped');
+      const soldAssets = assetsWithCalcs.filter((a) => a.status === 'sold');
+      const scrappedAssets = assetsWithCalcs.filter((a) => a.status === 'scrapped');
+      const remainingAssets = assetsWithCalcs.filter((a) => a.status !== 'sold' && a.status !== 'scrapped');
 
       const totalPurchaseCost = assetsWithCalcs.reduce((sum, a) => sum + a.purchase_price, 0);
       const totalRefurbishmentCost = assetsWithCalcs.reduce((sum, a) => sum + a.refurbishment_cost, 0);
@@ -372,7 +383,7 @@ export function LotProfitReport({ lot, onClose }: LotProfitReportProps) {
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                          asset.status === 'Sold'
+                          asset.status === 'sold'
                             ? 'bg-green-100 text-green-800'
                             : 'bg-amber-100 text-amber-800'
                         }`}>
@@ -383,12 +394,12 @@ export function LotProfitReport({ lot, onClose }: LotProfitReportProps) {
                       <td className="px-4 py-3 text-sm text-right text-gray-900">{formatCurrency(asset.refurbishment_cost)}</td>
                       <td className="px-4 py-3 text-sm text-right font-medium text-gray-900">{formatCurrency(asset.total_cost)}</td>
                       <td className="px-4 py-3 text-sm text-right text-gray-900">
-                        {asset.status === 'Sold' ? formatCurrency(asset.selling_price) : '-'}
+                        {asset.status === 'sold' ? formatCurrency(asset.selling_price) : '-'}
                       </td>
                       <td className={`px-4 py-3 text-sm text-right font-semibold ${
                         asset.profit > 0 ? 'text-green-600' : asset.profit < 0 ? 'text-red-600' : 'text-gray-400'
                       }`}>
-                        {asset.status === 'Sold' ? formatCurrency(asset.profit) : '-'}
+                        {asset.status === 'sold' ? formatCurrency(asset.profit) : '-'}
                       </td>
                     </tr>
                   ))}

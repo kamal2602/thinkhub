@@ -251,8 +251,27 @@ export function AssetBulkUpdate({ onClose, onSuccess }: AssetBulkUpdateProps) {
             updatedCount++;
           } else {
             const rowNum = batch[idx].rowNumber;
-            const error = result.status === 'fulfilled' ? result.value.error?.message : (result as PromiseRejectedResult).reason;
-            errors.push(`Row ${rowNum}: ${error}`);
+            const errorObj = result.status === 'fulfilled' ? result.value.error : (result as PromiseRejectedResult).reason;
+            const errorMsg = errorObj?.message || errorObj;
+            const errorCode = errorObj?.code;
+
+            if (errorCode === '23503') {
+              if (errorMsg.includes('status_fkey')) {
+                errors.push(`Row ${rowNum}: Invalid status value`);
+              } else if (errorMsg.includes('functional_status_fkey')) {
+                errors.push(`Row ${rowNum}: Invalid functional status`);
+              } else if (errorMsg.includes('cosmetic_grade_fkey')) {
+                errors.push(`Row ${rowNum}: Invalid cosmetic grade`);
+              } else if (errorMsg.includes('product_type_id_fkey')) {
+                errors.push(`Row ${rowNum}: Invalid product type`);
+              } else if (errorMsg.includes('location_id_fkey')) {
+                errors.push(`Row ${rowNum}: Invalid location`);
+              } else {
+                errors.push(`Row ${rowNum}: Invalid reference value`);
+              }
+            } else {
+              errors.push(`Row ${rowNum}: ${errorMsg}`);
+            }
           }
         });
       }

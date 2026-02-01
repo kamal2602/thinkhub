@@ -48,7 +48,6 @@ export function AssetForm({ asset, onClose }: AssetFormProps) {
 
     purchase_price: asset?.purchase_price || '',
     market_price: asset?.market_price || '',
-    selling_price: asset?.selling_price || '',
 
     warranty_months: asset?.warranty_months || 0,
     warranty_start_date: asset?.warranty_start_date || '',
@@ -192,7 +191,6 @@ export function AssetForm({ asset, onClose }: AssetFormProps) {
         ...formData,
         purchase_price: formData.purchase_price ? parseFloat(formData.purchase_price as any) : null,
         market_price: formData.market_price ? parseFloat(formData.market_price as any) : null,
-        selling_price: formData.selling_price ? parseFloat(formData.selling_price as any) : null,
         warranty_months: parseInt(formData.warranty_months as any) || 0,
         warranty_start_date: formData.warranty_start_date || null,
         warranty_end_date: formData.warranty_start_date
@@ -243,7 +241,23 @@ export function AssetForm({ asset, onClose }: AssetFormProps) {
 
       onClose();
     } catch (error: any) {
-      setError(error.message);
+      if (error.code === '23503') {
+        if (error.message.includes('status_fkey')) {
+          setError('Invalid status value. Please select from the dropdown.');
+        } else if (error.message.includes('functional_status_fkey')) {
+          setError('Invalid functional status. Please select from the dropdown.');
+        } else if (error.message.includes('cosmetic_grade_fkey')) {
+          setError('Invalid cosmetic grade. Please select from the dropdown.');
+        } else if (error.message.includes('product_type_id_fkey')) {
+          setError('Invalid product type. Please select from the dropdown.');
+        } else if (error.message.includes('location_id_fkey')) {
+          setError('Invalid location. Please select from the dropdown.');
+        } else {
+          setError('Invalid selection. Please check all dropdown values.');
+        }
+      } else {
+        setError(error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -540,16 +554,6 @@ export function AssetForm({ asset, onClose }: AssetFormProps) {
                 step="0.01"
                 value={formData.market_price}
                 onChange={(e) => setFormData({ ...formData, market_price: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Selling Price</label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.selling_price}
-                onChange={(e) => setFormData({ ...formData, selling_price: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>

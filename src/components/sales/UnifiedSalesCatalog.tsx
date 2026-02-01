@@ -87,7 +87,7 @@ export function UnifiedSalesCatalog({ onAddToInvoice, selectedCustomerName }: Un
           serial_number,
           brand,
           model,
-          selling_price,
+          market_price,
           status,
           product_type_id,
           cosmetic_grade,
@@ -102,7 +102,7 @@ export function UnifiedSalesCatalog({ onAddToInvoice, selectedCustomerName }: Un
         `)
         .eq('company_id', selectedCompany.id)
         .eq('is_sales_ready', true)
-        .gt('selling_price', 0);
+        .gt('market_price', 0);
 
       if (assetsError) throw assetsError;
 
@@ -125,7 +125,7 @@ export function UnifiedSalesCatalog({ onAddToInvoice, selectedCustomerName }: Un
             grade_color: gradeInfo?.color || null,
             grade_id: gradeInfo?.id || null,
             available_count: 1,
-            unit_price: asset.selling_price || 0,
+            unit_price: asset.market_price || 0,
             requires_serial_tracking: asset.product_types?.requires_serial_tracking || false,
             is_component: false,
             tracking_mode: 'serial'
