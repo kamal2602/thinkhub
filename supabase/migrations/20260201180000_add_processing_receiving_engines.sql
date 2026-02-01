@@ -1,14 +1,20 @@
 /*
-  # Add Processing and Receiving Engines
+  # Add Missing Operations Engines
 
-  1. New Engines
-    - `processing` - Asset testing, grading, and workflow management
-    - `receiving` - Smart receiving and PO processing
+  1. New Engines Added
+    - `processing` - Asset testing, grading, and refurbishment workflow (Operations)
+    - `receiving` - Smart receiving and purchase order processing (Operations)
+    - `repairs` - Equipment repair tracking and management (Operations)
 
-  2. Notes
-    - Processing depends on inventory (manages assets)
-    - Receiving depends on inventory (creates assets from POs)
-    - Both are operations category engines
+  2. Dependencies
+    - Processing, Receiving, Repairs → all depend on inventory
+    - All are set as installed and enabled by default (core operational features)
+
+  3. Notes
+    - These features exist in the codebase but were not in the engine registry
+    - Adds routes: /processing, /smart-receiving, /repairs
+    - Updates initialization function for new companies
+    - Payments already exists in the registry from prior migration
 */
 
 -- Update initialization function to include Processing and Receiving
@@ -28,8 +34,9 @@ BEGIN
   VALUES
     (target_company_id, 'processing', 'Processing', 'Asset testing, grading, and refurbishment workflow', 'Wrench', 'operations', false, true, true, '/processing', '/settings/processing', 10, '["inventory"]'),
     (target_company_id, 'receiving', 'Receiving', 'Smart receiving and purchase order processing', 'PackageOpen', 'operations', false, true, true, '/smart-receiving', '/settings/receiving', 11, '["inventory"]'),
-    (target_company_id, 'recycling', 'Recycling', 'Component harvesting and material recovery', 'Recycle', 'operations', false, true, false, '/recycling', '/settings/recycling', 12, '["inventory"]'),
-    (target_company_id, 'lots', 'Purchase Lots', 'Lot tracking and profitability', 'Archive', 'operations', false, true, true, '/purchase-lots', '/settings/lots', 13, '["inventory"]')
+    (target_company_id, 'repairs', 'Repairs', 'Equipment repair tracking and management', 'Tool', 'operations', false, true, true, '/repairs', '/settings/repairs', 12, '["inventory"]'),
+    (target_company_id, 'recycling', 'Recycling', 'Component harvesting and material recovery', 'Recycle', 'operations', false, true, false, '/recycling', '/settings/recycling', 13, '["inventory"]'),
+    (target_company_id, 'lots', 'Purchase Lots', 'Lot tracking and profitability', 'Archive', 'operations', false, true, true, '/purchase-lots', '/settings/lots', 14, '["inventory"]')
   ON CONFLICT (company_id, key) DO NOTHING;
 
   -- Sales engines
@@ -101,6 +108,24 @@ SELECT
   '/smart-receiving',
   '/settings/receiving',
   11,
+  '["inventory"]'::jsonb
+FROM companies
+ON CONFLICT (company_id, key) DO NOTHING;
+
+INSERT INTO engines (company_id, key, title, description, icon, category, is_core, is_installed, is_enabled, workspace_route, settings_route, sort_order, depends_on)
+SELECT
+  id,
+  'repairs',
+  'Repairs',
+  'Equipment repair tracking and management',
+  'Tool',
+  'operations',
+  false,
+  true,
+  true,
+  '/repairs',
+  '/settings/repairs',
+  12,
   '["inventory"]'::jsonb
 FROM companies
 ON CONFLICT (company_id, key) DO NOTHING;

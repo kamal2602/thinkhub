@@ -13,6 +13,7 @@ const Customers = lazy(() => import('../customers/Customers').then(m => ({ defau
 const SalesInvoices = lazy(() => import('../sales/SalesInvoices').then(m => ({ default: m.SalesInvoices })));
 const UnifiedSalesCatalog = lazy(() => import('../sales/UnifiedSalesCatalog').then(m => ({ default: m.UnifiedSalesCatalog })));
 const Returns = lazy(() => import('../returns/Returns').then(m => ({ default: m.Returns })));
+const Repairs = lazy(() => import('../repairs/Repairs').then(m => ({ default: m.Repairs })));
 const Locations = lazy(() => import('../locations/Locations').then(m => ({ default: m.Locations })));
 const StockMovements = lazy(() => import('../movements/StockMovements').then(m => ({ default: m.StockMovements })));
 const AuctionManagement = lazy(() => import('../auctions/AuctionManagement').then(m => ({ default: m.AuctionManagement })));
@@ -34,7 +35,10 @@ const ITADRevenueSettlements = lazy(() => import('../itad/ITADRevenueSettlements
 const DownstreamVendors = lazy(() => import('../itad/DownstreamVendors').then(m => ({ default: m.DownstreamVendors })));
 const ChartOfAccounts = lazy(() => import('../accounting/ChartOfAccounts').then(m => ({ default: m.ChartOfAccounts })));
 const JournalEntries = lazy(() => import('../accounting/JournalEntries').then(m => ({ default: m.JournalEntries })));
+const PagePayments = lazy(() => import('../finance/Page_Payments').then(m => ({ default: m.Page_Payments })));
 const Reports = lazy(() => import('../reports/Reports').then(m => ({ default: m.Reports })));
+const PageAppsManagement = lazy(() => import('../system/Page_Apps_Management').then(m => ({ default: m.Page_Apps_Management })));
+const PageAuditTrail = lazy(() => import('../system/Page_Audit_Trail').then(m => ({ default: m.Page_Audit_Trail })));
 const Companies = lazy(() => import('../companies/Companies').then(m => ({ default: m.Companies })));
 const Users = lazy(() => import('../users/Users').then(m => ({ default: m.Users })));
 const ProductTypes = lazy(() => import('../product-types/ProductTypes').then(m => ({ default: m.ProductTypes })));
@@ -102,6 +106,8 @@ export function PageRouter({ path, fallback }: PageRouterProps) {
         return <UnifiedSalesCatalog />;
       case '/returns':
         return <Returns />;
+      case '/repairs':
+        return <Repairs />;
       case '/locations':
         return <Locations />;
       case '/movements':
@@ -144,8 +150,14 @@ export function PageRouter({ path, fallback }: PageRouterProps) {
         return <ChartOfAccounts />;
       case '/journal-entries':
         return <JournalEntries />;
+      case '/payments':
+        return <PagePayments />;
       case '/reports':
         return <Reports />;
+      case '/apps':
+        return <PageAppsManagement />;
+      case '/audit-trail':
+        return <PageAuditTrail />;
       case '/companies':
         return <Companies />;
       case '/users':
