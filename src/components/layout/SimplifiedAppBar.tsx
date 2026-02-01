@@ -120,6 +120,7 @@ export function SimplifiedAppBar({ currentPage, onNavigate }: SimplifiedAppBarPr
       color: 'bg-slate-500',
       roles: ['admin', 'manager'],
       pages: [
+        { name: 'Engine Toggles', page: 'engine-toggles', roles: ['admin'] },
         { name: 'Product Setup', page: 'product-setup' },
         { name: 'Business Rules', page: 'business-rules' },
         { name: 'System Config', page: 'system-config' },

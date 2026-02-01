@@ -49,6 +49,7 @@ import { SystemConfig } from '../components/settings/SystemConfig';
 import { ITADCompliance } from '../components/itad/ITADCompliance';
 import { ChartOfAccounts } from '../components/accounting/ChartOfAccounts';
 import { JournalEntries } from '../components/accounting/JournalEntries';
+import { EngineToggles } from '../components/settings/EngineToggles';
 import { useCompany } from '../contexts/CompanyContext';
 import { useAuth } from '../contexts/AuthContext';
 import { CommandPalette } from '../components/common/CommandPalette';
@@ -150,6 +151,7 @@ export function DashboardPage() {
         {currentPage === 'itad-compliance' && <ITADCompliance />}
         {currentPage === 'chart-of-accounts' && <ChartOfAccounts />}
         {currentPage === 'journal-entries' && <JournalEntries />}
+        {currentPage === 'engine-toggles' && <EngineToggles />}
       </main>
     </div>
   );
