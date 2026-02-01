@@ -21,7 +21,10 @@ export function RegistryDrivenSidebar() {
   }, [company]);
 
   const loadModules = async () => {
-    if (!company) return;
+    if (!company) {
+      setLoading(false);
+      return;
+    }
 
     try {
       const [categories, enabledModules] = await Promise.all([

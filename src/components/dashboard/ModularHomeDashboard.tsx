@@ -16,17 +16,20 @@ export function ModularHomeDashboard() {
   const { user } = useAuth();
   const [modulesByCategory, setModulesByCategory] = useState<ModulesByCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (company) {
-      loadModules();
-    }
+    loadModules();
   }, [company]);
 
   const loadModules = async () => {
-    if (!company) return;
+    if (!company) {
+      setLoading(false);
+      return;
+    }
 
     try {
+      setError(null);
       const [categories, enabledModules] = await Promise.all([
         moduleRegistryService.getModuleCategories(),
         moduleRegistryService.getEnabledModules(company.id)
@@ -42,6 +45,7 @@ export function ModularHomeDashboard() {
       setModulesByCategory(grouped);
     } catch (error) {
       console.error('Failed to load modules:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load modules');
     } finally {
       setLoading(false);
     }
@@ -87,6 +91,35 @@ export function ModularHomeDashboard() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <Icons.AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Dashboard</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => loadModules()}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!company) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Icons.Building className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600">No company selected</p>
         </div>
       </div>
     );

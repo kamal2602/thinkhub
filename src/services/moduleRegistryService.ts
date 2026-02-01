@@ -77,26 +77,31 @@ class ModuleRegistryService {
   }
 
   async getEnabledModules(companyId: string): Promise<Module[]> {
-    const { data, error } = await supabase
+    const { data: companyModules, error: cmError } = await supabase
       .from('company_modules')
-      .select(`
-        module_name,
-        modules (*)
-      `)
+      .select('module_name')
       .eq('company_id', companyId)
       .eq('is_enabled', true);
 
-    if (error) throw error;
+    if (cmError) throw cmError;
 
-    return (data || [])
-      .map(item => (item as any).modules)
-      .filter(Boolean)
-      .sort((a, b) => a.sort_order - b.sort_order);
+    const { data: allModules, error: mError } = await supabase
+      .from('modules')
+      .select('*')
+      .order('sort_order');
+
+    if (mError) throw mError;
+
+    const enabledModuleNames = new Set(companyModules?.map(cm => cm.module_name) || []);
+
+    return (allModules || []).filter(m => enabledModuleNames.has(m.name));
   }
 
   async getModulesGroupedByCategory(companyId: string): Promise<Record<string, Module[]>> {
-    const modules = await this.getEnabledModules(companyId);
-    const categories = await this.getModuleCategories();
+    const [modules, categories] = await Promise.all([
+      this.getEnabledModules(companyId),
+      this.getModuleCategories()
+    ]);
 
     const grouped: Record<string, Module[]> = {};
 
