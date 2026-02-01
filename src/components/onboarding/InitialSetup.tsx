@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Building, ArrowRight, Loader } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Building, ArrowRight, Loader, LogOut } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { moduleRegistryService } from '../../services/moduleRegistryService';
@@ -13,6 +13,16 @@ export function InitialSetup({ onComplete }: InitialSetupProps) {
   const [companyName, setCompanyName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    localStorage.removeItem('selectedCompanyId');
+  }, []);
+
+  const handleSignOut = async () => {
+    localStorage.clear();
+    await supabase.auth.signOut();
+    window.location.href = '/';
+  };
 
   const handleSetup = async () => {
     if (!companyName.trim()) {
@@ -40,10 +50,7 @@ export function InitialSetup({ onComplete }: InitialSetupProps) {
 
       if (companyError) throw companyError;
 
-      await supabase
-        .from('profiles')
-        .update({ company_id: company.id })
-        .eq('id', user.id);
+      localStorage.setItem('selectedCompanyId', company.id);
 
       const allModules = await moduleRegistryService.getAllModules();
 
@@ -69,6 +76,14 @@ export function InitialSetup({ onComplete }: InitialSetupProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 flex items-center justify-center p-4">
+      <button
+        onClick={handleSignOut}
+        className="fixed top-4 right-4 px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-100 transition-colors flex items-center space-x-2 shadow-md"
+      >
+        <LogOut className="w-4 h-4" />
+        <span>Sign Out</span>
+      </button>
+
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden">
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-12 text-white text-center">
           <Building className="w-20 h-20 mx-auto mb-4 opacity-90" />
