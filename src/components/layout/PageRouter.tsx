@@ -9,7 +9,7 @@ const PurchaseOrders = lazy(() => import('../purchases/PurchaseOrders').then(m =
 const SmartReceiving = lazy(() => import('../receiving/SmartReceivingWorkflow'));
 const PurchaseLots = lazy(() => import('../purchase-lots/PurchaseLots').then(m => ({ default: m.PurchaseLots })));
 const Suppliers = lazy(() => import('../suppliers/Suppliers').then(m => ({ default: m.Suppliers })));
-const Customers = lazy(() => import('../customers/Customers').then(m => ({ default: m.Customers })));
+const Customers = lazy(() => import('../customers/CustomersEnhanced').then(m => ({ default: m.CustomersEnhanced })));
 const SalesInvoices = lazy(() => import('../sales/SalesInvoices').then(m => ({ default: m.SalesInvoices })));
 const UnifiedSalesCatalog = lazy(() => import('../sales/UnifiedSalesCatalog').then(m => ({ default: m.UnifiedSalesCatalog })));
 const Returns = lazy(() => import('../returns/Returns').then(m => ({ default: m.Returns })));
