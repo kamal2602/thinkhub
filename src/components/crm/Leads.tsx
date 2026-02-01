@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Plus, User, Edit2, Trash2, CheckCircle, Clock, XCircle, TrendingUp, Users } from 'lucide-react';
 import { useCompany } from '../../contexts/CompanyContext';
 import { crmService, LeadWithParty, CreateLeadInput } from '../../services/crmService';
-import { customerService } from '../../services/customerService';
 
 export function Leads() {
   const { selectedCompany } = useCompany();
@@ -12,10 +11,12 @@ export function Leads() {
   const [showConvertModal, setShowConvertModal] = useState(false);
   const [editingLead, setEditingLead] = useState<LeadWithParty | null>(null);
   const [convertingLead, setConvertingLead] = useState<LeadWithParty | null>(null);
-  const [parties, setParties] = useState<any[]>([]);
   const [leadSources, setLeadSources] = useState<any[]>([]);
   const [formData, setFormData] = useState({
-    party_id: '',
+    lead_name: '',
+    company_name: '',
+    contact_email: '',
+    contact_phone: '',
     status: 'new',
     lead_source: '',
     qualification_score: 50,
@@ -35,7 +36,6 @@ export function Leads() {
   useEffect(() => {
     if (selectedCompany) {
       fetchLeads();
-      fetchParties();
       fetchLeadSources();
     }
   }, [selectedCompany, statusFilter]);
@@ -50,15 +50,6 @@ export function Leads() {
       console.error('Error fetching leads:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchParties = async () => {
-    try {
-      const customers = await customerService.getCustomers(selectedCompany!.id);
-      setParties(customers);
-    } catch (error) {
-      console.error('Error fetching parties:', error);
     }
   };
 
@@ -140,7 +131,10 @@ export function Leads() {
     if (lead) {
       setEditingLead(lead);
       setFormData({
-        party_id: lead.party_id || '',
+        lead_name: lead.lead_name,
+        company_name: lead.company_name || '',
+        contact_email: lead.contact_email || '',
+        contact_phone: lead.contact_phone || '',
         status: lead.status,
         lead_source: lead.lead_source || '',
         qualification_score: lead.qualification_score || 50,
@@ -156,7 +150,7 @@ export function Leads() {
   const openConvertModal = (lead: LeadWithParty) => {
     setConvertingLead(lead);
     setConvertData({
-      title: `${lead.party?.name || 'Untitled'} Opportunity`,
+      title: `${lead.lead_name || 'Untitled'} Opportunity`,
       value_estimate: '',
       stage: 'prospecting',
       expected_close_date: '',
@@ -168,7 +162,10 @@ export function Leads() {
   const resetForm = () => {
     setEditingLead(null);
     setFormData({
-      party_id: '',
+      lead_name: '',
+      company_name: '',
+      contact_email: '',
+      contact_phone: '',
       status: 'new',
       lead_source: '',
       qualification_score: 50,
@@ -311,10 +308,10 @@ export function Leads() {
                     <Users className="h-10 w-10 text-gray-400" />
                     <div className="ml-4">
                       <div className="text-sm font-medium text-gray-900">
-                        {lead.party?.name || 'Unknown Contact'}
+                        {lead.lead_name}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {lead.party?.email || ''}
+                        {lead.contact_email || lead.company_name || ''}
                       </div>
                     </div>
                   </div>
@@ -393,21 +390,55 @@ export function Leads() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Contact *
+                    Contact Name *
                   </label>
-                  <select
-                    value={formData.party_id}
-                    onChange={(e) => setFormData({ ...formData, party_id: e.target.value })}
+                  <input
+                    type="text"
+                    value={formData.lead_name}
+                    onChange={(e) => setFormData({ ...formData, lead_name: e.target.value })}
                     className="w-full border border-gray-300 rounded-lg px-4 py-2"
                     required
-                  >
-                    <option value="">Select a contact...</option>
-                    {parties.map((party) => (
-                      <option key={party.id} value={party.id}>
-                        {party.name} {party.email ? `(${party.email})` : ''}
-                      </option>
-                    ))}
-                  </select>
+                    placeholder="John Doe"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.company_name}
+                    onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    placeholder="Acme Corp"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.contact_email}
+                    onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    placeholder="john@example.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.contact_phone}
+                    onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                    placeholder="+1 (555) 123-4567"
+                  />
                 </div>
 
                 <div>

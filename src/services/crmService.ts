@@ -5,26 +5,28 @@ import { PartyService } from './partyService';
 export interface Lead {
   id: string;
   company_id: string;
-  party_id?: string;
-  status: string;
+  lead_name: string;
+  company_name?: string;
+  contact_email?: string;
+  contact_phone?: string;
   lead_source?: string;
+  status: string;
   qualification_score?: number;
   assigned_to?: string;
   notes?: string;
+  party_id: string;
   created_at: string;
   updated_at: string;
 }
 
 export interface LeadWithParty extends Lead {
-  party?: any;
-  party_type?: 'customer' | 'supplier';
+  party_type: 'customer';
 }
 
 export interface Opportunity {
   id: string;
   company_id: string;
   party_id?: string;
-  lead_id?: string;
   customer_id?: string;
   title: string;
   value_estimate?: number;
@@ -40,7 +42,6 @@ export interface Opportunity {
 export interface OpportunityWithParty extends Opportunity {
   party?: any;
   party_type?: 'customer' | 'supplier';
-  lead?: Lead;
 }
 
 export interface Activity {
@@ -112,7 +113,10 @@ export interface PipelineStats {
 
 export interface CreateLeadInput {
   company_id: string;
-  party_id?: string;
+  lead_name: string;
+  company_name?: string;
+  contact_email?: string;
+  contact_phone?: string;
   status?: string;
   lead_source?: string;
   qualification_score?: number;
@@ -123,7 +127,6 @@ export interface CreateLeadInput {
 export interface CreateOpportunityInput {
   company_id: string;
   party_id?: string;
-  lead_id?: string;
   customer_id?: string;
   title: string;
   value_estimate?: number;
@@ -181,26 +184,10 @@ export class CRMService extends BaseService {
       const { data, error } = await query;
       if (error) throw error;
 
-      const leadsWithParty = await Promise.all(
-        (data || []).map(async (lead) => {
-          if (lead.party_id) {
-            const { data: party } = await this.supabase
-              .from('customers')
-              .select('*')
-              .eq('id', lead.party_id)
-              .maybeSingle();
-
-            return {
-              ...lead,
-              party,
-              party_type: 'customer' as const,
-            };
-          }
-          return lead;
-        })
-      );
-
-      return leadsWithParty;
+      return (data || []).map(lead => ({
+        ...lead,
+        party_type: 'customer' as const,
+      }));
     } catch (error) {
       return this.handleError(error, 'fetch leads');
     }
@@ -218,21 +205,10 @@ export class CRMService extends BaseService {
       if (error) throw error;
       if (!data) return null;
 
-      if (data.party_id) {
-        const { data: party } = await this.supabase
-          .from('customers')
-          .select('*')
-          .eq('id', data.party_id)
-          .maybeSingle();
-
-        return {
-          ...data,
-          party,
-          party_type: 'customer',
-        };
-      }
-
-      return data;
+      return {
+        ...data,
+        party_type: 'customer' as const,
+      };
     } catch (error) {
       return this.handleError(error, 'fetch lead');
     }
@@ -241,28 +217,43 @@ export class CRMService extends BaseService {
   async createLead(input: CreateLeadInput): Promise<Lead> {
     try {
       const { data, error } = await this.supabase
-        .from('leads')
+        .from('customers')
         .insert({
-          ...input,
-          status: input.status || 'new',
+          company_id: input.company_id,
+          name: input.lead_name,
+          email: input.contact_email || '',
+          phone: input.contact_phone || '',
+          entity_type: 'prospect',
+          crm_metadata: {
+            company_name: input.company_name,
+            lead_source: input.lead_source,
+            status: input.status || 'new',
+            qualification_score: input.qualification_score,
+            assigned_to: input.assigned_to,
+            notes: input.notes,
+          },
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      if (input.party_id) {
-        await this.partyService.linkToParty(
-          input.company_id,
-          'lead',
-          data.id,
-          'customer',
-          input.party_id,
-          { method: 'manual' }
-        );
-      }
-
-      return data;
+      return {
+        id: data.id,
+        company_id: data.company_id,
+        lead_name: data.name,
+        company_name: data.crm_metadata?.company_name,
+        contact_email: data.email,
+        contact_phone: data.phone,
+        lead_source: data.crm_metadata?.lead_source,
+        status: data.crm_metadata?.status || 'new',
+        qualification_score: data.crm_metadata?.qualification_score,
+        assigned_to: data.crm_metadata?.assigned_to,
+        notes: data.crm_metadata?.notes,
+        party_id: data.id,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+      };
     } catch (error) {
       return this.handleError(error, 'create lead');
     }
@@ -270,10 +261,25 @@ export class CRMService extends BaseService {
 
   async updateLead(id: string, companyId: string, updates: Partial<Lead>): Promise<Lead> {
     try {
+      const current = await this.getLeadById(id, companyId);
+      if (!current) throw new Error('Lead not found');
+
+      const crm_metadata = {
+        company_name: updates.company_name ?? current.company_name,
+        lead_source: updates.lead_source ?? current.lead_source,
+        status: updates.status ?? current.status,
+        qualification_score: updates.qualification_score ?? current.qualification_score,
+        assigned_to: updates.assigned_to ?? current.assigned_to,
+        notes: updates.notes ?? current.notes,
+      };
+
       const { data, error } = await this.supabase
-        .from('leads')
+        .from('customers')
         .update({
-          ...updates,
+          name: updates.lead_name ?? current.lead_name,
+          email: updates.contact_email ?? current.contact_email,
+          phone: updates.contact_phone ?? current.contact_phone,
+          crm_metadata,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
@@ -282,7 +288,23 @@ export class CRMService extends BaseService {
         .single();
 
       if (error) throw error;
-      return data;
+
+      return {
+        id: data.id,
+        company_id: data.company_id,
+        lead_name: data.name,
+        company_name: data.crm_metadata?.company_name,
+        contact_email: data.email,
+        contact_phone: data.phone,
+        lead_source: data.crm_metadata?.lead_source,
+        status: data.crm_metadata?.status || 'new',
+        qualification_score: data.crm_metadata?.qualification_score,
+        assigned_to: data.crm_metadata?.assigned_to,
+        notes: data.crm_metadata?.notes,
+        party_id: data.id,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+      };
     } catch (error) {
       return this.handleError(error, 'update lead');
     }
@@ -291,10 +313,11 @@ export class CRMService extends BaseService {
   async deleteLead(id: string, companyId: string): Promise<void> {
     try {
       const { error } = await this.supabase
-        .from('leads')
+        .from('customers')
         .delete()
         .eq('id', id)
-        .eq('company_id', companyId);
+        .eq('company_id', companyId)
+        .eq('entity_type', 'prospect');
 
       if (error) throw error;
     } catch (error) {
@@ -321,7 +344,6 @@ export class CRMService extends BaseService {
       const opportunity = await this.createOpportunity({
         company_id: companyId,
         party_id: lead.party_id,
-        lead_id: leadId,
         title: opportunityData.title,
         value_estimate: opportunityData.value_estimate,
         stage: opportunityData.stage || 'prospecting',
@@ -336,6 +358,18 @@ export class CRMService extends BaseService {
       return opportunity;
     } catch (error) {
       return this.handleError(error, 'convert lead to opportunity');
+    }
+  }
+
+  async convertProspectToCustomer(prospectId: string, companyId: string): Promise<void> {
+    try {
+      const { error } = await this.supabase.rpc('convert_prospect_to_customer', {
+        prospect_id: prospectId,
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      return this.handleError(error, 'convert prospect to customer');
     }
   }
 
@@ -379,22 +413,10 @@ export class CRMService extends BaseService {
             }
           }
 
-          let lead = null;
-          if (opp.lead_id) {
-            const { data: leadData } = await this.supabase
-              .from('leads')
-              .select('*')
-              .eq('id', opp.lead_id)
-              .maybeSingle();
-
-            lead = leadData;
-          }
-
           return {
             ...opp,
             party,
             party_type,
-            lead,
           };
         })
       );
@@ -433,22 +455,10 @@ export class CRMService extends BaseService {
         }
       }
 
-      let lead = null;
-      if (data.lead_id) {
-        const { data: leadData } = await this.supabase
-          .from('leads')
-          .select('*')
-          .eq('id', data.lead_id)
-          .maybeSingle();
-
-        lead = leadData;
-      }
-
       return {
         ...data,
         party,
         party_type,
-        lead,
       };
     } catch (error) {
       return this.handleError(error, 'fetch opportunity');
