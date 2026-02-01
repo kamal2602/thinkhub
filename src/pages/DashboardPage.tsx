@@ -58,21 +58,29 @@ import { WebsiteDashboard } from '../components/website/WebsiteDashboard';
 import { Pages } from '../components/website/Pages';
 import { NavigationMenus } from '../components/website/NavigationMenus';
 import { WebsiteSettings } from '../components/website/WebsiteSettings';
+import { InitialSetup } from '../components/onboarding/InitialSetup';
 import { useCompany } from '../contexts/CompanyContext';
 import { useAuth } from '../contexts/AuthContext';
 
 export function DashboardPage() {
   const [currentPage, setCurrentPage] = useState('dashboard');
-  const { selectedCompany, loading } = useCompany();
+  const [setupComplete, setSetupComplete] = useState(false);
+  const { selectedCompany, loading, refreshCompanies } = useCompany();
   const { isSuperAdmin } = useAuth();
 
   useEffect(() => {
-    if (!loading && !selectedCompany) {
-      setCurrentPage('companies');
-    } else if (!loading && selectedCompany && currentPage === 'companies') {
+    if (!loading && !selectedCompany && !setupComplete) {
+      setCurrentPage('initial-setup');
+    } else if (!loading && selectedCompany && currentPage === 'initial-setup') {
       setCurrentPage('dashboard');
     }
-  }, [loading, selectedCompany]);
+  }, [loading, selectedCompany, setupComplete]);
+
+  const handleSetupComplete = async () => {
+    setSetupComplete(true);
+    await refreshCompanies();
+    setCurrentPage('dashboard');
+  };
 
   if (loading) {
     return (
@@ -83,6 +91,10 @@ export function DashboardPage() {
         </div>
       </div>
     );
+  }
+
+  if (!selectedCompany && currentPage === 'initial-setup') {
+    return <InitialSetup onComplete={handleSetupComplete} />;
   }
 
   return (

@@ -14,6 +14,7 @@ interface Company {
 interface CompanyContextType {
   companies: Company[];
   selectedCompany: Company | null;
+  company: Company | null;
   setSelectedCompany: (company: Company | null) => void;
   loading: boolean;
   refreshCompanies: () => Promise<void>;
@@ -106,6 +107,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       value={{
         companies,
         selectedCompany,
+        company: selectedCompany,
         setSelectedCompany,
         loading,
         refreshCompanies,
