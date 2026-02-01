@@ -47,6 +47,8 @@ import { ProductSetup } from '../components/settings/ProductSetup';
 import { BusinessRules } from '../components/settings/BusinessRules';
 import { SystemConfig } from '../components/settings/SystemConfig';
 import { ITADCompliance } from '../components/itad/ITADCompliance';
+import { ChartOfAccounts } from '../components/accounting/ChartOfAccounts';
+import { JournalEntries } from '../components/accounting/JournalEntries';
 import { useCompany } from '../contexts/CompanyContext';
 import { useAuth } from '../contexts/AuthContext';
 import { CommandPalette } from '../components/common/CommandPalette';
@@ -146,6 +148,8 @@ export function DashboardPage() {
         {currentPage === 'business-rules' && <BusinessRules />}
         {currentPage === 'system-config' && <SystemConfig />}
         {currentPage === 'itad-compliance' && <ITADCompliance />}
+        {currentPage === 'chart-of-accounts' && <ChartOfAccounts />}
+        {currentPage === 'journal-entries' && <JournalEntries />}
       </main>
     </div>
   );

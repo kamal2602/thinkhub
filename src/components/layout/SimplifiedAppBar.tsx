@@ -9,7 +9,8 @@ import {
   Shield,
   PieChart,
   Home,
-  Search
+  Search,
+  Calculator
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -89,6 +90,17 @@ export function SimplifiedAppBar({ currentPage, onNavigate }: SimplifiedAppBarPr
         { name: 'ITAD Projects', page: 'itad-projects' },
         { name: 'Compliance', page: 'itad-compliance' },
         { name: 'Downstream Vendors', page: 'downstream-vendors' },
+      ]
+    },
+    {
+      id: 'accounting',
+      name: 'Accounting',
+      icon: Calculator,
+      color: 'bg-green-500',
+      roles: ['admin', 'manager'],
+      pages: [
+        { name: 'Chart of Accounts', page: 'chart-of-accounts' },
+        { name: 'Journal Entries', page: 'journal-entries' },
       ]
     },
     {
