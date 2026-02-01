@@ -12,3 +12,4 @@ export * from './salesInvoiceService';
 export * from './userService';
 export * from './accountingService';
 export * from './engineService';
+export * from './partyService';

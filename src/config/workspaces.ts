@@ -234,6 +234,7 @@ export const WORKSPACES: WorkspaceConfig[] = [
           { name: 'Product Setup', page: 'product-setup' },
           { name: 'Business Rules', page: 'business-rules' },
           { name: 'System Config', page: 'system-config', requiredRoles: ['admin'] },
+          { name: 'Party Directory', page: 'party-directory', requiredRoles: ['admin'] },
         ],
       },
       {

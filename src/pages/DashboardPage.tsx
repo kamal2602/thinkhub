@@ -51,6 +51,7 @@ import { ITADCompliance } from '../components/itad/ITADCompliance';
 import { ChartOfAccounts } from '../components/accounting/ChartOfAccounts';
 import { JournalEntries } from '../components/accounting/JournalEntries';
 import { EngineToggles } from '../components/settings/EngineToggles';
+import { PartyDirectory } from '../components/settings/PartyDirectory';
 import { useCompany } from '../contexts/CompanyContext';
 import { useAuth } from '../contexts/AuthContext';
 import { CommandPalette } from '../components/common/CommandPalette';
@@ -193,6 +194,7 @@ export function DashboardPage() {
         {currentPage === 'product-setup' && <ProductSetup />}
         {currentPage === 'business-rules' && <BusinessRules />}
         {currentPage === 'system-config' && <SystemConfig />}
+        {currentPage === 'party-directory' && <PartyDirectory />}
         {currentPage === 'itad-compliance' && (
           <EngineGuard engine="itad_enabled">
             <ITADCompliance />
