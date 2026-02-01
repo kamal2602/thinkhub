@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GlobalTopBar } from './GlobalTopBar';
 import { DynamicSidebar } from './DynamicSidebar';
+import { PageRouter } from './PageRouter';
 import { useCompany } from '../../contexts/CompanyContext';
 import { DynamicDashboard } from '../dashboard/DynamicDashboard';
 import { AppsInstaller } from '../apps/AppsInstaller';
@@ -58,7 +59,7 @@ export function ModularAppShell({ children }: ModularAppShellProps) {
       return <Page_Payments />;
     }
 
-    return <DynamicDashboard onNavigate={handleNavigate} />;
+    return <PageRouter path={currentPath} fallback={<DynamicDashboard onNavigate={handleNavigate} />} />;
   };
 
   return (
