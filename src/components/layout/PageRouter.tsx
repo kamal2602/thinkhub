@@ -95,28 +95,32 @@ export function PageRouter({ path, fallback }: PageRouterProps) {
         return <PurchaseOrders />;
       case '/smart-receiving':
         return <SmartReceiving />;
+      case '/lots':
       case '/purchase-lots':
         return <PurchaseLots />;
       case '/suppliers':
         return <Suppliers />;
       case '/customers':
         return <Customers />;
+      case '/orders':
+        return <PurchaseOrders />;
+      case '/invoices':
       case '/sales':
         return <SalesInvoices />;
-      case '/sales-catalog':
-        return <UnifiedSalesCatalog />;
       case '/returns':
         return <Returns />;
       case '/repairs':
         return <Repairs />;
-      case '/smart-receiving':
-        return <SmartReceiving />;
       case '/locations':
         return <Locations />;
       case '/movements':
         return <StockMovements />;
+      case '/auction':
       case '/auctions':
         return <AuctionManagement />;
+      case '/reseller':
+      case '/sales-catalog':
+        return <UnifiedSalesCatalog />;
       case '/crm':
         return <CRMDashboard />;
       case '/crm-leads':
@@ -143,6 +147,7 @@ export function PageRouter({ path, fallback }: PageRouterProps) {
         return <EnvironmentalCompliance />;
       case '/recycling':
         return <ESGDashboard />;
+      case '/itad':
       case '/itad-compliance':
         return <ITADCompliance />;
       case '/company-certifications':
