@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, Command, ArrowRight, Clock, Star, Settings, FileText, Package, Users, TrendingUp } from 'lucide-react';
+import { useEngines } from '../../hooks/useEngines';
+import { WORKSPACES, getWorkspacePages } from '../../config/workspaces';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -21,63 +24,38 @@ export function CommandPalette({ isOpen, onClose, onNavigate }: CommandPalettePr
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { isEnabled } = useEngines();
+  const { userRole, isSuperAdmin } = useAuth();
 
-  const commands: CommandItem[] = [
-    {
-      id: 'nav-processing',
-      label: 'Processing',
-      description: 'Manage asset processing workflow',
-      icon: Package,
-      action: () => onNavigate('/processing'),
-      keywords: ['process', 'assets', 'workflow'],
-      category: 'navigation',
-    },
-    {
-      id: 'nav-inventory',
-      label: 'Inventory',
-      description: 'View and manage inventory',
-      icon: Package,
-      action: () => onNavigate('/inventory'),
-      keywords: ['stock', 'items'],
-      category: 'navigation',
-    },
-    {
-      id: 'nav-purchases',
-      label: 'Purchase Orders',
-      description: 'Manage purchase orders',
-      icon: FileText,
-      action: () => onNavigate('/purchases'),
-      keywords: ['po', 'orders', 'buying'],
-      category: 'navigation',
-    },
-    {
-      id: 'nav-sales',
-      label: 'Sales Invoices',
-      description: 'Create and manage sales',
-      icon: TrendingUp,
-      action: () => onNavigate('/sales'),
-      keywords: ['selling', 'invoices'],
-      category: 'navigation',
-    },
-    {
-      id: 'nav-customers',
-      label: 'Customers',
-      description: 'Manage customer relationships',
-      icon: Users,
-      action: () => onNavigate('/customers'),
-      keywords: ['clients', 'contacts'],
-      category: 'navigation',
-    },
-    {
-      id: 'nav-settings',
-      label: 'Settings',
-      description: 'Configure system settings',
-      icon: Settings,
-      action: () => onNavigate('/settings'),
-      keywords: ['config', 'preferences'],
-      category: 'navigation',
-    },
-  ];
+  const commands: CommandItem[] = WORKSPACES.flatMap(workspace => {
+    if (workspace.requiredEngine && !isEnabled(workspace.requiredEngine)) {
+      return [];
+    }
+
+    if (workspace.requiredRoles && !isSuperAdmin && userRole) {
+      if (!workspace.requiredRoles.includes(userRole)) {
+        return [];
+      }
+    }
+
+    const pages = getWorkspacePages(workspace);
+    return pages
+      .filter(page => {
+        if (!page.requiredRoles) return true;
+        if (isSuperAdmin) return true;
+        if (!userRole) return false;
+        return page.requiredRoles.includes(userRole);
+      })
+      .map(page => ({
+        id: `nav-${page.page}`,
+        label: page.name,
+        description: `${workspace.name} → ${page.name}`,
+        icon: workspace.icon,
+        action: () => onNavigate(`/${page.page}`),
+        keywords: [workspace.name.toLowerCase(), page.name.toLowerCase(), page.page],
+        category: 'navigation' as const,
+      }));
+  });
 
   const filteredCommands = search
     ? commands.filter((cmd) => {

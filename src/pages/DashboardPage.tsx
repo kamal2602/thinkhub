@@ -3,6 +3,7 @@ import { SimplifiedAppBar } from '../components/layout/SimplifiedAppBar';
 import { Breadcrumbs } from '../components/layout/Breadcrumbs';
 import { SearchBar } from '../components/layout/SearchBar';
 import { Header } from '../components/layout/Header';
+import { EngineGuard } from '../components/common/EngineGuard';
 import { SimplifiedDashboard } from '../components/dashboard/SimplifiedDashboard';
 import { Processing } from '../components/processing/Processing';
 import { ProductTypes } from '../components/product-types/ProductTypes';
@@ -112,7 +113,11 @@ export function DashboardPage() {
         {currentPage === 'purchase-lots' && <PurchaseLots />}
         {currentPage === 'saleable-inventory' && <SaleableInventory />}
         {currentPage === 'inventory' && <Inventory />}
-        {currentPage === 'harvested-components' && <HarvestedComponentsEnhanced />}
+        {currentPage === 'harvested-components' && (
+          <EngineGuard engine="recycling_enabled">
+            <HarvestedComponentsEnhanced />
+          </EngineGuard>
+        )}
         {currentPage === 'suppliers' && <Suppliers />}
         {currentPage === 'customers' && <Customers />}
         {currentPage === 'movements' && <StockMovements />}
@@ -134,21 +139,65 @@ export function DashboardPage() {
         {currentPage === 'import-intelligence' && <ImportIntelligence />}
         {currentPage === 'model-aliases' && <ModelAliases />}
         {currentPage === 'product-type-aliases' && <ProductTypes initialTab="all-aliases" />}
-        {currentPage === 'component-market-prices' && <ComponentMarketPrices />}
-        {currentPage === 'company-certifications' && <CompanyCertifications />}
-        {currentPage === 'component-sales' && <ComponentSales />}
+        {currentPage === 'component-market-prices' && (
+          <EngineGuard engine="recycling_enabled">
+            <ComponentMarketPrices />
+          </EngineGuard>
+        )}
+        {currentPage === 'company-certifications' && (
+          <EngineGuard engine="itad_enabled">
+            <CompanyCertifications />
+          </EngineGuard>
+        )}
+        {currentPage === 'component-sales' && (
+          <EngineGuard engine="recycling_enabled">
+            <ComponentSales />
+          </EngineGuard>
+        )}
         {currentPage === 'processing-stages' && <ProcessingStages />}
-        {currentPage === 'data-sanitization' && <DataSanitization />}
-        {currentPage === 'itad-projects' && <ITADProjects />}
-        {currentPage === 'certificates' && <Certificates />}
-        {currentPage === 'downstream-vendors' && <DownstreamVendors />}
-        {currentPage === 'environmental-compliance' && <EnvironmentalCompliance />}
-        {currentPage === 'auctions' && <AuctionManagement />}
-        {currentPage === 'itad-revenue-settlements' && <ITADRevenueSettlements />}
+        {currentPage === 'data-sanitization' && (
+          <EngineGuard engine="itad_enabled">
+            <DataSanitization />
+          </EngineGuard>
+        )}
+        {currentPage === 'itad-projects' && (
+          <EngineGuard engine="itad_enabled">
+            <ITADProjects />
+          </EngineGuard>
+        )}
+        {currentPage === 'certificates' && (
+          <EngineGuard engine="itad_enabled">
+            <Certificates />
+          </EngineGuard>
+        )}
+        {currentPage === 'downstream-vendors' && (
+          <EngineGuard engine="itad_enabled">
+            <DownstreamVendors />
+          </EngineGuard>
+        )}
+        {currentPage === 'environmental-compliance' && (
+          <EngineGuard engine="itad_enabled">
+            <EnvironmentalCompliance />
+          </EngineGuard>
+        )}
+        {currentPage === 'auctions' && (
+          <EngineGuard engine="auction_enabled">
+            <AuctionManagement />
+          </EngineGuard>
+        )}
+        {currentPage === 'itad-revenue-settlements' && (
+          <EngineGuard engine="itad_enabled">
+            <ITADRevenueSettlements />
+          </EngineGuard>
+        )}
         {currentPage === 'product-setup' && <ProductSetup />}
         {currentPage === 'business-rules' && <BusinessRules />}
         {currentPage === 'system-config' && <SystemConfig />}
-        {currentPage === 'itad-compliance' && <ITADCompliance />}
+        {currentPage === 'itad-compliance' && (
+          <EngineGuard engine="itad_enabled">
+            <ITADCompliance />
+          </EngineGuard>
+        )}
         {currentPage === 'chart-of-accounts' && <ChartOfAccounts />}
         {currentPage === 'journal-entries' && <JournalEntries />}
         {currentPage === 'engine-toggles' && <EngineToggles />}

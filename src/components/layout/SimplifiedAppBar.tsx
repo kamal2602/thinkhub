@@ -1,37 +1,13 @@
-import {
-  Package,
-  BarChart3,
-  Settings,
-  User,
-  Grid3x3,
-  Wrench,
-  ShoppingBag,
-  Shield,
-  PieChart,
-  Home,
-  Search,
-  Calculator
-} from 'lucide-react';
+import { Package, Search } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCompany } from '../../contexts/CompanyContext';
+import { useEngines } from '../../hooks/useEngines';
+import { WORKSPACES, getWorkspacePages, WorkspaceConfig, PageConfig } from '../../config/workspaces';
 
 interface SimplifiedAppBarProps {
   currentPage: string;
   onNavigate: (page: string) => void;
-}
-
-interface AppModule {
-  id: string;
-  name: string;
-  icon: any;
-  pages: {
-    name: string;
-    page: string;
-    roles?: string[];
-  }[];
-  color: string;
-  roles?: string[];
 }
 
 export function SimplifiedAppBar({ currentPage, onNavigate }: SimplifiedAppBarProps) {
@@ -42,125 +18,34 @@ export function SimplifiedAppBar({ currentPage, onNavigate }: SimplifiedAppBarPr
   const appSwitcherRef = useRef<HTMLDivElement>(null);
   const { userRole, isSuperAdmin } = useAuth();
   const { selectedCompany } = useCompany();
+  const { isEnabled, loading: enginesLoading } = useEngines();
 
-  const modules: AppModule[] = [
-    {
-      id: 'dashboard',
-      name: 'Dashboard',
-      icon: Home,
-      color: 'bg-blue-500',
-      pages: [
-        { name: 'Dashboard', page: 'dashboard' },
-      ]
-    },
-    {
-      id: 'operations',
-      name: 'Operations',
-      icon: Wrench,
-      color: 'bg-blue-500',
-      roles: ['admin', 'manager', 'technician'],
-      pages: [
-        { name: 'Assets', page: 'processing' },
-        { name: 'Receiving', page: 'smart-receiving', roles: ['admin', 'manager'] },
-        { name: 'Inventory', page: 'saleable-inventory' },
-        { name: 'Locations', page: 'locations' },
-      ]
-    },
-    {
-      id: 'business',
-      name: 'Business',
-      icon: ShoppingBag,
-      color: 'bg-emerald-500',
-      roles: ['admin', 'manager', 'sales'],
-      pages: [
-        { name: 'Purchase Orders', page: 'purchases', roles: ['admin', 'manager'] },
-        { name: 'Sales Orders', page: 'sales' },
-        { name: 'Suppliers', page: 'suppliers', roles: ['admin', 'manager'] },
-        { name: 'Customers', page: 'customers' },
-        { name: 'Returns & Repairs', page: 'returns' },
-      ]
-    },
-    {
-      id: 'itad',
-      name: 'ITAD',
-      icon: Shield,
-      color: 'bg-red-500',
-      roles: ['admin', 'manager'],
-      pages: [
-        { name: 'ITAD Projects', page: 'itad-projects' },
-        { name: 'Compliance', page: 'itad-compliance' },
-        { name: 'Downstream Vendors', page: 'downstream-vendors' },
-      ]
-    },
-    {
-      id: 'accounting',
-      name: 'Accounting',
-      icon: Calculator,
-      color: 'bg-green-500',
-      roles: ['admin', 'manager'],
-      pages: [
-        { name: 'Chart of Accounts', page: 'chart-of-accounts' },
-        { name: 'Journal Entries', page: 'journal-entries' },
-      ]
-    },
-    {
-      id: 'reports',
-      name: 'Reports',
-      icon: PieChart,
-      color: 'bg-violet-500',
-      roles: ['admin', 'manager'],
-      pages: [
-        { name: 'Analytics', page: 'reports' },
-      ]
-    },
-    {
-      id: 'settings',
-      name: 'Settings',
-      icon: Settings,
-      color: 'bg-slate-500',
-      roles: ['admin', 'manager'],
-      pages: [
-        { name: 'Engine Toggles', page: 'engine-toggles', roles: ['admin'] },
-        { name: 'Product Setup', page: 'product-setup' },
-        { name: 'Business Rules', page: 'business-rules' },
-        { name: 'System Config', page: 'system-config' },
-        { name: 'Processing Stages', page: 'processing-stages' },
-      ]
-    },
-    {
-      id: 'account',
-      name: 'Account',
-      icon: User,
-      color: 'bg-gray-500',
-      roles: ['admin', 'manager'],
-      pages: [
-        { name: 'Companies', page: 'companies' },
-        { name: 'Users', page: 'users', roles: ['admin'] },
-      ]
-    },
-  ];
+  const filteredWorkspaces = WORKSPACES.filter(workspace => {
+    if (workspace.requiredEngine && !isEnabled(workspace.requiredEngine)) {
+      return false;
+    }
 
-  const filteredModules = modules.filter(module => {
-    if (!module.roles) return true;
+    if (!workspace.requiredRoles) return true;
     if (isSuperAdmin) return true;
     if (!userRole) return false;
-    return module.roles.includes(userRole);
+    return workspace.requiredRoles.includes(userRole);
   });
 
-  const getFilteredPages = (module: AppModule) => {
-    return module.pages.filter(page => {
-      if (!page.roles) return true;
+  const getFilteredPages = (workspace: WorkspaceConfig): PageConfig[] => {
+    const allPages = getWorkspacePages(workspace);
+    return allPages.filter(page => {
+      if (!page.requiredRoles) return true;
       if (isSuperAdmin) return true;
       if (!userRole) return false;
-      return page.roles.includes(userRole);
+      return page.requiredRoles.includes(userRole);
     });
   };
 
-  const getCurrentModule = () => {
-    for (const module of modules) {
-      const pages = getFilteredPages(module);
+  const getCurrentWorkspace = (): WorkspaceConfig | null => {
+    for (const workspace of WORKSPACES) {
+      const pages = getFilteredPages(workspace);
       if (pages.some(p => p.page === currentPage)) {
-        return module;
+        return workspace;
       }
     }
     return null;
@@ -200,16 +85,16 @@ export function SimplifiedAppBar({ currentPage, onNavigate }: SimplifiedAppBarPr
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleModuleClick = (moduleId: string) => {
-    const module = modules.find(m => m.id === moduleId);
-    if (module) {
-      const pages = getFilteredPages(module);
+  const handleWorkspaceClick = (workspaceId: string) => {
+    const workspace = WORKSPACES.find(w => w.id === workspaceId);
+    if (workspace) {
+      const pages = getFilteredPages(workspace);
       if (pages.length === 1) {
         handlePageClick(pages[0].page);
-      } else if (activeModule === moduleId) {
+      } else if (activeModule === workspaceId) {
         setActiveModule(null);
       } else {
-        setActiveModule(moduleId);
+        setActiveModule(workspaceId);
       }
     }
   };
@@ -220,7 +105,7 @@ export function SimplifiedAppBar({ currentPage, onNavigate }: SimplifiedAppBarPr
     setShowAppSwitcher(false);
   };
 
-  const currentModule = getCurrentModule();
+  const currentWorkspace = getCurrentWorkspace();
 
   return (
     <div className="bg-white border-b border-slate-200 shadow-sm">
@@ -235,25 +120,25 @@ export function SimplifiedAppBar({ currentPage, onNavigate }: SimplifiedAppBarPr
         </div>
 
         <nav className="flex items-center gap-1 flex-1">
-          {filteredModules.map((module) => {
-            const Icon = module.icon;
-            const isActive = currentModule?.id === module.id;
-            const pages = getFilteredPages(module);
+          {filteredWorkspaces.map((workspace) => {
+            const Icon = workspace.icon;
+            const isActive = currentWorkspace?.id === workspace.id;
+            const pages = getFilteredPages(workspace);
 
             return (
               <div
-                key={module.id}
+                key={workspace.id}
                 className="relative"
                 ref={(el) => {
                   if (el) {
-                    moduleMenuRefs.current.set(module.id, el);
+                    moduleMenuRefs.current.set(workspace.id, el);
                   } else {
-                    moduleMenuRefs.current.delete(module.id);
+                    moduleMenuRefs.current.delete(workspace.id);
                   }
                 }}
               >
                 <button
-                  onClick={() => handleModuleClick(module.id)}
+                  onClick={() => handleWorkspaceClick(workspace.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
                     isActive
                       ? 'bg-blue-50 text-blue-600'
@@ -261,10 +146,10 @@ export function SimplifiedAppBar({ currentPage, onNavigate }: SimplifiedAppBarPr
                   }`}
                 >
                   <Icon className="w-4 h-4" />
-                  <span className="text-sm font-medium">{module.name}</span>
+                  <span className="text-sm font-medium">{workspace.name}</span>
                 </button>
 
-                {activeModule === module.id && pages.length > 1 && (
+                {activeModule === workspace.id && pages.length > 1 && (
                   <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-slate-200 py-2 z-50">
                     {pages.map((page) => {
                       const isPageActive = currentPage === page.page;

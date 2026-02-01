@@ -3,6 +3,7 @@ import { useCompany } from '../../contexts/CompanyContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { engineService, EngineToggles as EngineTogglesType } from '../../services/engineService';
 import { useToast } from '../../contexts/ToastContext';
+import { getWorkspacesForEngine } from '../../config/workspaces';
 import {
   ShoppingBag,
   Shield,
@@ -272,6 +273,26 @@ export function EngineToggles() {
                   ))}
                 </ul>
               </div>
+
+              {getWorkspacesForEngine(engine.key).length > 0 && (
+                <div className="mt-4 pt-4 border-t border-slate-200">
+                  <p className="text-xs font-medium uppercase text-slate-500 mb-2">
+                    Workspaces Enabled:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {getWorkspacesForEngine(engine.key).map((workspace) => (
+                      <span
+                        key={workspace}
+                        className={`px-2 py-1 rounded text-xs font-medium ${
+                          isEnabled ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'
+                        }`}
+                      >
+                        {workspace}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}
