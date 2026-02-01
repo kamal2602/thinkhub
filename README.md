@@ -1,98 +1,38 @@
-# Stock Pro - Smart Inventory & Billing Solution
+# Modular ITAD ERP System
 
-A comprehensive stock management and billing platform with multi-company support and advanced access control.
+A comprehensive, engine-driven enterprise resource planning platform for IT Asset Disposition (ITAD), electronics reselling, component harvesting, and circular economy operations.
 
-## Features Implemented
+## Overview
 
-### ✅ Core Features
-- **Multi-Company Management** - Manage multiple businesses from one account
-- **Multi-Location Support** - Track inventory across multiple warehouses/stores
-- **Role-Based Access Control** - 4 levels: Admin, Manager, Staff, Viewer
-- **Location-Level Permissions** - Control who can view/edit specific locations
-- **Real-time Stock Tracking** - Automatic stock updates from all transactions
-- **Authentication System** - Secure email/password authentication
+This system is built on a modular engine architecture that allows organizations to activate only the features they need, from basic inventory management to advanced ITAD compliance, auction platforms, CRM, and more.
 
-### ✅ Inventory Management
-- **Unlimited Products** - Add unlimited inventory items
-- **Barcode Support** - Ready for barcode/SKU scanning
-- **Categories** - Organize products (with subcategory support in database)
-- **Cost & Selling Price** - Track both prices for profit calculation
-- **Reorder Levels** - Low stock alerts and monitoring
-- **Stock Levels** - Real-time quantity tracking per location
-- **Stock Movements** - Complete audit trail of all stock changes
+## Key Features
 
-### ✅ Supplier & Customer Management
-- **Suppliers** - Manage supplier database with contact info
-- **Customers** - Customer database for sales tracking
-- Contact information (phone, email, address)
-- Quick add/edit/delete functionality
-
-### ✅ User Management (Admin only)
-- Invite users to companies
-- Assign roles per company
-- Set location-specific permissions (view/edit)
-- Remove user access
-
-### ✅ Dashboard & Reporting
-- Key metrics overview
-- Low stock alerts
-- Recent activity tracking
-- Company statistics
-
-### 🚧 Features Ready (Database Schema Complete)
-These features have full database support and are ready for UI implementation:
-
-- **Purchase Invoices** - Record supplier purchases with line items
-- **Sales Invoices** - Create sales orders with payment tracking
-- **Returns Management** - Process sales and purchase returns
-- **Repairs Tracking** - Service/repair management system
-- **Advanced Reports** - Sales, purchases, profit/loss, stock valuation
+- **Engine-Based Architecture** - Modular system where features can be enabled/disabled per company
+- **Multi-Company & Multi-Workspace** - Manage multiple businesses with isolated data
+- **ITAD Compliance** - Data sanitization tracking, certificates, environmental reporting (WEEE, GRI)
+- **Component Harvesting** - Track harvested parts, market pricing, and resale value
+- **Smart Import Intelligence** - AI-powered field mapping and product type detection
+- **Customer Portal** - Self-service portal for clients to track assets and download certificates
+- **Purchase & Receiving** - Comprehensive PO management with smart receiving workflows
+- **Sales & Invoicing** - Unified sales catalog for whole assets and components
+- **Auction Platform** - Built-in auction engine aligned with core inventory
+- **CRM** - Lead, opportunity, and activity tracking
+- **Website CMS** - Public-facing website engine for marketing
+- **Processing Workflows** - Asset lifecycle tracking from receiving through testing to sale
+- **Real-time Updates** - Live collaboration with Supabase realtime
+- **Enterprise Security** - Role-based access control with comprehensive audit trails
 
 ## Tech Stack
 
 - **Frontend**: React 18 + TypeScript + Vite
 - **Styling**: Tailwind CSS
 - **Database**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth
+- **Authentication**: Supabase Auth (Email/Password + Customer Portal)
 - **Icons**: Lucide React
-
-## Database Schema
-
-### Core Tables
-- `companies` - Business entities
-- `locations` - Warehouse/store locations
-- `user_company_access` - Company-level permissions
-- `user_location_access` - Location-level permissions
-- `profiles` - User profiles
-
-### Inventory Tables
-- `categories` - Product categories
-- `inventory_items` - Product catalog
-- `stock_levels` - Current stock by location
-- `stock_movements` - Movement audit trail
-
-### Business Tables
-- `suppliers` - Supplier database
-- `customers` - Customer database
-- `purchase_invoices` + `purchase_invoice_items` - Purchase orders
-- `sales_invoices` + `sales_invoice_items` - Sales orders
-- `returns` + `return_items` - Return processing
-- `repairs` - Repair/service tracking
-
-## Security Features
-
-### Row Level Security (RLS)
-All tables have RLS policies enforcing:
-- Company-based access control
-- Role-based permissions
-- Location-specific access rights
-
-### Automatic Features
-- Stock movements auto-created from invoices
-- Stock levels auto-updated from movements
-- Payment status auto-calculated
-- Returns auto-adjust stock levels
-- Timestamps auto-managed
+- **File Processing**: XLSX for Excel imports
+- **Drag & Drop**: dnd-kit for Kanban boards
+- **Routing**: React Router v6
 
 ## Getting Started
 
@@ -100,9 +40,11 @@ All tables have RLS policies enforcing:
 - Node.js 18+
 - Supabase account
 
-### Environment Variables
-Create `.env` file:
-```
+### Environment Setup
+
+1. Clone the repository
+2. Create `.env` file with your Supabase credentials:
+```bash
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
@@ -116,162 +58,132 @@ npm run dev
 ### Build for Production
 ```bash
 npm run build
+npm start
 ```
+
+## Documentation
+
+Comprehensive documentation is available in the `/docs` directory:
+
+### Quick Links
+- **[Documentation Index](docs/README.md)** - Complete documentation navigation
+- **[First Time Setup](docs/guides/FIRST_TIME_SETUP_GUIDE.md)** - Get started guide
+- **[Architecture Overview](docs/architecture/ENGINES.md)** - System architecture
+- **[Processing Workflow](docs/workflows/PROCESSING_WORKFLOW_GUIDE.md)** - Asset processing guide
+- **[Deployment Guide](docs/reference/DEPLOYMENT.md)** - Production deployment
+
+### Documentation Structure
+- **`/docs/architecture`** - System design, engine architecture, modular ERP
+- **`/docs/guides`** - Getting started, quick starts, troubleshooting
+- **`/docs/workflows`** - Processing, receiving, import intelligence
+- **`/docs/features`** - Feature-specific documentation
+- **`/docs/implementation`** - Project status and change logs
+- **`/docs/reference`** - Technical specifications
+- **`/docs/archive`** - Historical documentation
 
 ## Project Structure
 
 ```
 src/
 ├── components/
-│   ├── auth/           # Login & Registration
-│   ├── companies/      # Company management
-│   ├── customers/      # Customer management
-│   ├── dashboard/      # Dashboard overview
-│   ├── inventory/      # Inventory management
-│   ├── layout/         # Header & Sidebar
-│   ├── locations/      # Location management
-│   ├── movements/      # Stock movements
-│   ├── suppliers/      # Supplier management
-│   └── users/          # User management
-├── contexts/           # Auth & Company contexts
-├── lib/               # Supabase client & types
-└── pages/             # Auth & Dashboard pages
+│   ├── accounting/       # GL, journal entries
+│   ├── ai/              # AI valuation widgets
+│   ├── apps/            # Engine installer
+│   ├── auctions/        # Auction management
+│   ├── auth/            # Login & registration
+│   ├── common/          # Shared components, modals, guards
+│   ├── compliance/      # Audit exports
+│   ├── crm/             # Leads, opportunities, activities
+│   ├── customer-portal/ # Customer self-service portal
+│   ├── dashboard/       # Engine-driven dashboards
+│   ├── esg/             # ESG/environmental compliance
+│   ├── inventory/       # Asset inventory, components
+│   ├── itad/            # ITAD compliance, certificates
+│   ├── layout/          # App shell, sidebar, navigation
+│   ├── onboarding/      # First-time setup wizard
+│   ├── processing/      # Asset processing workflows
+│   ├── purchases/       # PO management, smart imports
+│   ├── receiving/       # Receiving workflows
+│   ├── sales/           # Sales invoices, catalog
+│   ├── settings/        # System configuration, engines
+│   ├── website/         # CMS engine
+│   └── workspace/       # Universal workspace tables
+├── contexts/            # Auth, Company, Workspace, Toast
+├── hooks/               # Custom React hooks
+├── lib/                 # Utilities, database types, parsers
+├── models/              # Data models
+├── services/            # Business logic services
+└── pages/              # Top-level pages
+
+supabase/
+└── migrations/         # Database schema migrations
 ```
 
-## User Roles
+## Engine System
 
-### Admin
-- Full access to everything
-- Manage users and permissions
-- Delete records
-- Manage companies
+The platform uses an engine registry system where each company can activate specific modules:
 
-### Manager
-- Manage inventory
-- Manage locations
-- Create invoices
-- View reports
+**Core Engines:**
+- Inventory (always on)
+- Processing
+- Receiving
 
-### Staff
-- Edit inventory
-- Create invoices
-- Process returns
-- Record movements
+**Optional Engines:**
+- ITAD Compliance
+- Component Harvesting
+- Auction Platform
+- CRM
+- Customer Portal
+- Website/CMS
+- Accounting
+- ESG/Compliance Reporting
+- AI Valuation
 
-### Viewer
-- View-only access
-- Can see all data but cannot edit
+Engines can be toggled in Settings → Engine Toggles.
 
-## Access Control Flow
+## Security
 
-1. **Company Level** - User must have access to company
-2. **Role Check** - User's role determines feature access
-3. **Location Level** - For location-specific operations, check location permissions
-4. **Database RLS** - All policies enforced at database level
+- **Row Level Security (RLS)** on all tables
+- **Company-scoped data** - Complete isolation between organizations
+- **Role-based access control** - Admin, Manager, Staff, Viewer, Customer Portal
+- **Audit trails** - Comprehensive change tracking
+- **Engine gating** - Features locked unless engine enabled
+- **Zero parallel truth** - Single source of truth for inventory, financial data
 
-## Next Steps for Full Implementation
+## Database
 
-To complete the Stock Pro feature set, implement these components:
+PostgreSQL via Supabase with 200+ migration files covering:
+- Multi-company architecture
+- Party system (unified customers/suppliers)
+- ITAD compliance tracking
+- Component harvesting and sales
+- Import intelligence
+- Audit trails
+- RLS policies
 
-### 1. Purchase Invoices Component (Priority 1)
-- Select supplier
-- Add line items (product, quantity, price)
-- Calculate totals
-- Track payment status
-- Auto-generate invoice numbers
+See `/docs/reference` for database schema documentation.
 
-### 2. Sales Invoices Component (Priority 1)
-- Select customer
-- Add line items with cost price for profit tracking
-- Payment tracking
-- Print invoice feature
+## Contributing
 
-### 3. Returns Component (Priority 2)
-- Select return type (sales/purchase)
-- Reference original invoice (optional)
-- Select items and quantities
-- Choose refund method
-- Auto-adjust stock
-
-### 4. Repairs Component (Priority 2)
-- Record item, customer, issue
-- Status tracking workflow
-- Repair cost and notes
-- Completion date tracking
-
-### 5. Reports Component (Priority 3)
-- Sales reports (by date, product, customer)
-- Purchase reports (by supplier, date)
-- Profit/loss analysis
-- Stock valuation reports
-- Export to PDF
-
-### 6. Barcode Scanning (Priority 4)
-Options:
-- Use `quagga2` for webcam scanning
-- Support hardware barcode scanners (input field)
-- Browser Barcode Detection API
-
-### 7. Categories Management (Priority 4)
-- Add/edit/delete categories
-- Subcategory support
-- Assign to products
-
-## Database Query Examples
-
-### Get Invoice with Full Details
-```typescript
-const { data } = await supabase
-  .from('sales_invoices')
-  .select(`
-    *,
-    customers(name, phone),
-    sales_invoice_items(
-      *,
-      inventory_items(name, sku, cost_price),
-      locations(name)
-    )
-  `)
-  .eq('id', invoiceId)
-  .single();
-```
-
-### Calculate Total Profit
-```typescript
-const { data } = await supabase
-  .from('sales_invoice_items')
-  .select('quantity, unit_price, cost_price');
-
-const profit = data.reduce((sum, item) =>
-  sum + (item.quantity * (item.unit_price - item.cost_price)), 0
-);
-```
-
-### Stock Valuation
-```typescript
-const { data } = await supabase
-  .from('stock_levels')
-  .select(`
-    quantity,
-    inventory_items(cost_price)
-  `);
-
-const value = data.reduce((sum, item) =>
-  sum + (item.quantity * item.inventory_items.cost_price), 0
-);
-```
-
-## Support & Documentation
-
-For detailed implementation guides, see:
-- `STOCKPRO_IMPLEMENTATION.md` - Complete feature breakdown
-- Database migration files in `supabase/migrations/`
+When adding features:
+1. Follow the engine architecture patterns
+2. Ensure RLS policies are in place
+3. Update relevant documentation in `/docs`
+4. Test with engine enabled/disabled states
 
 ## License
 
 Proprietary - All rights reserved
 
-## Contact
+## Support
 
-For inquiries about Stock Pro features or custom development:
-📞 +971 50 1640519
+For questions or support:
+- Review documentation in `/docs`
+- Check troubleshooting guides
+- Contact the development team
+
+---
+
+**Version:** 2.0
+**Last Updated:** February 2026
+**Architecture:** Modular Engine System
