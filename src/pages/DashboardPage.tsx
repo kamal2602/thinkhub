@@ -52,6 +52,10 @@ import { ChartOfAccounts } from '../components/accounting/ChartOfAccounts';
 import { JournalEntries } from '../components/accounting/JournalEntries';
 import { EngineToggles } from '../components/settings/EngineToggles';
 import { PartyDirectory } from '../components/settings/PartyDirectory';
+import { CRMDashboard } from '../components/crm/CRMDashboard';
+import { Leads } from '../components/crm/Leads';
+import { Opportunities } from '../components/crm/Opportunities';
+import { Activities } from '../components/crm/Activities';
 import { useCompany } from '../contexts/CompanyContext';
 import { useAuth } from '../contexts/AuthContext';
 import { CommandPalette } from '../components/common/CommandPalette';
@@ -203,6 +207,26 @@ export function DashboardPage() {
         {currentPage === 'chart-of-accounts' && <ChartOfAccounts />}
         {currentPage === 'journal-entries' && <JournalEntries />}
         {currentPage === 'engine-toggles' && <EngineToggles />}
+        {currentPage === 'crm' && (
+          <EngineGuard engine="crm_enabled">
+            <CRMDashboard onNavigate={setCurrentPage} />
+          </EngineGuard>
+        )}
+        {currentPage === 'crm-leads' && (
+          <EngineGuard engine="crm_enabled">
+            <Leads />
+          </EngineGuard>
+        )}
+        {currentPage === 'crm-opportunities' && (
+          <EngineGuard engine="crm_enabled">
+            <Opportunities />
+          </EngineGuard>
+        )}
+        {currentPage === 'crm-activities' && (
+          <EngineGuard engine="crm_enabled">
+            <Activities />
+          </EngineGuard>
+        )}
       </main>
     </div>
   );

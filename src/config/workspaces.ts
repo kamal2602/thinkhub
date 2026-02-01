@@ -177,8 +177,17 @@ export const WORKSPACES: WorkspaceConfig[] = [
     color: 'pink',
     requiredEngine: 'crm_enabled',
     requiredRoles: ['admin', 'manager', 'sales'],
-    pages: [
-      { name: 'CRM Dashboard', page: 'crm' },
+    modules: [
+      {
+        id: 'sales-crm',
+        name: 'Sales CRM',
+        pages: [
+          { name: 'CRM Dashboard', page: 'crm', requiredEngine: 'crm_enabled' },
+          { name: 'Leads', page: 'crm-leads', requiredEngine: 'crm_enabled' },
+          { name: 'Opportunities', page: 'crm-opportunities', requiredEngine: 'crm_enabled' },
+          { name: 'Activities', page: 'crm-activities', requiredEngine: 'crm_enabled' },
+        ],
+      },
     ],
   },
   {
