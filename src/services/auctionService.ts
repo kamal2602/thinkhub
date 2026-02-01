@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import type { Database } from '../lib/database.types';
+import { salesInvoiceService } from './salesInvoiceService';
 
 /**
  * Auction Service
@@ -9,6 +10,12 @@ import type { Database } from '../lib/database.types';
  * This service manages auction houses, events, lots, bids, and settlements.
  * All UI components using this service must be wrapped with:
  * <EngineGuard engine="auction_enabled">
+ *
+ * ARCHITECTURE ALIGNMENT:
+ * - Buyers are Parties (customers table) - use party_id in bids
+ * - Lots reference purchase_lots for inventory/cost basis
+ * - Settlements create sales_invoices (core financial truth)
+ * - buyer_accounts deprecated (use party_links for legacy mapping)
  */
 
 type AuctionHouse = Database['public']['Tables']['auction_houses']['Row'];
@@ -19,12 +26,12 @@ type AuctionLot = Database['public']['Tables']['auction_lots']['Row'];
 type AuctionLotInsert = Database['public']['Tables']['auction_lots']['Insert'];
 type AuctionLotItem = Database['public']['Tables']['auction_lot_items']['Row'];
 type AuctionLotItemInsert = Database['public']['Tables']['auction_lot_items']['Insert'];
-type BuyerAccount = Database['public']['Tables']['buyer_accounts']['Row'];
-type BuyerAccountInsert = Database['public']['Tables']['buyer_accounts']['Insert'];
 type Bid = Database['public']['Tables']['bids']['Row'];
 type BidInsert = Database['public']['Tables']['bids']['Insert'];
+
+// Legacy types - preserved for backward compatibility
+type BuyerAccount = Database['public']['Tables']['buyer_accounts']['Row'];
 type AuctionSettlement = Database['public']['Tables']['auction_settlements']['Row'];
-type AuctionSettlementInsert = Database['public']['Tables']['auction_settlements']['Insert'];
 
 export const auctionService = {
   async getAuctionHouses(companyId: string): Promise<AuctionHouse[]> {
@@ -151,12 +158,17 @@ export const auctionService = {
       .select(`
         *,
         auction_event:auction_events(event_name, start_date, status),
+        purchase_lot:purchase_lots(lot_number, total_cost, total_items, supplier:suppliers(name)),
         auction_lot_items(
           *,
           asset:assets(serial_number, brand, model),
           component:harvested_components_inventory(component_type, brand, model)
         ),
-        bids(*, buyer:buyer_accounts(buyer_name))
+        bids(
+          *,
+          party:customers(name, customer_number, email),
+          buyer:buyer_accounts(buyer_name, buyer_number)
+        )
       `)
       .eq('id', id)
       .maybeSingle();
@@ -232,6 +244,16 @@ export const auctionService = {
     return data || [];
   },
 
+  // =========================================
+  // BUYERS (Party-based)
+  // =========================================
+  // DEPRECATED: Use customerService for buyer management
+  // Buyers are now Parties (customers). Use party_links for legacy buyer_account mapping.
+
+  /**
+   * @deprecated Use customerService.getCustomers() instead
+   * Legacy function preserved for backward compatibility only
+   */
   async getBuyerAccounts(companyId: string): Promise<BuyerAccount[]> {
     const { data, error } = await supabase
       .from('buyer_accounts')
@@ -243,31 +265,13 @@ export const auctionService = {
     return data || [];
   },
 
-  async createBuyerAccount(buyer: BuyerAccountInsert): Promise<BuyerAccount> {
-    const { data, error } = await supabase
-      .from('buyer_accounts')
-      .insert(buyer)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  },
-
-  async updateBuyerAccount(id: string, updates: Partial<BuyerAccountInsert>): Promise<BuyerAccount> {
-    const { data, error} = await supabase
-      .from('buyer_accounts')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  },
-
+  /**
+   * Place a bid on an auction lot
+   * @param bid - Bid data with party_id (customer ID) as buyer identity
+   */
   async placeBid(bid: BidInsert): Promise<Bid> {
-    const { data: currentBids, error: fetchError } = await supabase
+    // Mark all current winning bids as not winning
+    const { error: fetchError } = await supabase
       .from('bids')
       .update({ is_winning: false })
       .eq('auction_lot_id', bid.auction_lot_id)
@@ -275,6 +279,7 @@ export const auctionService = {
 
     if (fetchError) throw fetchError;
 
+    // Insert new bid as winning
     const { data, error } = await supabase
       .from('bids')
       .insert({ ...bid, is_winning: true })
@@ -283,6 +288,7 @@ export const auctionService = {
 
     if (error) throw error;
 
+    // Update auction lot with current bid and count
     const { error: updateError } = await supabase
       .from('auction_lots')
       .update({
@@ -300,11 +306,16 @@ export const auctionService = {
     return data;
   },
 
+  /**
+   * Get bids for an auction lot
+   * Joins with customers (Party) for buyer identity
+   */
   async getBidsForLot(lotId: string): Promise<Bid[]> {
     const { data, error } = await supabase
       .from('bids')
       .select(`
         *,
+        party:customers(name, customer_number, email),
         buyer:buyer_accounts(buyer_name, buyer_number)
       `)
       .eq('auction_lot_id', lotId)
@@ -323,26 +334,145 @@ export const auctionService = {
     if (error) throw error;
   },
 
-  async createSettlement(settlement: AuctionSettlementInsert): Promise<AuctionSettlement> {
-    const { data, error } = await supabase
-      .from('auction_settlements')
-      .insert(settlement)
-      .select()
+  /**
+   * Settle an auction lot by creating a sales invoice
+   * This is the ONLY way to settle auctions - creates core financial truth
+   *
+   * @param lotId - Auction lot ID
+   * @param partyId - Buyer party ID (customer)
+   * @param hammerPrice - Final winning bid amount
+   * @param commission - Auction house commission
+   * @param buyerPremium - Additional buyer premium
+   * @returns Sales invoice created for the settlement
+   */
+  async settleAuction(params: {
+    companyId: string;
+    lotId: string;
+    partyId: string;
+    hammerPrice: number;
+    commission?: number;
+    buyerPremium?: number;
+    listingFees?: number;
+    otherFees?: number;
+    notes?: string;
+  }): Promise<any> {
+    const {
+      companyId,
+      lotId,
+      partyId,
+      hammerPrice,
+      commission = 0,
+      buyerPremium = 0,
+      listingFees = 0,
+      otherFees = 0,
+      notes = ''
+    } = params;
+
+    // 1. Get lot details and items
+    const { data: lot, error: lotError } = await supabase
+      .from('auction_lots')
+      .select(`
+        *,
+        auction_lot_items(
+          *,
+          asset:assets(*),
+          component:harvested_components_inventory(*)
+        )
+      `)
+      .eq('id', lotId)
       .single();
 
-    if (error) throw error;
+    if (lotError) throw lotError;
+    if (!lot) throw new Error('Auction lot not found');
 
+    // 2. Calculate cost basis
+    const { data: costBasis } = await supabase
+      .rpc('get_auction_lot_cost_basis', { lot_id: lotId });
+
+    // 3. Calculate totals
+    const totalSalePrice = hammerPrice + buyerPremium;
+    const netProceeds = hammerPrice - commission - listingFees - otherFees;
+
+    // 4. Generate invoice number
+    const { data: invoiceCount } = await supabase
+      .from('sales_invoices')
+      .select('id', { count: 'exact', head: true })
+      .eq('company_id', companyId);
+
+    const invoiceNumber = `INV-AUC-${String((invoiceCount?.count || 0) + 1).padStart(6, '0')}`;
+
+    // 5. Create sales invoice (core financial truth)
+    const invoice = await salesInvoiceService.createInvoice({
+      company_id: companyId,
+      customer_id: partyId,
+      invoice_number: invoiceNumber,
+      invoice_date: new Date().toISOString().split('T')[0],
+      total_amount: totalSalePrice,
+      paid_amount: 0,
+      payment_status: 'unpaid',
+      sales_channel: 'auction',
+      notes: `Auction Settlement - Lot ${lot.lot_number}\nHammer Price: $${hammerPrice}\nCommission: $${commission}\nBuyer Premium: $${buyerPremium}\n${notes}`,
+    });
+
+    // 6. Add line items from auction lot
+    if (lot.auction_lot_items && lot.auction_lot_items.length > 0) {
+      for (const item of lot.auction_lot_items) {
+        await salesInvoiceService.addInvoiceItem({
+          invoice_id: invoice.id,
+          description: item.description || `Auction Lot ${lot.lot_number} Item`,
+          quantity: item.quantity || 1,
+          unit_price: hammerPrice / (lot.auction_lot_items.length || 1),
+          cost_price: item.cost_basis || 0,
+          asset_id: item.asset_id,
+          component_id: item.component_id,
+        });
+      }
+    }
+
+    // 7. Mark auction lot as sold
     const { error: updateError } = await supabase
       .from('auction_lots')
-      .update({ status: 'sold' })
-      .eq('id', settlement.auction_lot_id);
+      .update({
+        status: 'sold',
+        hammer_price: hammerPrice,
+        buyer_premium: buyerPremium,
+        total_price: totalSalePrice
+      })
+      .eq('id', lotId);
 
     if (updateError) throw updateError;
 
-    return data;
+    return invoice;
   },
 
-  async getSettlements(companyId: string): Promise<AuctionSettlement[]> {
+  /**
+   * Get auction settlements (from sales_invoices with sales_channel = 'auction')
+   * This reads from the core financial system (sales_invoices) not parallel auction_settlements
+   */
+  async getSettlements(companyId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('sales_invoices')
+      .select(`
+        *,
+        customer:customers(name, customer_number, email),
+        sales_invoice_items(
+          *,
+          asset:assets(serial_number, brand, model),
+          component:harvested_components_inventory(component_type, brand, model)
+        )
+      `)
+      .eq('company_id', companyId)
+      .eq('sales_channel', 'auction')
+      .order('invoice_date', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  /**
+   * @deprecated Legacy settlements table is read-only for historical data
+   */
+  async getLegacySettlements(companyId: string): Promise<AuctionSettlement[]> {
     const { data, error } = await supabase
       .from('auction_settlements')
       .select(`
@@ -357,29 +487,79 @@ export const auctionService = {
     return data || [];
   },
 
-  async updateSettlement(id: string, updates: Partial<AuctionSettlementInsert>): Promise<AuctionSettlement> {
+  /**
+   * Calculate lot cost basis from purchase_lots (if linked) or auction_lot_items (legacy)
+   * Uses database function for single source of truth
+   */
+  async calculateLotCostBasis(lotId: string): Promise<number> {
     const { data, error } = await supabase
-      .from('auction_settlements')
-      .update(updates)
-      .eq('id', id)
+      .rpc('get_auction_lot_cost_basis', { lot_id: lotId });
+
+    if (error) throw error;
+    return data || 0;
+  },
+
+  /**
+   * Create an auction lot from an existing purchase lot
+   * This is the preferred way to create auction lots (uses purchase_lots as source)
+   */
+  async createAuctionLotFromPurchaseLot(params: {
+    companyId: string;
+    auctionEventId: string;
+    purchaseLotId: string;
+    lotNumber: string;
+    title: string;
+    description?: string;
+    startingPrice?: number;
+    reservePrice?: number;
+    estimateLow?: number;
+    estimateHigh?: number;
+  }): Promise<AuctionLot> {
+    const {
+      companyId,
+      auctionEventId,
+      purchaseLotId,
+      lotNumber,
+      title,
+      description = '',
+      startingPrice,
+      reservePrice,
+      estimateLow,
+      estimateHigh
+    } = params;
+
+    // Get purchase lot details
+    const { data: purchaseLot, error: plError } = await supabase
+      .from('purchase_lots')
+      .select('*, supplier:suppliers(name)')
+      .eq('id', purchaseLotId)
+      .single();
+
+    if (plError) throw plError;
+    if (!purchaseLot) throw new Error('Purchase lot not found');
+
+    // Create auction lot linked to purchase lot
+    const { data, error } = await supabase
+      .from('auction_lots')
+      .insert({
+        company_id: companyId,
+        auction_event_id: auctionEventId,
+        purchase_lot_id: purchaseLotId,
+        lot_number: lotNumber,
+        title: title,
+        description: description || `${purchaseLot.total_items} items from ${purchaseLot.supplier?.name || 'supplier'}`,
+        starting_price: startingPrice,
+        reserve_price: reservePrice,
+        estimate_low: estimateLow || purchaseLot.total_cost,
+        estimate_high: estimateHigh || purchaseLot.total_cost * 1.5,
+        items_count: purchaseLot.total_items,
+        status: 'draft'
+      })
       .select()
       .single();
 
     if (error) throw error;
     return data;
-  },
-
-  async calculateLotCostBasis(lotId: string): Promise<number> {
-    const { data: items, error } = await supabase
-      .from('auction_lot_items')
-      .select('cost_basis, quantity')
-      .eq('auction_lot_id', lotId);
-
-    if (error) throw error;
-
-    return items?.reduce((sum, item) => {
-      return sum + ((item.cost_basis || 0) * (item.quantity || 1));
-    }, 0) || 0;
   },
 
   async exportAuctionCatalog(eventId: string): Promise<any[]> {

@@ -2,26 +2,23 @@ import { useState, useEffect } from 'react';
 import { useCompany } from '../../contexts/CompanyContext';
 import { useToast } from '../../contexts/ToastContext';
 import { auctionService } from '../../services/auctionService';
-import { Plus, Calendar, Gavel, Users, DollarSign, Package, TrendingUp, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Calendar, Gavel, DollarSign, Package, Edit, Trash2, Eye } from 'lucide-react';
 
 export function AuctionManagement() {
   const { currentCompany } = useCompany();
   const { showToast } = useToast();
-  const [activeTab, setActiveTab] = useState<'houses' | 'events' | 'lots' | 'buyers' | 'settlements'>('events');
+  const [activeTab, setActiveTab] = useState<'houses' | 'events' | 'lots' | 'settlements'>('events');
   const [loading, setLoading] = useState(false);
 
   const [auctionHouses, setAuctionHouses] = useState<any[]>([]);
   const [auctionEvents, setAuctionEvents] = useState<any[]>([]);
-  const [buyerAccounts, setBuyerAccounts] = useState<any[]>([]);
   const [settlements, setSettlements] = useState<any[]>([]);
 
   const [showHouseModal, setShowHouseModal] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
-  const [showBuyerModal, setShowBuyerModal] = useState(false);
 
   const [selectedHouse, setSelectedHouse] = useState<any>(null);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
-  const [selectedBuyer, setSelectedBuyer] = useState<any>(null);
 
   useEffect(() => {
     if (currentCompany) {
@@ -42,10 +39,6 @@ export function AuctionManagement() {
         case 'events':
           const events = await auctionService.getAuctionEvents(currentCompany.id);
           setAuctionEvents(events);
-          break;
-        case 'buyers':
-          const buyers = await auctionService.getBuyerAccounts(currentCompany.id);
-          setBuyerAccounts(buyers);
           break;
         case 'settlements':
           const sett = await auctionService.getSettlements(currentCompany.id);
@@ -91,11 +84,6 @@ export function AuctionManagement() {
     setShowEventModal(true);
   };
 
-  const handleCreateBuyer = () => {
-    setSelectedBuyer(null);
-    setShowBuyerModal(true);
-  };
-
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -134,7 +122,6 @@ export function AuctionManagement() {
             { id: 'houses', label: 'Auction Houses', icon: Gavel },
             { id: 'events', label: 'Auction Events', icon: Calendar },
             { id: 'lots', label: 'Auction Lots', icon: Package },
-            { id: 'buyers', label: 'Buyers', icon: Users },
             { id: 'settlements', label: 'Settlements', icon: DollarSign }
           ].map(tab => {
             const Icon = tab.icon;
@@ -330,73 +317,14 @@ export function AuctionManagement() {
         </div>
       )}
 
-      {activeTab === 'buyers' && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold">Buyer Accounts</h2>
-            <button
-              onClick={handleCreateBuyer}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              <Plus className="w-5 h-5" />
-              Add Buyer
-            </button>
-          </div>
-
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            </div>
-          ) : buyerAccounts.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-              <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">No buyer accounts registered</p>
-            </div>
-          ) : (
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Buyer</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Purchases</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Spent</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {buyerAccounts.map(buyer => (
-                    <tr key={buyer.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="font-medium text-gray-900">{buyer.buyer_name}</div>
-                          <div className="text-sm text-gray-500">#{buyer.buyer_number}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">
-                        {buyer.buyer_type?.replace('_', ' ') || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {buyer.email || buyer.phone || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {buyer.total_purchases}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatCurrency(buyer.total_spent)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
       {activeTab === 'settlements' && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Auction Settlements</h2>
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-lg font-semibold">Auction Settlements</h2>
+              <p className="text-sm text-gray-600 mt-1">Sales invoices for completed auction sales</p>
+            </div>
+          </div>
 
           {loading ? (
             <div className="text-center py-12">
@@ -406,48 +334,50 @@ export function AuctionManagement() {
             <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
               <DollarSign className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600">No settlements recorded</p>
+              <p className="text-sm text-gray-500 mt-2">Settlements are created as sales invoices when auctions are closed</p>
             </div>
           ) : (
             <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lot</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Buyer</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hammer Price</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commission</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Net Profit</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paid</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {settlements.map(settlement => (
-                    <tr key={settlement.id} className="hover:bg-gray-50">
+                  {settlements.map(invoice => (
+                    <tr key={invoice.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900">{settlement.auction_lot?.lot_number}</div>
-                        <div className="text-sm text-gray-500">{settlement.auction_lot?.title}</div>
+                        <div className="font-medium text-gray-900">{invoice.invoice_number}</div>
+                        <div className="text-sm text-gray-500">
+                          {invoice.sales_invoice_items?.length || 0} items
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="font-medium text-gray-900">{invoice.customer?.name}</div>
+                        <div className="text-sm text-gray-500">{invoice.customer?.email}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {settlement.buyer?.buyer_name || 'Anonymous'}
+                        {formatDate(invoice.invoice_date)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatCurrency(settlement.hammer_price)}
+                        {formatCurrency(invoice.total_amount)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600">
-                        -{formatCurrency(settlement.auction_commission)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span className={settlement.net_profit >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                          {formatCurrency(settlement.net_profit)}
-                        </span>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatCurrency(invoice.paid_amount)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          settlement.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
-                          settlement.payment_status === 'overdue' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
+                          invoice.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
+                          invoice.payment_status === 'partial' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
                         }`}>
-                          {settlement.payment_status}
+                          {invoice.payment_status}
                         </span>
                       </td>
                     </tr>
