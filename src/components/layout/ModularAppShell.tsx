@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { GlobalTopBar } from './GlobalTopBar';
-import { DynamicSidebar } from './DynamicSidebar';
+import { RegistryDrivenSidebar } from './RegistryDrivenSidebar';
 import { PageRouter } from './PageRouter';
 import { useCompany } from '../../contexts/CompanyContext';
-import { engineRegistryService } from '../../services/engineRegistryService';
-import { EngineDrivenDashboard } from '../dashboard/EngineDrivenDashboard';
-import { AppsInstaller } from '../apps/AppsInstaller';
-import { OnboardingWizard } from '../onboarding/OnboardingWizard';
-import { Page_Audit_Trail } from '../system/Page_Audit_Trail';
-import { Page_Payments } from '../finance/Page_Payments';
-import { ModuleGate } from '../common/ModuleGate';
+import { moduleRegistryService } from '../../services/moduleRegistryService';
+import { ModularHomeDashboard } from '../dashboard/ModularHomeDashboard';
+import { CompanyOnboardingWizard } from '../onboarding/CompanyOnboardingWizard';
+import { ESGDashboard } from '../compliance/ESGDashboard';
 import { SystemConfig } from '../settings/SystemConfig';
 
 interface ModularAppShellProps {
@@ -27,15 +24,20 @@ export function ModularAppShell({ children }: ModularAppShellProps) {
     checkOnboarding();
   }, [selectedCompany]);
 
-  const checkOnboarding = () => {
-    if (selectedCompany && !selectedCompany.onboarding_completed) {
-      setShowOnboarding(true);
-    } else {
+  const checkOnboarding = async () => {
+    if (!selectedCompany) return;
+
+    try {
+      const status = await moduleRegistryService.getOnboardingStatus(selectedCompany.id);
+      setShowOnboarding(!status?.is_completed);
+    } catch (error) {
+      console.error('Error checking onboarding status:', error);
       setShowOnboarding(false);
     }
   };
 
   const handleOnboardingComplete = async () => {
+    setShowOnboarding(false);
     await refreshCompanies();
   };
 
@@ -44,25 +46,21 @@ export function ModularAppShell({ children }: ModularAppShellProps) {
   };
 
   if (showOnboarding) {
-    return <OnboardingWizard onComplete={handleOnboardingComplete} />;
+    return <CompanyOnboardingWizard onComplete={handleOnboardingComplete} />;
   }
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
       <GlobalTopBar />
       <div className="flex-1 flex overflow-hidden">
-        <DynamicSidebar currentPath={location.pathname} onNavigate={handleNavigate} />
+        <RegistryDrivenSidebar />
         <main className="flex-1 overflow-auto">
           <Routes>
-            <Route path="/" element={<EngineDrivenDashboard />} />
-            <Route path="/dashboard" element={<EngineDrivenDashboard />} />
-            <Route path="/apps" element={<AppsInstaller />} />
+            <Route path="/" element={<ModularHomeDashboard />} />
+            <Route path="/dashboard" element={<ModularHomeDashboard />} />
+            <Route path="/esg" element={<ESGDashboard />} />
             <Route path="/settings" element={<SystemConfig />} />
-            <Route path="/audit" element={<Page_Audit_Trail />} />
-            <Route path="/system/audit" element={<Page_Audit_Trail />} />
-            <Route path="/payments" element={<Page_Payments />} />
-            <Route path="/accounting/payments" element={<Page_Payments />} />
-            <Route path="/*" element={<DynamicEngineRoute />} />
+            <Route path="/*" element={<PageRouter />} />
           </Routes>
         </main>
       </div>
@@ -70,52 +68,3 @@ export function ModularAppShell({ children }: ModularAppShellProps) {
   );
 }
 
-function DynamicEngineRoute() {
-  const location = useLocation();
-  const { selectedCompany } = useCompany();
-  const [engine, setEngine] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadEngine();
-  }, [location.pathname, selectedCompany]);
-
-  const loadEngine = async () => {
-    if (!selectedCompany) return;
-
-    const pathParts = location.pathname.split('/').filter(Boolean);
-    const engineKey = pathParts[0];
-
-    if (!engineKey) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const foundEngine = await engineRegistryService.getEngine(selectedCompany.id, engineKey);
-      setEngine(foundEngine);
-    } catch (error) {
-      console.error('Error loading engine:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  if (!engine) {
-    return <PageRouter path={location.pathname} fallback={<EngineDrivenDashboard />} />;
-  }
-
-  if (!engine.is_enabled) {
-    return <ModuleGate engineTitle={engine.title} engineIcon={engine.icon} engineKey={engine.key} />;
-  }
-
-  return <PageRouter path={location.pathname} fallback={<EngineDrivenDashboard />} />;
-}
