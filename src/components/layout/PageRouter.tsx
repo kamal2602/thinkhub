@@ -108,6 +108,8 @@ export function PageRouter({ path, fallback }: PageRouterProps) {
         return <Returns />;
       case '/repairs':
         return <Repairs />;
+      case '/smart-receiving':
+        return <SmartReceiving />;
       case '/locations':
         return <Locations />;
       case '/movements':

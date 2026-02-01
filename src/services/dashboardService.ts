@@ -270,7 +270,7 @@ export class DashboardService extends BaseService {
       .select('id', { count: 'exact', head: true })
       .eq('company_id', companyId)
       .in('status', ['testing', 'refurbishing', 'qc_grading'])
-      .lt('stage_started_at', thirtyDaysAgo.toISOString());
+      .lt('updated_at', thirtyDaysAgo.toISOString());
 
     if (error) return 0;
     return count || 0;
