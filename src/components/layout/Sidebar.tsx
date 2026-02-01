@@ -135,14 +135,14 @@ export function Sidebar({
 
   const shouldShowItem = (item: SidebarItem) => {
     if (!item.requireEngine) return true;
-    return engines[item.requireEngine] === true;
+    return engines?.[item.requireEngine] === true;
   };
 
   const shouldShowSection = (section: SidebarSection) => {
     if (!section.requireEngine) {
       return section.items.some(item => shouldShowItem(item));
     }
-    return engines[section.requireEngine] === true && section.items.some(item => shouldShowItem(item));
+    return engines?.[section.requireEngine] === true && section.items.some(item => shouldShowItem(item));
   };
 
   return (
