@@ -7,7 +7,7 @@ import { BarChart3, Leaf, Recycle, TrendingDown, Download, Calendar } from 'luci
 import type { ESGReport, GRIReport, WEEEReport } from '../../services/esgService';
 
 export function ESGDashboard() {
-  const { currentCompany } = useCompany();
+  const { selectedCompany } = useCompany();
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState<ESGReport | null>(null);
   const [griReport, setGRIReport] = useState<GRIReport | null>(null);
@@ -19,20 +19,20 @@ export function ESGDashboard() {
   const [reportType, setReportType] = useState<'summary' | 'gri' | 'weee'>('summary');
 
   useEffect(() => {
-    if (currentCompany?.id) {
+    if (selectedCompany?.id) {
       loadReports();
     }
-  }, [currentCompany, dateRange]);
+  }, [selectedCompany, dateRange]);
 
   const loadReports = async () => {
-    if (!currentCompany?.id) return;
+    if (!selectedCompany?.id) return;
 
     try {
       setLoading(true);
       const [summaryData, griData, weeeData] = await Promise.all([
-        esgService.generateESGReport(currentCompany.id, dateRange.from, dateRange.to),
-        esgService.generateGRIReport(currentCompany.id, dateRange.from, dateRange.to),
-        esgService.generateWEEEReport(currentCompany.id, dateRange.from, dateRange.to),
+        esgService.generateESGReport(selectedCompany.id, dateRange.from, dateRange.to),
+        esgService.generateGRIReport(selectedCompany.id, dateRange.from, dateRange.to),
+        esgService.generateWEEEReport(selectedCompany.id, dateRange.from, dateRange.to),
       ]);
 
       setReport(summaryData);
@@ -135,7 +135,22 @@ export function ESGDashboard() {
         </button>
       </div>
 
-      {reportType === 'summary' && report && (
+      {reportType === 'summary' && report && report.summary.total_events === 0 && (
+        <Card className="p-12">
+          <div className="text-center">
+            <Recycle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No ESG Events Recorded</h3>
+            <p className="text-gray-600 mb-4">
+              Start tracking your environmental impact by recording recycling and recovery activities.
+            </p>
+            <p className="text-sm text-gray-500">
+              ESG events are automatically created when assets are processed through the system.
+            </p>
+          </div>
+        </Card>
+      )}
+
+      {reportType === 'summary' && report && report.summary.total_events > 0 && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Card className="p-6">
@@ -259,7 +274,19 @@ export function ESGDashboard() {
         </>
       )}
 
-      {reportType === 'gri' && griReport && (
+      {reportType === 'gri' && griReport && griReport.waste_generated.total_kg === 0 && (
+        <Card className="p-12">
+          <div className="text-center">
+            <BarChart3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No GRI Report Data</h3>
+            <p className="text-gray-600 mb-4">
+              Start tracking waste management activities to generate GRI 306:2020 compliant reports.
+            </p>
+          </div>
+        </Card>
+      )}
+
+      {reportType === 'gri' && griReport && griReport.waste_generated.total_kg > 0 && (
         <div className="space-y-6">
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">GRI 306:2020 - Waste Management</h3>
@@ -323,7 +350,19 @@ export function ESGDashboard() {
         </div>
       )}
 
-      {reportType === 'weee' && weeeReport && (
+      {reportType === 'weee' && weeeReport && weeeReport.categories.length === 0 && (
+        <Card className="p-12">
+          <div className="text-center">
+            <Leaf className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No WEEE Report Data</h3>
+            <p className="text-gray-600 mb-4">
+              Start tracking electronic waste to generate EU WEEE Directive compliance reports.
+            </p>
+          </div>
+        </Card>
+      )}
+
+      {reportType === 'weee' && weeeReport && weeeReport.categories.length > 0 && (
         <div className="space-y-6">
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">EU WEEE Directive Compliance</h3>
