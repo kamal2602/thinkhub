@@ -5,7 +5,7 @@ import { useCompany } from '../../contexts/CompanyContext';
 
 export function TopBar({ onOpenCommand }: { onOpenCommand: () => void }) {
   const { user, signOut } = useAuth();
-  const { currentCompany } = useCompany();
+  const { selectedCompany } = useCompany();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   return (
@@ -50,9 +50,9 @@ export function TopBar({ onOpenCommand }: { onOpenCommand: () => void }) {
               <div className="text-sm font-medium text-primary">
                 {user?.email?.split('@')[0]}
               </div>
-              {currentCompany && (
+              {selectedCompany && (
                 <div className="text-xs text-secondary">
-                  {currentCompany.name}
+                  {selectedCompany.name}
                 </div>
               )}
             </div>
@@ -72,8 +72,8 @@ export function TopBar({ onOpenCommand }: { onOpenCommand: () => void }) {
               >
                 <div className="px-4 py-2 border-b border-neutral-100">
                   <div className="text-sm font-medium text-primary">{user?.email}</div>
-                  {currentCompany && (
-                    <div className="text-xs text-secondary mt-1">{currentCompany.name}</div>
+                  {selectedCompany && (
+                    <div className="text-xs text-secondary mt-1">{selectedCompany.name}</div>
                   )}
                 </div>
 
