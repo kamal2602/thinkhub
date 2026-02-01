@@ -70,6 +70,7 @@ export function DashboardPage() {
 
   useEffect(() => {
     if (!loading && !selectedCompany && !setupComplete) {
+      localStorage.removeItem('selectedCompanyId');
       setCurrentPage('initial-setup');
     } else if (!loading && selectedCompany && currentPage === 'initial-setup') {
       setCurrentPage('dashboard');
@@ -93,7 +94,7 @@ export function DashboardPage() {
     );
   }
 
-  if (!selectedCompany && currentPage === 'initial-setup') {
+  if (!selectedCompany) {
     return <InitialSetup onComplete={handleSetupComplete} />;
   }
 
