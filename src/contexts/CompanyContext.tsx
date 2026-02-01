@@ -8,6 +8,7 @@ interface Company {
   name: string;
   description: string;
   role: UserRole;
+  onboarding_completed?: boolean;
 }
 
 interface CompanyContextType {
@@ -40,7 +41,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       if (isSuperAdmin) {
         const { data: allCompanies, error: companiesError } = await supabase
           .from('companies')
-          .select('id, name, description')
+          .select('id, name, description, onboarding_completed')
           .order('name');
 
         if (companiesError) throw companiesError;
@@ -50,11 +51,12 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
           name: company.name,
           description: company.description || '',
           role: 'admin' as UserRole,
+          onboarding_completed: company.onboarding_completed ?? false,
         }));
       } else {
         const { data: accessData, error: accessError } = await supabase
           .from('user_company_access')
-          .select('company_id, role, companies(id, name, description)')
+          .select('company_id, role, companies(id, name, description, onboarding_completed)')
           .eq('user_id', user.id);
 
         if (accessError) throw accessError;
@@ -64,6 +66,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
           name: access.companies.name,
           description: access.companies.description,
           role: access.role as UserRole,
+          onboarding_completed: access.companies.onboarding_completed ?? false,
         }));
       }
 

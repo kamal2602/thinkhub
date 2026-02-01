@@ -31,7 +31,6 @@ export function ModularAppShell({ children }: ModularAppShellProps) {
 
   const handleOnboardingComplete = async () => {
     await refreshCompanies();
-    setShowOnboarding(false);
   };
 
   const handleNavigate = (path: string) => {
