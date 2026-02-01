@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { AppBar } from '../components/layout/AppBar';
+import { SimplifiedAppBar } from '../components/layout/SimplifiedAppBar';
 import { Breadcrumbs } from '../components/layout/Breadcrumbs';
 import { SearchBar } from '../components/layout/SearchBar';
 import { Header } from '../components/layout/Header';
-import { Dashboard } from '../components/dashboard/Dashboard';
+import { SimplifiedDashboard } from '../components/dashboard/SimplifiedDashboard';
 import { Processing } from '../components/processing/Processing';
 import { ProductTypes } from '../components/product-types/ProductTypes';
 import { PurchaseLots } from '../components/purchase-lots/PurchaseLots';
@@ -43,6 +43,10 @@ import { CompanyCertifications } from '../components/settings/CompanyCertificati
 import { AssetBulkUpdate } from '../components/processing/AssetBulkUpdate';
 import { AuctionManagement } from '../components/auctions/AuctionManagement';
 import { ITADRevenueSettlements } from '../components/itad/ITADRevenueSettlements';
+import { ProductSetup } from '../components/settings/ProductSetup';
+import { BusinessRules } from '../components/settings/BusinessRules';
+import { SystemConfig } from '../components/settings/SystemConfig';
+import { ITADCompliance } from '../components/itad/ITADCompliance';
 import { useCompany } from '../contexts/CompanyContext';
 import { useAuth } from '../contexts/AuthContext';
 import { CommandPalette } from '../components/common/CommandPalette';
@@ -86,7 +90,7 @@ export function DashboardPage() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      <AppBar currentPage={currentPage} onNavigate={setCurrentPage} />
+      <SimplifiedAppBar currentPage={currentPage} onNavigate={setCurrentPage} />
       <Header />
       <Breadcrumbs currentPage={currentPage} onNavigate={setCurrentPage} />
       <SearchBar currentPage={currentPage} onNavigate={setCurrentPage} />
@@ -98,7 +102,7 @@ export function DashboardPage() {
       />
 
       <main className="flex-1 overflow-y-auto">
-        {currentPage === 'dashboard' && <Dashboard />}
+        {currentPage === 'dashboard' && <SimplifiedDashboard />}
         {currentPage === 'processing' && <Processing />}
         {currentPage === 'asset-bulk-update' && <AssetBulkUpdate />}
         {currentPage === 'product-types' && <ProductTypes />}
@@ -138,6 +142,10 @@ export function DashboardPage() {
         {currentPage === 'environmental-compliance' && <EnvironmentalCompliance />}
         {currentPage === 'auctions' && <AuctionManagement />}
         {currentPage === 'itad-revenue-settlements' && <ITADRevenueSettlements />}
+        {currentPage === 'product-setup' && <ProductSetup />}
+        {currentPage === 'business-rules' && <BusinessRules />}
+        {currentPage === 'system-config' && <SystemConfig />}
+        {currentPage === 'itad-compliance' && <ITADCompliance />}
       </main>
     </div>
   );
