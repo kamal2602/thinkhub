@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Check, ArrowRight, ArrowLeft, Package, Users, Shield, TrendingUp, Settings as SettingsIcon } from 'lucide-react';
-import { moduleRegistryService, Module, ModuleCategory } from '../../services/moduleRegistryService';
+import { engineRegistryService, Engine } from '../../services/engineRegistryService';
 import { useCompany } from '../../contexts/CompanyContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
 
 interface OnboardingWizardProps {
   onComplete: () => void;
@@ -12,87 +13,91 @@ export function CompanyOnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const { company } = useCompany();
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
-  const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set(['dashboard', 'inventory', 'settings']));
-  const [modules, setModules] = useState<Module[]>([]);
-  const [categories, setCategories] = useState<ModuleCategory[]>([]);
+  const [selectedEngines, setSelectedEngines] = useState<Set<string>>(new Set());
+  const [engines, setEngines] = useState<Engine[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadModules();
-  }, []);
+    loadEngines();
+  }, [company]);
 
-  const loadModules = async () => {
+  const loadEngines = async () => {
+    if (!company) return;
+
     try {
-      const [modulesData, categoriesData] = await Promise.all([
-        moduleRegistryService.getAllModules(),
-        moduleRegistryService.getModuleCategories()
-      ]);
-      setModules(modulesData);
-      setCategories(categoriesData);
+      const enginesData = await engineRegistryService.getEngines(company.id);
+      setEngines(enginesData);
 
-      const coreModules = modulesData
-        .filter(m => m.is_core)
-        .map(m => m.name);
-      setSelectedModules(new Set(coreModules));
+      const coreEngines = enginesData
+        .filter(e => e.is_core)
+        .map(e => e.key);
+      setSelectedEngines(new Set(coreEngines));
     } catch (error) {
-      console.error('Failed to load modules:', error);
+      console.error('Failed to load engines:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleModule = async (moduleName: string) => {
-    const module = modules.find(m => m.name === moduleName);
-    if (!module) return;
+  const toggleEngine = async (engineKey: string) => {
+    const engine = engines.find(e => e.key === engineKey);
+    if (!engine) return;
 
-    const newSelection = new Set(selectedModules);
+    const newSelection = new Set(selectedEngines);
 
-    if (newSelection.has(moduleName)) {
-      if (module.is_core) return;
+    if (newSelection.has(engineKey)) {
+      if (engine.is_core) return;
 
-      const dependents = modules.filter(m =>
-        m.depends_on.includes(moduleName) && newSelection.has(m.name)
+      const dependents = engines.filter(e =>
+        e.depends_on.includes(engineKey) && newSelection.has(e.key)
       );
 
       if (dependents.length > 0) {
-        alert(`Cannot disable ${module.display_name}. It's required by: ${dependents.map(d => d.display_name).join(', ')}`);
+        alert(`Cannot disable ${engine.title}. It's required by: ${dependents.map(d => d.title).join(', ')}`);
         return;
       }
 
-      newSelection.delete(moduleName);
+      newSelection.delete(engineKey);
     } else {
-      newSelection.add(moduleName);
+      newSelection.add(engineKey);
 
-      module.depends_on.forEach(dep => {
+      engine.depends_on.forEach(dep => {
         newSelection.add(dep);
       });
     }
 
-    setSelectedModules(newSelection);
+    setSelectedEngines(newSelection);
   };
 
   const completeOnboarding = async () => {
     if (!company || !user) return;
 
     try {
-      for (const moduleName of selectedModules) {
-        await moduleRegistryService.enableModule(company.id, moduleName, user.id);
+      for (const engineKey of selectedEngines) {
+        await engineRegistryService.toggleEngine(company.id, engineKey, true);
       }
 
-      const disabledModules = modules
-        .filter(m => !selectedModules.has(m.name))
-        .map(m => m.name);
+      const disabledEngines = engines
+        .filter(e => !selectedEngines.has(e.key) && !e.is_core)
+        .map(e => e.key);
 
-      for (const moduleName of disabledModules) {
-        await moduleRegistryService.disableModule(company.id, moduleName);
+      for (const engineKey of disabledEngines) {
+        await engineRegistryService.toggleEngine(company.id, engineKey, false);
       }
 
-      await moduleRegistryService.updateOnboardingStatus(company.id, {
-        is_completed: true,
-        completed_steps: steps.map(s => s.id),
-        modules_selected: Array.from(selectedModules),
-        completed_at: new Date().toISOString()
-      });
+      const { error } = await supabase
+        .from('onboarding_status')
+        .upsert({
+          company_id: company.id,
+          is_completed: true,
+          completed_steps: steps.map(s => s.id),
+          modules_selected: Array.from(selectedEngines),
+          completed_at: new Date().toISOString()
+        }, {
+          onConflict: 'company_id'
+        });
+
+      if (error) throw error;
 
       onComplete();
     } catch (error) {
@@ -202,33 +207,39 @@ export function CompanyOnboardingWizard({ onComplete }: OnboardingWizardProps) {
           {currentStep === 1 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Choose Your Modules</h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Choose Your Engines</h2>
                 <p className="text-gray-600 mb-6">
-                  Select the modules you want to enable. Core modules are required and cannot be disabled.
+                  Select the features you want to enable. Core engines are required and cannot be disabled.
                   Dependencies will be automatically enabled.
                 </p>
               </div>
 
               <div className="space-y-6">
-                {categories.map(category => {
-                  const categoryModules = modules.filter(m => m.category === category.code);
-                  if (categoryModules.length === 0) return null;
+                {['operations', 'sales', 'business', 'system'].map(category => {
+                  const categoryEngines = engines.filter(e => e.category === category && e.is_installed);
+                  if (categoryEngines.length === 0) return null;
+
+                  const categoryLabels: Record<string, string> = {
+                    operations: 'Operations',
+                    sales: 'Sales Channels',
+                    business: 'Business',
+                    system: 'System'
+                  };
 
                   return (
-                    <div key={category.code} className="border border-gray-200 rounded-lg p-4">
+                    <div key={category} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex items-center mb-3">
-                        <div className={`w-2 h-2 rounded-full bg-${category.color}-500 mr-2`}></div>
-                        <h3 className="font-semibold text-gray-900">{category.name}</h3>
+                        <h3 className="font-semibold text-gray-900">{categoryLabels[category]}</h3>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {categoryModules.map(module => {
-                          const isSelected = selectedModules.has(module.name);
-                          const isCore = module.is_core;
+                        {categoryEngines.map(engine => {
+                          const isSelected = selectedEngines.has(engine.key);
+                          const isCore = engine.is_core;
 
                           return (
                             <button
-                              key={module.name}
-                              onClick={() => toggleModule(module.name)}
+                              key={engine.key}
+                              onClick={() => toggleEngine(engine.key)}
                               disabled={isCore}
                               className={`text-left p-3 rounded-lg border-2 transition-all ${
                                 isSelected
@@ -239,17 +250,17 @@ export function CompanyOnboardingWizard({ onComplete }: OnboardingWizardProps) {
                               <div className="flex items-start justify-between">
                                 <div className="flex-1">
                                   <div className="flex items-center space-x-2">
-                                    <span className="font-medium text-gray-900">{module.display_name}</span>
+                                    <span className="font-medium text-gray-900">{engine.title}</span>
                                     {isCore && (
                                       <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded">
                                         Core
                                       </span>
                                     )}
                                   </div>
-                                  <p className="text-sm text-gray-600 mt-1">{module.description}</p>
-                                  {module.depends_on.length > 0 && (
+                                  <p className="text-sm text-gray-600 mt-1">{engine.description}</p>
+                                  {engine.depends_on.length > 0 && (
                                     <p className="text-xs text-gray-500 mt-1">
-                                      Requires: {module.depends_on.join(', ')}
+                                      Requires: {engine.depends_on.join(', ')}
                                     </p>
                                   )}
                                 </div>
@@ -270,7 +281,7 @@ export function CompanyOnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
-                  <strong>{selectedModules.size}</strong> modules selected. You can enable or disable modules later in Settings.
+                  <strong>{selectedEngines.size}</strong> engines selected. You can enable or disable engines later in Settings.
                 </p>
               </div>
             </div>
@@ -284,20 +295,20 @@ export function CompanyOnboardingWizard({ onComplete }: OnboardingWizardProps) {
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">All Set!</h2>
                 <p className="text-gray-600">
-                  Your system has been configured with {selectedModules.size} modules.
+                  Your system has been configured with {selectedEngines.size} engines.
                   You're ready to start using your ERP system.
                 </p>
               </div>
 
               <div className="bg-gray-50 rounded-lg p-6 text-left">
-                <h3 className="font-semibold text-gray-900 mb-3">Enabled Modules:</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">Enabled Engines:</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {Array.from(selectedModules).map(moduleName => {
-                    const module = modules.find(m => m.name === moduleName);
+                  {Array.from(selectedEngines).map(engineKey => {
+                    const engine = engines.find(e => e.key === engineKey);
                     return (
-                      <div key={moduleName} className="flex items-center space-x-2 text-sm text-gray-700">
+                      <div key={engineKey} className="flex items-center space-x-2 text-sm text-gray-700">
                         <Check className="w-4 h-4 text-green-600" />
-                        <span>{module?.display_name}</span>
+                        <span>{engine?.title}</span>
                       </div>
                     );
                   })}

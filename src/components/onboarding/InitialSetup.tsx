@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Building, ArrowRight, Loader, LogOut } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
-import { moduleRegistryService } from '../../services/moduleRegistryService';
 
 interface InitialSetupProps {
   onComplete: () => void;
@@ -50,23 +49,29 @@ export function InitialSetup({ onComplete }: InitialSetupProps) {
 
       if (companyError) throw companyError;
 
-      // Wait a moment for the auto-grant trigger to fire
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait for triggers to complete:
+      // 1. Auto-grant company access (grant_creator_company_access)
+      // 2. Initialize engines (trigger_initialize_engines)
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       localStorage.setItem('selectedCompanyId', company.id);
 
-      const allModules = await moduleRegistryService.getAllModules();
+      // Mark onboarding as started (wizard will complete it)
+      const { error: onboardingError } = await supabase
+        .from('onboarding_status')
+        .upsert({
+          company_id: company.id,
+          is_completed: false,
+          current_step: 'modules',
+          completed_steps: ['company_created'],
+          modules_selected: []
+        }, {
+          onConflict: 'company_id'
+        });
 
-      for (const module of allModules) {
-        await moduleRegistryService.enableModule(company.id, module.name, user.id);
+      if (onboardingError) {
+        console.error('Error creating onboarding status:', onboardingError);
       }
-
-      await moduleRegistryService.updateOnboardingStatus(company.id, {
-        is_completed: true,
-        completed_steps: ['company_created', 'modules_enabled'],
-        modules_selected: allModules.map(m => m.name),
-        completed_at: new Date().toISOString()
-      });
 
       onComplete();
     } catch (err: any) {

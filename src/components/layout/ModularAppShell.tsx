@@ -4,8 +4,8 @@ import { GlobalTopBar } from './GlobalTopBar';
 import { RegistryDrivenSidebar } from './RegistryDrivenSidebar';
 import { PageRouter } from './PageRouter';
 import { useCompany } from '../../contexts/CompanyContext';
-import { moduleRegistryService } from '../../services/moduleRegistryService';
-import { ModularHomeDashboard } from '../dashboard/ModularHomeDashboard';
+import { supabase } from '../../lib/supabase';
+import { EngineDrivenDashboard } from '../dashboard/EngineDrivenDashboard';
 import { CompanyOnboardingWizard } from '../onboarding/CompanyOnboardingWizard';
 import { InitialSetup } from '../onboarding/InitialSetup';
 import { ESGDashboard } from '../compliance/ESGDashboard';
@@ -29,7 +29,14 @@ export function ModularAppShell({ children }: ModularAppShellProps) {
     if (!selectedCompany) return;
 
     try {
-      const status = await moduleRegistryService.getOnboardingStatus(selectedCompany.id);
+      const { data: status, error } = await supabase
+        .from('onboarding_status')
+        .select('is_completed')
+        .eq('company_id', selectedCompany.id)
+        .maybeSingle();
+
+      if (error) throw error;
+
       setShowOnboarding(!status?.is_completed);
     } catch (error) {
       console.error('Error checking onboarding status:', error);
@@ -74,8 +81,8 @@ export function ModularAppShell({ children }: ModularAppShellProps) {
         <RegistryDrivenSidebar />
         <main className="flex-1 overflow-auto">
           <Routes>
-            <Route path="/" element={<ModularHomeDashboard />} />
-            <Route path="/dashboard" element={<ModularHomeDashboard />} />
+            <Route path="/" element={<EngineDrivenDashboard />} />
+            <Route path="/dashboard" element={<EngineDrivenDashboard />} />
             <Route path="/esg" element={<ESGDashboard />} />
             <Route path="/settings" element={<SystemConfig />} />
             <Route path="/*" element={<PageRouter />} />
