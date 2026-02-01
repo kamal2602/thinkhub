@@ -52,7 +52,33 @@ export function AppsInstaller() {
         'success'
       );
     } catch (error: any) {
-      addToast(error.message || 'Failed to update app', 'error');
+      if (error.message?.includes('Missing dependencies')) {
+        const missingDeps = await engineRegistryService.getMissingDependencies(selectedCompany.id, engine.key);
+        if (missingDeps.length > 0 && confirm(
+          `${engine.title} requires: ${missingDeps.map(d => d.title).join(', ')}.\n\nEnable all dependencies now?`
+        )) {
+          await handleEnableWithDependencies(engine);
+        } else {
+          addToast(error.message, 'error');
+        }
+      } else {
+        addToast(error.message || 'Failed to update app', 'error');
+      }
+    } finally {
+      setProcessingEngine(null);
+    }
+  };
+
+  const handleEnableWithDependencies = async (engine: Engine) => {
+    if (!selectedCompany) return;
+
+    setProcessingEngine(engine.key);
+    try {
+      await engineRegistryService.enableWithDependencies(selectedCompany.id, engine.key);
+      await loadEngines();
+      addToast(`${engine.title} and dependencies enabled`, 'success');
+    } catch (error: any) {
+      addToast(error.message || 'Failed to enable dependencies', 'error');
     } finally {
       setProcessingEngine(null);
     }
@@ -217,14 +243,16 @@ export function AppsInstaller() {
                     <div className="mb-4 p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-start gap-2">
                         <AlertCircle className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                        <div>
+                        <div className="flex-1">
                           <div className="text-xs font-medium text-gray-700 mb-1">Dependencies</div>
                           <div className="text-xs text-gray-600">
                             {engine.depends_on.map((dep, idx) => {
                               const depEngine = engines.find(e => e.key === dep);
+                              const isEnabled = depEngine?.is_enabled;
                               return (
-                                <span key={dep}>
+                                <span key={dep} className={isEnabled ? 'text-green-600' : 'text-amber-600'}>
                                   {depEngine?.title || dep}
+                                  {!isEnabled && ' (disabled)'}
                                   {idx < engine.depends_on.length - 1 && ', '}
                                 </span>
                               );
@@ -232,6 +260,14 @@ export function AppsInstaller() {
                           </div>
                         </div>
                       </div>
+                    </div>
+                  )}
+
+                  {!engine.is_enabled && engine.is_installed && (
+                    <div className="mb-4 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                      <p className="text-xs text-amber-700">
+                        Not visible in sidebar until enabled
+                      </p>
                     </div>
                   )}
 

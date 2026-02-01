@@ -34,17 +34,8 @@ export function DynamicSidebar({ currentPath, onNavigate }: DynamicSidebarProps)
     if (!selectedCompany) return;
 
     try {
-      const groups = await engineRegistryService.getEngineGroups(selectedCompany.id);
-      const enabledGroups: Record<string, Engine[]> = {};
-
-      Object.entries(groups).forEach(([category, engines]) => {
-        const enabled = engines.filter(e => e.is_enabled);
-        if (enabled.length > 0) {
-          enabledGroups[category] = enabled;
-        }
-      });
-
-      setEngineGroups(enabledGroups);
+      const groups = await engineRegistryService.getEnabledEngineGroups(selectedCompany.id);
+      setEngineGroups(groups);
     } catch (error) {
       console.error('Error loading engines:', error);
     } finally {

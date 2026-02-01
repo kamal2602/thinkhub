@@ -173,12 +173,52 @@ export class EngineRegistryService {
     const engines = await this.getEngines(companyId);
 
     return {
-      operations: engines.filter(e => e.category === 'operations' && e.is_installed),
-      sales: engines.filter(e => e.category === 'sales' && e.is_installed),
-      business: engines.filter(e => e.category === 'business' && e.is_installed),
-      system: engines.filter(e => e.category === 'system' && e.is_installed),
-      admin: engines.filter(e => e.category === 'admin' && e.is_installed)
+      operations: engines.filter(e => e.category === 'operations' && e.is_installed).sort((a, b) => a.title.localeCompare(b.title)),
+      sales: engines.filter(e => e.category === 'sales' && e.is_installed).sort((a, b) => a.title.localeCompare(b.title)),
+      business: engines.filter(e => e.category === 'business' && e.is_installed).sort((a, b) => a.title.localeCompare(b.title)),
+      system: engines.filter(e => e.category === 'system' && e.is_installed).sort((a, b) => a.title.localeCompare(b.title)),
+      admin: engines.filter(e => e.category === 'admin' && e.is_installed).sort((a, b) => a.title.localeCompare(b.title))
     };
+  }
+
+  async getEnabledEngineGroups(companyId: string): Promise<Record<string, Engine[]>> {
+    const engines = await this.getEnabledEngines(companyId);
+
+    return {
+      operations: engines.filter(e => e.category === 'operations').sort((a, b) => a.title.localeCompare(b.title)),
+      sales: engines.filter(e => e.category === 'sales').sort((a, b) => a.title.localeCompare(b.title)),
+      business: engines.filter(e => e.category === 'business').sort((a, b) => a.title.localeCompare(b.title)),
+      system: engines.filter(e => e.category === 'system').sort((a, b) => a.title.localeCompare(b.title)),
+      admin: engines.filter(e => e.category === 'admin').sort((a, b) => a.title.localeCompare(b.title))
+    };
+  }
+
+  async getMissingDependencies(companyId: string, engineKey: string): Promise<Engine[]> {
+    const engine = await this.getEngine(companyId, engineKey);
+    if (!engine || !engine.depends_on || engine.depends_on.length === 0) {
+      return [];
+    }
+
+    const allEngines = await this.getEngines(companyId);
+    const missingDeps = engine.depends_on.filter(depKey => {
+      const dep = allEngines.find(e => e.key === depKey);
+      return !dep || !dep.is_installed || !dep.is_enabled;
+    });
+
+    return allEngines.filter(e => missingDeps.includes(e.key));
+  }
+
+  async enableWithDependencies(companyId: string, engineKey: string): Promise<void> {
+    const engine = await this.getEngine(companyId, engineKey);
+    if (!engine) throw new Error('Engine not found');
+
+    const missingDeps = await this.getMissingDependencies(companyId, engineKey);
+
+    for (const dep of missingDeps) {
+      await this.toggleEngine(companyId, dep.key, true);
+    }
+
+    await this.toggleEngine(companyId, engineKey, true);
   }
 }
 

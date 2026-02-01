@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { BaseService } from './baseService';
+import { engineRegistryService } from './engineRegistryService';
 
 export interface EngineToggles {
   reseller_enabled: boolean;
@@ -26,32 +27,66 @@ export interface Company {
 export class EngineService extends BaseService {
   /**
    * Get engine toggles for a specific company
+   * LEGACY: Now reads from engines table instead of companies
    */
   async getEngineToggles(companyId: string): Promise<EngineToggles> {
     return this.executeQuery(async () => {
-      const { data, error } = await supabase
-        .from('companies')
-        .select('reseller_enabled, itad_enabled, recycling_enabled, auction_enabled, website_enabled, crm_enabled, consignment_enabled')
-        .eq('id', companyId)
-        .single();
+      const engines = await engineRegistryService.getEngines(companyId);
 
-      if (error) throw error;
-      return data;
+      const toggles: EngineToggles = {
+        reseller_enabled: engines.find(e => e.key === 'reseller')?.is_enabled ?? false,
+        itad_enabled: engines.find(e => e.key === 'itad')?.is_enabled ?? false,
+        recycling_enabled: engines.find(e => e.key === 'recycling')?.is_enabled ?? false,
+        auction_enabled: engines.find(e => e.key === 'auction')?.is_enabled ?? false,
+        website_enabled: engines.find(e => e.key === 'website')?.is_enabled ?? false,
+        crm_enabled: engines.find(e => e.key === 'crm')?.is_enabled ?? false,
+        consignment_enabled: false,
+      };
+
+      return toggles;
     }, 'Failed to fetch engine toggles');
   }
 
   /**
    * Update engine toggles for a company
-   * Only admins should be able to call this
+   * LEGACY: Now updates engines table instead of companies
    */
   async updateEngineToggles(companyId: string, toggles: Partial<EngineToggles>): Promise<void> {
     return this.executeQuery(async () => {
-      const { error } = await supabase
-        .from('companies')
-        .update(toggles)
-        .eq('id', companyId);
+      const updatePromises = [];
 
-      if (error) throw error;
+      if (toggles.reseller_enabled !== undefined) {
+        updatePromises.push(
+          engineRegistryService.toggleEngine(companyId, 'reseller', toggles.reseller_enabled)
+        );
+      }
+      if (toggles.itad_enabled !== undefined) {
+        updatePromises.push(
+          engineRegistryService.toggleEngine(companyId, 'itad', toggles.itad_enabled)
+        );
+      }
+      if (toggles.recycling_enabled !== undefined) {
+        updatePromises.push(
+          engineRegistryService.toggleEngine(companyId, 'recycling', toggles.recycling_enabled)
+        );
+      }
+      if (toggles.auction_enabled !== undefined) {
+        updatePromises.push(
+          engineRegistryService.toggleEngine(companyId, 'auction', toggles.auction_enabled)
+        );
+      }
+      if (toggles.website_enabled !== undefined) {
+        updatePromises.push(
+          engineRegistryService.toggleEngine(companyId, 'website', toggles.website_enabled)
+        );
+      }
+      if (toggles.crm_enabled !== undefined) {
+        updatePromises.push(
+          engineRegistryService.toggleEngine(companyId, 'crm', toggles.crm_enabled)
+        );
+      }
+
+      await Promise.all(updatePromises);
     }, 'Failed to update engine toggles');
   }
 
@@ -70,18 +105,8 @@ export class EngineService extends BaseService {
    */
   async getActiveEngines(companyId: string): Promise<string[]> {
     return this.executeQuery(async () => {
-      const toggles = await this.getEngineToggles(companyId);
-      const activeEngines: string[] = [];
-
-      if (toggles.reseller_enabled) activeEngines.push('reseller');
-      if (toggles.itad_enabled) activeEngines.push('itad');
-      if (toggles.recycling_enabled) activeEngines.push('recycling');
-      if (toggles.auction_enabled) activeEngines.push('auction');
-      if (toggles.website_enabled) activeEngines.push('website');
-      if (toggles.crm_enabled) activeEngines.push('crm');
-      if (toggles.consignment_enabled) activeEngines.push('consignment');
-
-      return activeEngines;
+      const engines = await engineRegistryService.getEnabledEngines(companyId);
+      return engines.map(e => e.key);
     }, 'Failed to get active engines');
   }
 }

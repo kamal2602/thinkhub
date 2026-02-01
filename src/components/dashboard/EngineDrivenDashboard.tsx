@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { AlertTriangle, Activity, TrendingUp, Package, Clock, DollarSign, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { AlertTriangle, Activity, TrendingUp, Package, Clock, DollarSign, ArrowRight, Lock } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useCompany } from '../../contexts/CompanyContext';
 import { engineRegistryService, Engine } from '../../services/engineRegistryService';
@@ -37,6 +38,7 @@ interface EngineTile {
 
 export function EngineDrivenDashboard() {
   const { selectedCompany } = useCompany();
+  const navigate = useNavigate();
   const [engines, setEngines] = useState<Engine[]>([]);
   const [engineTiles, setEngineTiles] = useState<EngineTile[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
@@ -61,12 +63,13 @@ export function EngineDrivenDashboard() {
     if (!selectedCompany) return;
 
     try {
-      const enabledEngines = await engineRegistryService.getEnabledEngines(selectedCompany.id);
-      setEngines(enabledEngines);
+      const allEngines = await engineRegistryService.getEngines(selectedCompany.id);
+      const installedEngines = allEngines.filter(e => e.is_installed);
+      setEngines(installedEngines);
 
       await Promise.all([
         fetchCoreStats(),
-        fetchEngineStats(enabledEngines)
+        fetchEngineStats(installedEngines)
       ]);
     } catch (error) {
       console.error('Error loading dashboard:', error);
@@ -219,11 +222,10 @@ export function EngineDrivenDashboard() {
             break;
         }
 
-        if (count > 0 || engine.is_core) {
-          tiles.push({ engine, count, value });
-        }
+        tiles.push({ engine, count, value });
       } catch (error) {
         console.error(`Error fetching stats for ${engine.key}:`, error);
+        tiles.push({ engine, count: 0, value: 0 });
       }
     }
 
@@ -233,12 +235,6 @@ export function EngineDrivenDashboard() {
   const getIcon = (iconName: string) => {
     const IconComponent = (Icons as any)[iconName];
     return IconComponent || Icons.Box;
-  };
-
-  const handleNavigate = (route: string | null) => {
-    if (route) {
-      window.dispatchEvent(new CustomEvent('navigate', { detail: route }));
-    }
   };
 
   if (!selectedCompany) {
@@ -344,22 +340,47 @@ export function EngineDrivenDashboard() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {tiles.map(({ engine, count }) => {
                     const Icon = getIcon(engine.icon);
+                    const isDisabled = !engine.is_enabled;
+
                     return (
                       <button
                         key={engine.id}
-                        onClick={() => handleNavigate(engine.workspace_route)}
-                        className="bg-white rounded-lg border border-slate-200 p-4 hover:border-blue-300 hover:shadow-md transition-all text-left group"
+                        onClick={() => navigate(isDisabled ? '/apps' : (engine.workspace_route || '/apps'))}
+                        className={`bg-white rounded-lg border p-4 transition-all text-left group relative ${
+                          isDisabled
+                            ? 'border-slate-200 opacity-60 hover:opacity-100 hover:border-amber-300'
+                            : 'border-slate-200 hover:border-blue-300 hover:shadow-md'
+                        }`}
                       >
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                            <Icon className="w-5 h-5 text-blue-600" />
+                        {isDisabled && (
+                          <div className="absolute top-2 right-2">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
+                              <Lock className="w-3 h-3" />
+                              Disabled
+                            </span>
                           </div>
-                          <ArrowRight className="w-4 h-4 text-slate-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                        )}
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+                            isDisabled
+                              ? 'bg-slate-100 group-hover:bg-amber-100'
+                              : 'bg-blue-50 group-hover:bg-blue-100'
+                          }`}>
+                            <Icon className={`w-5 h-5 ${isDisabled ? 'text-slate-400' : 'text-blue-600'}`} />
+                          </div>
+                          <ArrowRight className={`w-4 h-4 ml-auto opacity-0 group-hover:opacity-100 transition-opacity ${
+                            isDisabled ? 'text-amber-500' : 'text-slate-400'
+                          }`} />
                         </div>
-                        {count !== undefined && (
+                        {count !== undefined && !isDisabled && (
                           <div className="text-2xl font-bold text-slate-800 mb-1">{count}</div>
                         )}
-                        <div className="text-sm text-slate-600">{engine.title}</div>
+                        {isDisabled && (
+                          <div className="text-sm text-amber-600 font-medium mb-1">Enable in Apps</div>
+                        )}
+                        <div className={`text-sm ${isDisabled ? 'text-slate-500' : 'text-slate-600'}`}>
+                          {engine.title}
+                        </div>
                       </button>
                     );
                   })}
