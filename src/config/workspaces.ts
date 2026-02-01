@@ -197,8 +197,17 @@ export const WORKSPACES: WorkspaceConfig[] = [
     color: 'teal',
     requiredEngine: 'website_enabled',
     requiredRoles: ['admin', 'manager'],
-    pages: [
-      { name: 'Website Dashboard', page: 'website' },
+    modules: [
+      {
+        id: 'cms',
+        name: 'Content Management',
+        pages: [
+          { name: 'Website Dashboard', page: 'website', requiredEngine: 'website_enabled' },
+          { name: 'Pages', page: 'website-pages', requiredEngine: 'website_enabled' },
+          { name: 'Menus', page: 'website-menus', requiredEngine: 'website_enabled' },
+          { name: 'Settings', page: 'website-settings', requiredEngine: 'website_enabled' },
+        ],
+      },
     ],
   },
   {

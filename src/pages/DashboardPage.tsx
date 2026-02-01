@@ -56,6 +56,10 @@ import { CRMDashboard } from '../components/crm/CRMDashboard';
 import { Leads } from '../components/crm/Leads';
 import { Opportunities } from '../components/crm/Opportunities';
 import { Activities } from '../components/crm/Activities';
+import { WebsiteDashboard } from '../components/website/WebsiteDashboard';
+import { Pages } from '../components/website/Pages';
+import { NavigationMenus } from '../components/website/NavigationMenus';
+import { WebsiteSettings } from '../components/website/WebsiteSettings';
 import { useCompany } from '../contexts/CompanyContext';
 import { useAuth } from '../contexts/AuthContext';
 import { CommandPalette } from '../components/common/CommandPalette';
@@ -225,6 +229,26 @@ export function DashboardPage() {
         {currentPage === 'crm-activities' && (
           <EngineGuard engine="crm_enabled">
             <Activities />
+          </EngineGuard>
+        )}
+        {currentPage === 'website' && (
+          <EngineGuard engine="website_enabled">
+            <WebsiteDashboard />
+          </EngineGuard>
+        )}
+        {currentPage === 'website-pages' && (
+          <EngineGuard engine="website_enabled">
+            <Pages />
+          </EngineGuard>
+        )}
+        {currentPage === 'website-menus' && (
+          <EngineGuard engine="website_enabled">
+            <NavigationMenus />
+          </EngineGuard>
+        )}
+        {currentPage === 'website-settings' && (
+          <EngineGuard engine="website_enabled">
+            <WebsiteSettings />
           </EngineGuard>
         )}
       </main>

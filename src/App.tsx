@@ -5,12 +5,29 @@ import { CustomerPortalAuthProvider } from './contexts/CustomerPortalAuthContext
 import { AuthPage } from './pages/AuthPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { CustomerPortalPage } from './pages/CustomerPortalPage';
+import { PublicSitePage } from './pages/PublicSitePage';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { KeyboardShortcutsHelp } from './components/common/KeyboardShortcutsHelp';
 
 function AppContent() {
   const { user, loading } = useAuth();
   const isCustomerPortal = window.location.pathname.startsWith('/portal');
+  const isPublicSite = window.location.pathname.startsWith('/site');
+
+  // Handle public site (no auth required)
+  if (isPublicSite) {
+    const pathParts = window.location.pathname.split('/');
+    const companyId = pathParts[2];
+    const slug = pathParts[3];
+
+    if (companyId && slug) {
+      return (
+        <ErrorBoundary>
+          <PublicSitePage companyId={companyId} slug={slug} />
+        </ErrorBoundary>
+      );
+    }
+  }
 
   if (isCustomerPortal) {
     return (
