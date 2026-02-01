@@ -15,6 +15,7 @@ export interface SalesInvoice {
   total_amount: number;
   amount_paid: number;
   currency: string;
+  sales_order_id?: string; // Optional link to sales order
   notes?: string;
   terms?: string;
   created_at: string;
@@ -40,6 +41,7 @@ export interface CreateSalesInvoiceInput {
   invoice_date: string;
   due_date?: string;
   currency?: string;
+  sales_order_id?: string; // Optional link to sales order
   notes?: string;
   terms?: string;
   items: Omit<SalesInvoiceItem, 'id' | 'sales_invoice_id'>[];
@@ -109,6 +111,73 @@ export class SalesInvoiceService extends BaseService {
     }, 'Failed to fetch sales invoice');
   }
 
+  /**
+   * Convenience method for creating invoice without items (items added separately)
+   * Used by auction settlement and other flows that build invoices incrementally
+   */
+  async createInvoice(params: {
+    company_id: string;
+    customer_id: string;
+    invoice_number: string;
+    invoice_date: string;
+    due_date?: string;
+    total_amount: number;
+    paid_amount?: number;
+    payment_status?: string;
+    sales_channel?: string;
+    sales_order_id?: string;
+    notes?: string;
+  }): Promise<any> {
+    const { data, error } = await supabase
+      .from('sales_invoices')
+      .insert({
+        ...params,
+        status: params.payment_status || 'draft',
+        subtotal: params.total_amount,
+        tax_amount: 0,
+        discount_amount: 0,
+        amount_paid: params.paid_amount || 0,
+        currency: 'USD'
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  /**
+   * Add a single item to an existing invoice
+   */
+  async addInvoiceItem(params: {
+    invoice_id: string;
+    description: string;
+    quantity: number;
+    unit_price: number;
+    cost_price?: number;
+    asset_id?: string;
+    component_id?: string;
+  }): Promise<any> {
+    const totalPrice = params.quantity * params.unit_price;
+
+    const { data, error } = await supabase
+      .from('sales_invoice_items')
+      .insert({
+        invoice_id: params.invoice_id,
+        item_id: params.asset_id || params.component_id, // Legacy field
+        description: params.description,
+        quantity: params.quantity,
+        unit_price: params.unit_price,
+        total_price: totalPrice,
+        cost_price: params.cost_price
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
   async createSalesInvoice(input: CreateSalesInvoiceInput, userId: string): Promise<SalesInvoice> {
     return this.executeQuery(async () => {
       const invoiceNumber = await this.generateInvoiceNumber(input.company_id);
@@ -139,6 +208,7 @@ export class SalesInvoiceService extends BaseService {
           total_amount: totalAmount,
           amount_paid: 0,
           currency: input.currency || 'USD',
+          sales_order_id: input.sales_order_id,
           notes: input.notes,
           terms: input.terms,
           created_by: userId
@@ -240,25 +310,6 @@ export class SalesInvoiceService extends BaseService {
 
       if (error) throw error;
     }, 'Failed to delete sales invoice');
-  }
-
-  async addInvoiceItem(invoiceId: string, item: Omit<SalesInvoiceItem, 'id' | 'sales_invoice_id'>): Promise<SalesInvoiceItem> {
-    return this.executeQuery(async () => {
-      const { data, error } = await supabase
-        .from('sales_invoice_items')
-        .insert({
-          ...item,
-          sales_invoice_id: invoiceId
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      await this.recalculateInvoiceTotals(invoiceId);
-
-      return data;
-    }, 'Failed to add invoice item');
   }
 
   async updateInvoiceItem(itemId: string, updates: Partial<SalesInvoiceItem>): Promise<SalesInvoiceItem> {
