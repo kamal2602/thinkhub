@@ -83,7 +83,7 @@ const AppTile: React.FC<{
 
 export const AppLauncher: React.FC = () => {
   const navigate = useNavigate();
-  const { currentCompany } = useCompany();
+  const { selectedCompany } = useCompany();
   const { showToast } = useToast();
   const [engines, setEngines] = useState<Engine[]>([]);
   const [filteredEngines, setFilteredEngines] = useState<Engine[]>([]);
@@ -92,7 +92,7 @@ export const AppLauncher: React.FC = () => {
 
   useEffect(() => {
     loadEngines();
-  }, [currentCompany?.id]);
+  }, [selectedCompany?.id]);
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
@@ -110,11 +110,14 @@ export const AppLauncher: React.FC = () => {
   }, [searchQuery, engines]);
 
   const loadEngines = async () => {
-    if (!currentCompany?.id) return;
+    if (!selectedCompany?.id) {
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);
-      const installedEngines = await engineRegistryService.getInstalledEngines(currentCompany.id);
+      const installedEngines = await engineRegistryService.getInstalledEngines(selectedCompany.id);
       setEngines(installedEngines);
       setFilteredEngines(installedEngines);
     } catch (error) {
@@ -145,6 +148,18 @@ export const AppLauncher: React.FC = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading applications...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!selectedCompany) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Company Selected</h3>
+          <p className="text-gray-600">Please select or create a company to continue</p>
         </div>
       </div>
     );

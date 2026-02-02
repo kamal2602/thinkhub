@@ -17,7 +17,10 @@ export function ModernAppLauncher() {
   }, [selectedCompany]);
 
   const loadEngines = async () => {
-    if (!selectedCompany) return;
+    if (!selectedCompany) {
+      setLoading(false);
+      return;
+    }
 
     try {
       const enabledEngines = await engineRegistryService.getEnabledEngines(
@@ -74,6 +77,22 @@ export function ModernAppLauncher() {
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
           <p className="text-sm text-gray-600">Loading workspaces...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!selectedCompany) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">No company selected</p>
+          <button
+            onClick={() => navigate('/apps')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Go to Apps
+          </button>
         </div>
       </div>
     );
