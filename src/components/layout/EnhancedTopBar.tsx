@@ -68,119 +68,32 @@ export function EnhancedTopBar() {
   const recentApps = engines.slice(0, 5);
 
   return (
-    <div className="h-14 bg-white border-b border-gray-200 flex items-center px-4 gap-4 sticky top-0 z-50 shadow-sm">
-      {/* Logo & Company */}
+    <div className="h-16 bg-white border-b border-gray-200 flex items-center px-6 gap-4 sticky top-0 z-50 shadow-sm">
+      {/* Logo & Brand */}
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate('/')}
-          className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center hover:shadow-md transition-shadow"
-          title="Home"
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          title="ThinkHub - Home"
         >
-          <span className="text-white font-bold text-sm">SP</span>
+          <img
+            src="/logo_without_text-1.png"
+            alt="ThinkHub"
+            className="w-10 h-10 rounded-lg"
+          />
+          <span className="text-xl font-bold bg-gradient-to-r from-rose-500 to-teal-600 bg-clip-text text-transparent">
+            ThinkHub
+          </span>
         </button>
-      </div>
-
-      {/* Current App / App Switcher */}
-      <div className="relative">
-        <button
-          onClick={() => setShowAppMenu(!showAppMenu)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors min-w-[140px]"
-        >
-          {currentEngine ? (
-            <>
-              {React.createElement(getIcon(currentEngine.icon), {
-                className: 'w-4 h-4 text-blue-600'
-              })}
-              <span className="font-medium text-gray-900">{currentEngine.title}</span>
-            </>
-          ) : (
-            <>
-              <Home className="w-4 h-4 text-blue-600" />
-              <span className="font-medium text-gray-900">Home</span>
-            </>
-          )}
-          <ChevronDown className="w-4 h-4 text-gray-500 ml-auto" />
-        </button>
-
-        {showAppMenu && (
-          <>
-            <div
-              className="fixed inset-0 z-40"
-              onClick={() => setShowAppMenu(false)}
-            />
-            <div className="absolute top-full left-0 mt-1 w-72 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-              <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-500 uppercase">Quick Switch</span>
-                <button
-                  onClick={() => {
-                    navigate('/');
-                    setShowAppMenu(false);
-                  }}
-                  className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  View All
-                </button>
-              </div>
-
-              <div className="max-h-96 overflow-y-auto">
-                <button
-                  onClick={() => {
-                    navigate('/');
-                    setShowAppMenu(false);
-                  }}
-                  className={`w-full px-3 py-2.5 text-left hover:bg-gray-50 flex items-center gap-3 ${
-                    !currentEngine ? 'bg-blue-50' : ''
-                  }`}
-                >
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                    <Home className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-sm text-gray-900">Home</div>
-                    <div className="text-xs text-gray-500 truncate">App launcher</div>
-                  </div>
-                </button>
-
-                {recentApps.map((engine) => {
-                  const Icon = getIcon(engine.icon);
-                  return (
-                    <button
-                      key={engine.key}
-                      onClick={() => {
-                        if (engine.workspace_route) {
-                          navigate(engine.workspace_route);
-                        }
-                        setShowAppMenu(false);
-                      }}
-                      className={`w-full px-3 py-2.5 text-left hover:bg-gray-50 flex items-center gap-3 ${
-                        currentEngine?.key === engine.key ? 'bg-blue-50' : ''
-                      }`}
-                    >
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                        <Icon className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm text-gray-900">{engine.title}</div>
-                        {engine.description && (
-                          <div className="text-xs text-gray-500 truncate">{engine.description}</div>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </>
-        )}
       </div>
 
       {/* Apps Grid Button */}
       <button
         onClick={() => navigate('/')}
-        className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+        className="p-2.5 rounded-lg hover:bg-rose-50 transition-colors group"
         title="All Applications"
       >
-        <LayoutGrid className="w-5 h-5 text-gray-600" />
+        <LayoutGrid className="w-5 h-5 text-gray-600 group-hover:text-rose-600 transition-colors" />
       </button>
 
       {/* Search */}
@@ -192,7 +105,7 @@ export function EnhancedTopBar() {
             placeholder="Search anything..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent text-sm bg-gray-50"
           />
         </div>
       </div>
@@ -203,11 +116,11 @@ export function EnhancedTopBar() {
         <div className="relative">
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="relative p-2.5 rounded-lg hover:bg-teal-50 transition-colors group"
             title="Notifications"
           >
-            <Bell className="w-5 h-5 text-gray-600" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            <Bell className="w-5 h-5 text-gray-600 group-hover:text-teal-600 transition-colors" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full"></span>
           </button>
 
           {showNotifications && (
@@ -216,7 +129,7 @@ export function EnhancedTopBar() {
                 className="fixed inset-0 z-40"
                 onClick={() => setShowNotifications(false)}
               />
-              <div className="absolute top-full right-0 mt-1 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+              <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
                 <div className="px-4 py-3 border-b border-gray-200">
                   <h3 className="font-medium text-gray-900">Notifications</h3>
                 </div>
@@ -232,9 +145,9 @@ export function EnhancedTopBar() {
         <div className="relative">
           <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-rose-50 transition-colors"
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-rose-400 to-teal-500 rounded-full flex items-center justify-center">
               <User className="w-4 h-4 text-white" />
             </div>
             <ChevronDown className="w-4 h-4 text-gray-500" />
@@ -246,7 +159,7 @@ export function EnhancedTopBar() {
                 className="fixed inset-0 z-40"
                 onClick={() => setShowProfileMenu(false)}
               />
-              <div className="absolute top-full right-0 mt-1 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+              <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
                 <div className="px-4 py-3 border-b border-gray-200">
                   <div className="font-medium text-gray-900 truncate">{user?.email}</div>
                   <div className="text-sm text-gray-500 truncate">{selectedCompany?.name || 'No company'}</div>
@@ -256,14 +169,14 @@ export function EnhancedTopBar() {
                     navigate('/settings');
                     setShowProfileMenu(false);
                   }}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm text-gray-700"
+                  className="w-full px-4 py-2.5 text-left hover:bg-gray-50 flex items-center gap-2 text-sm text-gray-700 transition-colors"
                 >
-                  <Settings className="w-4 h-4" />
+                  <Settings className="w-4 h-4 text-teal-600" />
                   Settings
                 </button>
                 <button
                   onClick={handleSignOut}
-                  className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center gap-2 text-sm text-red-600"
+                  className="w-full px-4 py-2.5 text-left hover:bg-rose-50 flex items-center gap-2 text-sm text-rose-600 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                   Sign Out

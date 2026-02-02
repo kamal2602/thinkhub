@@ -121,7 +121,7 @@ export function OdooStyleLauncher() {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-12 h-12 border-4 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Loading applications...</p>
         </div>
       </div>
@@ -136,7 +136,7 @@ export function OdooStyleLauncher() {
           <p className="text-gray-600 mb-4">No company selected</p>
           <button
             onClick={() => navigate('/apps')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-gradient-to-r from-rose-500 to-teal-600 text-white rounded-md hover:shadow-lg transition-all"
           >
             Go to Apps
           </button>
@@ -146,37 +146,26 @@ export function OdooStyleLauncher() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Applications</h1>
-              <p className="text-sm text-gray-500 mt-1">Select an application to begin</p>
-            </div>
-          </div>
-
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-8 py-6">
+          <div className="relative max-w-lg">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search applications..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all shadow-sm"
             />
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-8 py-8">
         {sections.map((section) => (
           <div key={section} className="mb-10">
-            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 px-1">
-              {SECTION_LABELS[section]}
-            </h2>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {groupedEngines[section].map((engine) => {
                 const Icon = getIcon(engine.icon);
 
@@ -184,12 +173,12 @@ export function OdooStyleLauncher() {
                   <button
                     key={engine.key}
                     onClick={() => engine.workspace_route && navigate(engine.workspace_route)}
-                    className="group bg-white rounded-lg p-5 border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all duration-150 flex flex-col items-center text-center"
+                    className="group bg-white rounded-xl p-6 border border-gray-200 hover:border-rose-400 hover:shadow-lg transition-all duration-200 flex flex-col items-center text-center"
                   >
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-150">
-                      <Icon className="w-6 h-6 text-white" />
+                    <div className="w-14 h-14 bg-gradient-to-br from-rose-500 to-teal-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200 shadow-md">
+                      <Icon className="w-7 h-7 text-white" />
                     </div>
-                    <h3 className="font-medium text-gray-900 text-sm group-hover:text-blue-600 transition-colors">
+                    <h3 className="font-medium text-gray-900 text-sm group-hover:text-rose-600 transition-colors">
                       {engine.title}
                     </h3>
                     {engine.description && (
