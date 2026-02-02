@@ -4,6 +4,7 @@ import { Search, Grid3x3 } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { useCompany } from '../../contexts/CompanyContext';
 import { engineRegistryService, Engine } from '../../services/engineRegistryService';
+import { getAppColor } from '../../config/appColors';
 
 const PROCESS_FLOW_ORDER: Record<string, number> = {
   'contacts': 1,
@@ -30,26 +31,6 @@ const PROCESS_FLOW_ORDER: Record<string, number> = {
   'apps': 77,
   'settings': 80,
 };
-
-const SECTION_LABELS: Record<string, string> = {
-  'procurement': 'Procurement & Intake',
-  'operations': 'Operations',
-  'sales': 'Sales Channels',
-  'financial': 'Financial',
-  'specialized': 'Specialized Workflows',
-  'reporting': 'Compliance & Reporting',
-  'administration': 'Administration',
-};
-
-function getSectionForEngine(key: string, order: number): string {
-  if (order >= 1 && order <= 10) return 'procurement';
-  if (order >= 11 && order <= 30) return 'operations';
-  if (order >= 31 && order <= 40) return 'sales';
-  if (order >= 41 && order <= 50) return 'financial';
-  if (order >= 51 && order <= 60) return 'specialized';
-  if (order >= 61 && order <= 70) return 'reporting';
-  return 'administration';
-}
 
 export function OdooStyleLauncher() {
   const navigate = useNavigate();
@@ -91,31 +72,16 @@ export function OdooStyleLauncher() {
     return IconComponent || Icons.Package;
   };
 
-  const filteredEngines = engines.filter(engine =>
-    engine.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    engine.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const groupedEngines = filteredEngines.reduce((acc, engine) => {
-    const order = PROCESS_FLOW_ORDER[engine.key] || engine.sort_order || 999;
-    const section = getSectionForEngine(engine.key, order);
-
-    if (!acc[section]) {
-      acc[section] = [];
-    }
-    acc[section].push(engine);
-    return acc;
-  }, {} as Record<string, Engine[]>);
-
-  const sections = [
-    'procurement',
-    'operations',
-    'sales',
-    'financial',
-    'specialized',
-    'reporting',
-    'administration',
-  ].filter(section => groupedEngines[section]?.length > 0);
+  const filteredEngines = engines
+    .filter(engine =>
+      engine.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      engine.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      const orderA = PROCESS_FLOW_ORDER[a.key] || a.sort_order || 999;
+      const orderB = PROCESS_FLOW_ORDER[b.key] || b.sort_order || 999;
+      return orderA - orderB;
+    });
 
   if (loading) {
     return (
@@ -146,61 +112,57 @@ export function OdooStyleLauncher() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-8 py-6">
-          <div className="relative max-w-lg">
+    <div className="min-h-screen bg-gray-100">
+      {/* Clean header with search - Odoo style */}
+      <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-[1400px] mx-auto px-8 py-6">
+          <div className="relative max-w-xl">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search applications..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all shadow-sm"
+              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all bg-gray-50 hover:bg-white"
             />
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-8 py-8">
-        {sections.map((section) => (
-          <div key={section} className="mb-10">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {groupedEngines[section].map((engine) => {
-                const Icon = getIcon(engine.icon);
+      {/* App grid - Fixed 6 columns on desktop, clean and continuous */}
+      <div className="max-w-[1400px] mx-auto px-8 py-12">
+        {filteredEngines.length > 0 ? (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-6">
+            {filteredEngines.map((engine) => {
+              const Icon = getIcon(engine.icon);
+              const colors = getAppColor(engine.key);
 
-                return (
-                  <button
-                    key={engine.key}
-                    onClick={() => engine.workspace_route && navigate(engine.workspace_route)}
-                    className="group bg-white rounded-xl p-6 border border-gray-200 hover:border-rose-400 hover:shadow-lg transition-all duration-200 flex flex-col items-center text-center"
-                  >
-                    <div className="w-14 h-14 bg-gradient-to-br from-rose-500 to-teal-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200 shadow-md">
-                      <Icon className="w-7 h-7 text-white" />
-                    </div>
-                    <h3 className="font-medium text-gray-900 text-sm group-hover:text-rose-600 transition-colors">
-                      {engine.title}
-                    </h3>
-                    {engine.description && (
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                        {engine.description}
-                      </p>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+              return (
+                <button
+                  key={engine.key}
+                  onClick={() => engine.workspace_route && navigate(engine.workspace_route)}
+                  className="group bg-white rounded-2xl p-6 hover:shadow-xl transition-all duration-300 flex flex-col items-center text-center border border-transparent hover:border-gray-200"
+                >
+                  <div className={`w-16 h-16 bg-gradient-to-br ${colors.gradient} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}>
+                    <Icon className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className={`font-semibold text-gray-900 text-sm mb-1 group-hover:${colors.text} transition-colors line-clamp-2 leading-tight`}>
+                    {engine.title}
+                  </h3>
+                </button>
+              );
+            })}
           </div>
-        ))}
-
-        {filteredEngines.length === 0 && (
-          <div className="text-center py-16">
-            <Grid3x3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No applications found</h3>
+        ) : (
+          <div className="text-center py-20">
+            <div className="w-20 h-20 bg-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Grid3x3 className="w-10 h-10 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No applications found</h3>
             <p className="text-gray-500">
               {searchQuery
                 ? `No applications match "${searchQuery}"`
-                : 'No applications are enabled'
+                : 'No applications are enabled for this company'
               }
             </p>
           </div>
