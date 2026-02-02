@@ -1,15 +1,27 @@
+/**
+ * @deprecated This file is LEGACY and uses the old EngineToggles pattern.
+ * Dependencies are now managed in the engines table via depends_on array.
+ * Use engineRegistryService.getMissingDependencies() instead.
+ */
+
 import { EngineToggles } from '../services/engineService';
 
 export interface EngineDependency {
   requires: (keyof EngineToggles)[];
 }
 
+/**
+ * @deprecated Dependencies are now in the database engines table
+ */
 export const ENGINE_DEPENDENCIES: Partial<Record<keyof EngineToggles, EngineDependency>> = {
   website_enabled: { requires: ['reseller_enabled'] },
   auction_enabled: { requires: ['reseller_enabled'] },
   consignment_enabled: { requires: ['reseller_enabled'] },
 };
 
+/**
+ * @deprecated Use engineRegistryService methods instead
+ */
 export interface ValidationResult {
   valid: boolean;
   errors: string[];

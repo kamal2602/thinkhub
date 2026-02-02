@@ -1,7 +1,23 @@
+/**
+ * @deprecated This service is LEGACY and should not be used in new code.
+ * Use engineRegistryService directly instead.
+ *
+ * This file exists only for backward compatibility with old code that
+ * references EngineToggles interface or getEngineToggles() method.
+ *
+ * Migration path:
+ * - Replace getEngineToggles() with engineRegistryService.getEngines()
+ * - Replace updateEngineToggles() with engineRegistryService.toggleEngine()
+ * - Replace isEngineEnabled() with engineRegistryService.getEngine()
+ */
+
 import { supabase } from '../lib/supabase';
 import { BaseService } from './baseService';
 import { engineRegistryService } from './engineRegistryService';
 
+/**
+ * @deprecated Use engineRegistryService.Engine type instead
+ */
 export interface EngineToggles {
   reseller_enabled: boolean;
   itad_enabled: boolean;
@@ -12,6 +28,9 @@ export interface EngineToggles {
   consignment_enabled: boolean;
 }
 
+/**
+ * @deprecated Use Company type from CompanyContext instead
+ */
 export interface Company {
   id: string;
   name: string;
@@ -24,6 +43,9 @@ export interface Company {
   consignment_enabled: boolean;
 }
 
+/**
+ * @deprecated Use engineRegistryService directly instead
+ */
 export class EngineService extends BaseService {
   /**
    * Get engine toggles for a specific company

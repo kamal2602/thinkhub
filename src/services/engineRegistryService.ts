@@ -21,7 +21,44 @@ export interface Engine {
 }
 
 export class EngineRegistryService {
+  private cache: Map<string, { data: Engine[]; timestamp: number }> = new Map();
+  private readonly CACHE_TTL = 5000; // 5 seconds
+
+  private getCacheKey(companyId: string, filter: string): string {
+    return `${companyId}:${filter}`;
+  }
+
+  private getCachedData(companyId: string, filter: string): Engine[] | null {
+    const key = this.getCacheKey(companyId, filter);
+    const cached = this.cache.get(key);
+
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+      return cached.data;
+    }
+
+    return null;
+  }
+
+  private setCachedData(companyId: string, filter: string, data: Engine[]): void {
+    const key = this.getCacheKey(companyId, filter);
+    this.cache.set(key, { data, timestamp: Date.now() });
+  }
+
+  invalidateCache(companyId?: string): void {
+    if (companyId) {
+      for (const key of this.cache.keys()) {
+        if (key.startsWith(`${companyId}:`)) {
+          this.cache.delete(key);
+        }
+      }
+    } else {
+      this.cache.clear();
+    }
+  }
   async getEngines(companyId: string): Promise<Engine[]> {
+    const cached = this.getCachedData(companyId, 'all');
+    if (cached) return cached;
+
     const { data, error } = await supabase
       .from('engines')
       .select('*')
@@ -29,10 +66,32 @@ export class EngineRegistryService {
       .order('sort_order', { ascending: true });
 
     if (error) throw error;
-    return data || [];
+    const engines = data || [];
+    this.setCachedData(companyId, 'all', engines);
+    return engines;
+  }
+
+  async getInstalledEngines(companyId: string): Promise<Engine[]> {
+    const cached = this.getCachedData(companyId, 'installed');
+    if (cached) return cached;
+
+    const { data, error } = await supabase
+      .from('engines')
+      .select('*')
+      .eq('company_id', companyId)
+      .eq('is_installed', true)
+      .order('sort_order', { ascending: true });
+
+    if (error) throw error;
+    const engines = data || [];
+    this.setCachedData(companyId, 'installed', engines);
+    return engines;
   }
 
   async getEnabledEngines(companyId: string): Promise<Engine[]> {
+    const cached = this.getCachedData(companyId, 'enabled');
+    if (cached) return cached;
+
     const { data, error } = await supabase
       .from('engines')
       .select('*')
@@ -42,7 +101,13 @@ export class EngineRegistryService {
       .order('sort_order', { ascending: true });
 
     if (error) throw error;
-    return data || [];
+    const engines = data || [];
+    this.setCachedData(companyId, 'enabled', engines);
+    return engines;
+  }
+
+  async getModuleByKey(companyId: string, key: string): Promise<Engine | null> {
+    return this.getEngine(companyId, key);
   }
 
   async getEnginesByCategory(companyId: string, category: string): Promise<Engine[]> {
@@ -92,6 +157,8 @@ export class EngineRegistryService {
       .eq('key', key);
 
     if (error) throw error;
+
+    this.invalidateCache(companyId);
   }
 
   async installEngine(companyId: string, key: string): Promise<void> {
@@ -111,6 +178,8 @@ export class EngineRegistryService {
       .eq('key', key);
 
     if (error) throw error;
+
+    this.invalidateCache(companyId);
   }
 
   async uninstallEngine(companyId: string, key: string): Promise<void> {
@@ -146,6 +215,8 @@ export class EngineRegistryService {
       .eq('key', key);
 
     if (error) throw error;
+
+    this.invalidateCache(companyId);
   }
 
   private async checkDependencies(companyId: string, engine: Engine): Promise<void> {
@@ -219,6 +290,10 @@ export class EngineRegistryService {
     }
 
     await this.toggleEngine(companyId, engineKey, true);
+  }
+
+  async getModulesByCategory(companyId: string): Promise<Record<string, Engine[]>> {
+    return this.getEnabledEngineGroups(companyId);
   }
 }
 

@@ -63,8 +63,7 @@ export function EngineDrivenDashboard() {
     if (!selectedCompany) return;
 
     try {
-      const allEngines = await engineRegistryService.getEngines(selectedCompany.id);
-      const installedEngines = allEngines.filter(e => e.is_installed);
+      const installedEngines = await engineRegistryService.getInstalledEngines(selectedCompany.id);
       setEngines(installedEngines);
 
       await Promise.all([

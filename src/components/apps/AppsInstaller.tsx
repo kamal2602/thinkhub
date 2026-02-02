@@ -264,9 +264,12 @@ export function AppsInstaller() {
                   )}
 
                   {!engine.is_enabled && engine.is_installed && (
-                    <div className="mb-4 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-                      <p className="text-xs text-amber-700">
-                        Not visible in sidebar until enabled
+                    <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                      <p className="text-xs font-medium text-amber-800 mb-1">
+                        Module Disabled
+                      </p>
+                      <p className="text-xs text-amber-600">
+                        Enable to show in sidebar and allow access
                       </p>
                     </div>
                   )}
@@ -289,11 +292,11 @@ export function AppsInstaller() {
                           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                             engine.is_enabled
                               ? 'bg-green-50 text-green-700 border-2 border-green-200 hover:bg-green-100'
-                              : 'bg-gray-100 text-gray-700 border-2 border-gray-200 hover:bg-gray-200'
+                              : 'bg-blue-600 text-white hover:bg-blue-700'
                           }`}
                         >
                           {engine.is_enabled && <Check className="w-4 h-4" />}
-                          {isProcessing ? 'Processing...' : engine.is_enabled ? 'Enabled' : 'Disabled'}
+                          {isProcessing ? 'Processing...' : engine.is_enabled ? 'Enabled - Click to Disable' : 'Enable Module'}
                         </button>
                         {!engine.is_core && (
                           <button

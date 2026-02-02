@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { GlobalTopBar } from './GlobalTopBar';
 import { RegistryDrivenSidebar } from './RegistryDrivenSidebar';
-import { PageRouter } from './PageRouter';
+import { EngineRouter } from './EngineRouter';
 import { useCompany } from '../../contexts/CompanyContext';
 import { supabase } from '../../lib/supabase';
 import { EngineDrivenDashboard } from '../dashboard/EngineDrivenDashboard';
 import { CompanyOnboardingWizard } from '../onboarding/CompanyOnboardingWizard';
 import { InitialSetup } from '../onboarding/InitialSetup';
-import { ESGDashboard } from '../compliance/ESGDashboard';
-import { SystemConfig } from '../settings/SystemConfig';
 
 interface ModularAppShellProps {
   children?: React.ReactNode;
@@ -18,8 +16,6 @@ interface ModularAppShellProps {
 export function ModularAppShell({ children }: ModularAppShellProps) {
   const { companies, selectedCompany, refreshCompanies, loading } = useCompany();
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const location = useLocation();
-  const navigate = useNavigate();
 
   useEffect(() => {
     checkOnboarding();
@@ -47,10 +43,6 @@ export function ModularAppShell({ children }: ModularAppShellProps) {
   const handleOnboardingComplete = async () => {
     setShowOnboarding(false);
     await refreshCompanies();
-  };
-
-  const handleNavigate = (path: string) => {
-    navigate(path);
   };
 
   // Show loading while checking for companies
@@ -83,9 +75,7 @@ export function ModularAppShell({ children }: ModularAppShellProps) {
           <Routes>
             <Route path="/" element={<EngineDrivenDashboard />} />
             <Route path="/dashboard" element={<EngineDrivenDashboard />} />
-            <Route path="/esg" element={<ESGDashboard />} />
-            <Route path="/settings" element={<SystemConfig />} />
-            <Route path="/*" element={<PageRouter path={location.pathname} />} />
+            <Route path="/*" element={<EngineRouter />} />
           </Routes>
         </main>
       </div>
