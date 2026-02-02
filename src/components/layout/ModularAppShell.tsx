@@ -5,7 +5,7 @@ import { RegistryDrivenSidebar } from './RegistryDrivenSidebar';
 import { EngineRouter } from './EngineRouter';
 import { useCompany } from '../../contexts/CompanyContext';
 import { supabase } from '../../lib/supabase';
-import { ModernAppLauncher } from '../launchpad/ModernAppLauncher';
+import { AppLauncher } from '../launcher/AppLauncher';
 import { EngineDrivenDashboard } from '../dashboard/EngineDrivenDashboard';
 import { CompanyOnboardingWizard } from '../onboarding/CompanyOnboardingWizard';
 import { InitialSetup } from '../onboarding/InitialSetup';
@@ -108,7 +108,7 @@ export function ModularAppShell({ children }: ModularAppShellProps) {
         <RegistryDrivenSidebar />
         <main className="flex-1 overflow-auto">
           <Routes>
-            <Route path="/" element={<ModernAppLauncher />} />
+            <Route path="/" element={<AppLauncher />} />
             <Route path="/dashboard" element={<EngineDrivenDashboard />} />
             <Route path="/*" element={<EngineRouter />} />
           </Routes>

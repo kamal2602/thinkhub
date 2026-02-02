@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Search, Bell, ChevronDown, LogOut, User, Settings } from 'lucide-react';
+import { Search, Bell, ChevronDown, LogOut, User, Settings, LayoutGrid } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useWorkspace, WORKSPACES } from '../../contexts/WorkspaceContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCompany } from '../../contexts/CompanyContext';
 
 export function GlobalTopBar() {
+  const navigate = useNavigate();
   const { currentWorkspace, setCurrentWorkspace, getWorkspace } = useWorkspace();
   const { user, signOut } = useAuth();
   const { selectedCompany } = useCompany();
@@ -66,6 +68,14 @@ export function GlobalTopBar() {
           )}
         </div>
       </div>
+
+      <button
+        onClick={() => navigate('/')}
+        className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+        title="Applications"
+      >
+        <LayoutGrid className="w-5 h-5 text-gray-600" />
+      </button>
 
       <div className="flex-1 max-w-2xl">
         <div className="relative">

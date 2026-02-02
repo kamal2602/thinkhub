@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { userLandingService } from '../services/userLandingService';
 
 interface Profile {
   id: string;
@@ -21,6 +22,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  getUserLandingRoute: () => Promise<string>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -200,8 +202,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  const getUserLandingRoute = async (): Promise<string> => {
+    if (!user) return '/';
+    return await userLandingService.getUserLandingRoute(user.id);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, isSuperAdmin, userRole, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, isSuperAdmin, userRole, signUp, signIn, signOut, getUserLandingRoute }}>
       {children}
     </AuthContext.Provider>
   );
