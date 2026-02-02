@@ -24,6 +24,11 @@ export function ModernAppLauncher() {
         selectedCompany.id
       );
 
+      if (enabledEngines.length === 0) {
+        navigate('/apps');
+        return;
+      }
+
       if (enabledEngines.length === 1 && enabledEngines[0].workspace_route) {
         navigate(enabledEngines[0].workspace_route);
         return;

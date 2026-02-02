@@ -5,7 +5,7 @@ export const ENGINE_COMPONENT_MAP: Record<string, LazyExoticComponent<ComponentT
   'processing': lazy(() => import('../components/processing/Processing').then(m => ({ default: m.Processing }))),
   'receiving': lazy(() => import('../components/receiving/SmartReceivingWorkflow').then(m => ({ default: m.SmartReceivingWorkflow }))),
   'lots': lazy(() => import('../components/purchase-lots/PurchaseLots').then(m => ({ default: m.PurchaseLots }))),
-  'recycling': lazy(() => import('../components/esg/ESGDashboard').then(m => ({ default: m.ESGDashboard }))),
+  'recycling': lazy(() => import('../components/inventory/HarvestedComponentsEnhanced').then(m => ({ default: m.default }))),
   'repairs': lazy(() => import('../components/repairs/Repairs').then(m => ({ default: m.Repairs }))),
 
   'auction': lazy(() => import('../components/auctions/AuctionManagement').then(m => ({ default: m.AuctionManagement }))),
@@ -15,7 +15,8 @@ export const ENGINE_COMPONENT_MAP: Record<string, LazyExoticComponent<ComponentT
   'crm': lazy(() => import('../components/crm/CRMDashboard').then(m => ({ default: m.CRMDashboard }))),
   'accounting': lazy(() => import('../components/accounting/ChartOfAccounts').then(m => ({ default: m.ChartOfAccounts }))),
   'itad': lazy(() => import('../components/itad/ITADCompliance').then(m => ({ default: m.ITADCompliance }))),
-  'contacts': lazy(() => import('../components/settings/PartyDirectory').then(m => ({ default: m.PartyDirectory }))),
+  'esg': lazy(() => import('../components/esg/ESGDashboard').then(m => ({ default: m.ESGDashboard }))),
+  'contacts': lazy(() => import('../components/contacts/ContactsDirectory').then(m => ({ default: m.ContactsDirectory }))),
   'orders': lazy(() => import('../components/purchases/PurchaseOrders').then(m => ({ default: m.PurchaseOrders }))),
   'invoices': lazy(() => import('../components/sales/SalesInvoices').then(m => ({ default: m.SalesInvoices }))),
   'payments': lazy(() => import('../components/finance/Page_Payments').then(m => ({ default: m.Page_Payments }))),
