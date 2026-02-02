@@ -1,5 +1,5 @@
-import { ModernAppLauncher } from '../components/launchpad/ModernAppLauncher';
+import { OdooStyleLauncher } from '../components/launchpad/OdooStyleLauncher';
 
 export default function DashboardPage() {
-  return <ModernAppLauncher />;
+  return <OdooStyleLauncher />;
 }
