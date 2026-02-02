@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { BaseService } from './baseService';
-import { PartyService } from './partyService';
+import { ContactService, contactService } from './contactService';
 
 export interface Lead {
   id: string;
