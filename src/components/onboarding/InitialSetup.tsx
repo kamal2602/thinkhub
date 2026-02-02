@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Building, ArrowRight, Loader, LogOut } from 'lucide-react';
+import { Building, ArrowRight, Loader, LogOut, Info } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -7,15 +7,64 @@ interface InitialSetupProps {
   onComplete: () => void;
 }
 
+interface DiagnosticsData {
+  companiesCount: number;
+  selectedCompanyId: string | null;
+  enginesCount: number;
+  rlsError: string | null;
+}
+
 export function InitialSetup({ onComplete }: InitialSetupProps) {
   const { user } = useAuth();
   const [companyName, setCompanyName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [diagnostics, setDiagnostics] = useState<DiagnosticsData>({
+    companiesCount: 0,
+    selectedCompanyId: null,
+    enginesCount: 0,
+    rlsError: null,
+  });
 
   useEffect(() => {
     localStorage.removeItem('selectedCompanyId');
+    loadDiagnostics();
   }, []);
+
+  const loadDiagnostics = async () => {
+    if (!user) return;
+
+    try {
+      const [companiesRes, selectedId] = await Promise.all([
+        supabase
+          .from('companies')
+          .select('id', { count: 'exact', head: true }),
+        Promise.resolve(localStorage.getItem('selectedCompanyId')),
+      ]);
+
+      let enginesCount = 0;
+      if (selectedId) {
+        const { count } = await supabase
+          .from('engines')
+          .select('*', { count: 'exact', head: true })
+          .eq('company_id', selectedId);
+        enginesCount = count || 0;
+      }
+
+      setDiagnostics({
+        companiesCount: companiesRes.count || 0,
+        selectedCompanyId: selectedId,
+        enginesCount,
+        rlsError: null,
+      });
+    } catch (err: any) {
+      setDiagnostics(prev => ({
+        ...prev,
+        rlsError: err.message?.includes('policy') ? 'RLS policy blocking access' : null,
+      }));
+    }
+  };
 
   const handleSignOut = async () => {
     localStorage.clear();
@@ -121,6 +170,53 @@ export function InitialSetup({ onComplete }: InitialSetupProps) {
               <p className="text-red-700 text-sm font-medium">{error}</p>
             </div>
           )}
+
+          <div className="border-2 border-gray-200 rounded-xl overflow-hidden">
+            <button
+              onClick={() => setShowDiagnostics(!showDiagnostics)}
+              className="w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between"
+            >
+              <span className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <Info className="w-4 h-4" />
+                Setup Diagnostics
+              </span>
+              <span className="text-xs text-gray-500">
+                {showDiagnostics ? 'Hide' : 'Show'}
+              </span>
+            </button>
+            {showDiagnostics && (
+              <div className="p-4 bg-white border-t border-gray-200">
+                <table className="w-full text-sm">
+                  <tbody className="divide-y divide-gray-100">
+                    <tr>
+                      <td className="py-2 text-gray-600 font-medium">User ID:</td>
+                      <td className="py-2 text-gray-900 font-mono text-xs">{user?.id || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 text-gray-600 font-medium">Companies Found:</td>
+                      <td className="py-2 text-gray-900">{diagnostics.companiesCount}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 text-gray-600 font-medium">Selected Company:</td>
+                      <td className="py-2 text-gray-900 font-mono text-xs">
+                        {diagnostics.selectedCompanyId || 'None'}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 text-gray-600 font-medium">Engines Count:</td>
+                      <td className="py-2 text-gray-900">{diagnostics.enginesCount}</td>
+                    </tr>
+                    {diagnostics.rlsError && (
+                      <tr>
+                        <td className="py-2 text-gray-600 font-medium">RLS Status:</td>
+                        <td className="py-2 text-red-600">{diagnostics.rlsError}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
 
           <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
             <h3 className="font-semibold text-blue-900 mb-3 text-lg">What happens next:</h3>

@@ -12,12 +12,17 @@ interface AuditResult {
   installed: boolean;
   enabled: boolean;
   hasWorkspaceRoute: boolean;
+  workspaceRoute: string | null;
+  routeMatchesKey: boolean;
+  category: string;
+  sortOrder: number;
   hasComponent: boolean;
   dependenciesMet: boolean;
   visibleInLauncher: boolean;
   visibleInSidebar: boolean;
   issues: string[];
   recommendations: string[];
+  quickFix: string | null;
 }
 
 export function ModuleVisibilityAuditor() {
@@ -40,15 +45,26 @@ export function ModuleVisibilityAuditor() {
         engines.map(async (engine) => {
           const issues: string[] = [];
           const recommendations: string[] = [];
+          let quickFix: string | null = null;
+
+          const expectedRoute = `/${engine.key}`;
+          const routeMatchesKey = engine.workspace_route === expectedRoute;
 
           if (!hasEngineComponent(engine.key)) {
             issues.push('No component mapped - will show "Coming Soon" page');
             recommendations.push('Add component to ENGINE_COMPONENT_MAP');
+            quickFix = `Add '${engine.key}': lazy(() => import('...')) to ENGINE_COMPONENT_MAP`;
           }
 
           if (!engine.workspace_route) {
             issues.push('No workspace route defined');
             recommendations.push('Set workspace_route in engines table');
+          } else if (!routeMatchesKey) {
+            issues.push(`Route mismatch: expected ${expectedRoute}, got ${engine.workspace_route}`);
+            recommendations.push(`Update workspace_route to ${expectedRoute}`);
+            if (!quickFix) {
+              quickFix = `UPDATE engines SET workspace_route = '${expectedRoute}' WHERE key = '${engine.key}'`;
+            }
           }
 
           let dependenciesMet = true;
@@ -72,6 +88,9 @@ export function ModuleVisibilityAuditor() {
           if (engine.is_installed && !engine.is_enabled) {
             issues.push('Module installed but disabled');
             recommendations.push('Enable module from Apps page');
+            if (!quickFix) {
+              quickFix = 'Click "Enable" button to activate this module';
+            }
           }
 
           const visibleInLauncher = engine.is_installed && engine.is_enabled && dependenciesMet;
@@ -84,12 +103,17 @@ export function ModuleVisibilityAuditor() {
             installed: engine.is_installed,
             enabled: engine.is_enabled,
             hasWorkspaceRoute: !!engine.workspace_route,
+            workspaceRoute: engine.workspace_route || null,
+            routeMatchesKey,
+            category: engine.category || 'Other',
+            sortOrder: engine.sort_order || 0,
             hasComponent: hasEngineComponent(engine.key),
             dependenciesMet,
             visibleInLauncher,
             visibleInSidebar,
             issues,
             recommendations,
+            quickFix,
           };
         })
       );
@@ -170,14 +194,14 @@ export function ModuleVisibilityAuditor() {
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Module</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Route</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Route Valid</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Component</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Installed</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Enabled</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Route</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Component</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Deps OK</th>
               <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Visible</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Issues</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase">Actions</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Issues & Quick Fix</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -186,8 +210,28 @@ export function ModuleVisibilityAuditor() {
                 <td className="px-4 py-3">
                   <div>
                     <div className="font-medium text-gray-900">{result.title}</div>
-                    <div className="text-xs text-gray-500">{result.engineKey}</div>
+                    <div className="text-xs text-gray-500 font-mono">{result.engineKey}</div>
+                    <div className="text-xs text-gray-400">{result.category}</div>
                   </div>
+                </td>
+                <td className="px-4 py-3">
+                  <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                    {result.workspaceRoute || 'none'}
+                  </code>
+                </td>
+                <td className="px-4 py-3 text-center">
+                  {result.routeMatchesKey ? (
+                    <CheckCircle className="w-5 h-5 text-green-600 mx-auto" />
+                  ) : (
+                    <XCircle className="w-5 h-5 text-red-600 mx-auto" title={`Expected: /${result.engineKey}`} />
+                  )}
+                </td>
+                <td className="px-4 py-3 text-center">
+                  {result.hasComponent ? (
+                    <CheckCircle className="w-5 h-5 text-green-600 mx-auto" />
+                  ) : (
+                    <AlertTriangle className="w-5 h-5 text-amber-600 mx-auto" title="Will show Coming Soon page" />
+                  )}
                 </td>
                 <td className="px-4 py-3 text-center">
                   {result.installed ? (
@@ -201,20 +245,6 @@ export function ModuleVisibilityAuditor() {
                     <CheckCircle className="w-5 h-5 text-green-600 mx-auto" />
                   ) : (
                     <XCircle className="w-5 h-5 text-red-600 mx-auto" />
-                  )}
-                </td>
-                <td className="px-4 py-3 text-center">
-                  {result.hasWorkspaceRoute ? (
-                    <CheckCircle className="w-5 h-5 text-green-600 mx-auto" />
-                  ) : (
-                    <XCircle className="w-5 h-5 text-red-600 mx-auto" />
-                  )}
-                </td>
-                <td className="px-4 py-3 text-center">
-                  {result.hasComponent ? (
-                    <CheckCircle className="w-5 h-5 text-green-600 mx-auto" />
-                  ) : (
-                    <AlertTriangle className="w-5 h-5 text-amber-600 mx-auto" title="Will show Coming Soon page" />
                   )}
                 </td>
                 <td className="px-4 py-3 text-center">
@@ -237,27 +267,36 @@ export function ModuleVisibilityAuditor() {
                 </td>
                 <td className="px-4 py-3">
                   {result.issues.length > 0 ? (
-                    <div className="space-y-1">
-                      {result.issues.map((issue, idx) => (
-                        <div key={idx} className="flex items-start gap-1 text-xs text-red-600">
-                          <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                          <span>{issue}</span>
+                    <div className="space-y-2">
+                      <div className="space-y-1">
+                        {result.issues.map((issue, idx) => (
+                          <div key={idx} className="flex items-start gap-1 text-xs text-red-600">
+                            <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                            <span>{issue}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {result.quickFix && (
+                        <div className="bg-blue-50 border border-blue-200 rounded p-2">
+                          <div className="text-xs font-medium text-blue-900 mb-1">Quick Fix:</div>
+                          <code className="text-xs text-blue-700 block break-all">{result.quickFix}</code>
                         </div>
-                      ))}
+                      )}
+                      {!result.enabled && result.installed && (
+                        <button
+                          onClick={() => handleEnable(result.engineKey)}
+                          className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700"
+                        >
+                          Enable Now
+                          <ArrowRight className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
                   ) : (
-                    <span className="text-xs text-green-600">No issues</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-center">
-                  {!result.enabled && result.installed && (
-                    <button
-                      onClick={() => handleEnable(result.engineKey)}
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700"
-                    >
-                      Enable
-                      <ArrowRight className="w-3 h-3" />
-                    </button>
+                    <span className="text-xs text-green-600 flex items-center gap-1">
+                      <CheckCircle className="w-3 h-3" />
+                      No issues
+                    </span>
                   )}
                 </td>
               </tr>

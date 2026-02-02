@@ -27,6 +27,10 @@ export const ENGINE_COMPONENT_MAP: Record<string, LazyExoticComponent<ComponentT
   'apps': lazy(() => import('../components/apps/AppsInstaller').then(m => ({ default: m.AppsInstaller }))),
   'settings': lazy(() => import('../components/settings/SystemConfig').then(m => ({ default: m.SystemConfig }))),
   'company': lazy(() => import('../components/companies/Companies').then(m => ({ default: m.Companies }))),
+  'automation': lazy(() => import('../components/system/Page_Apps_Management').then(m => ({ default: m.Page_Apps_Management }))),
+
+  // Legacy aliases for backward compatibility
+  'parties': lazy(() => import('../components/contacts/ContactsDirectory').then(m => ({ default: m.ContactsDirectory }))),
 };
 
 export function hasEngineComponent(engineKey: string): boolean {

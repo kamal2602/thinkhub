@@ -5,7 +5,9 @@ import {
   Cog,
   DollarSign,
   TrendingUp,
-  BarChart3
+  BarChart3,
+  PackageCheck,
+  Plus
 } from 'lucide-react';
 import { useCompany } from '../../contexts/CompanyContext';
 import { supabase } from '../../lib/supabase';
@@ -13,8 +15,10 @@ import { PurchaseOrders } from '../purchases/PurchaseOrders';
 import { Inventory } from '../inventory/Inventory';
 import { UnifiedSalesCatalog } from './UnifiedSalesCatalog';
 import { SalesInvoices } from './SalesInvoices';
+import SmartReceivingWorkflow from '../receiving/SmartReceivingWorkflow';
+import { Processing } from '../processing/Processing';
 
-type TabKey = 'procurement' | 'inventory' | 'sales' | 'invoices' | 'reports';
+type TabKey = 'procurement' | 'receiving' | 'processing' | 'inventory' | 'sales' | 'invoices' | 'reports';
 
 interface KPIData {
   totalPurchaseOrders: number;
@@ -78,7 +82,9 @@ export function ResaleWorkspace() {
   };
 
   const tabs = [
-    { id: 'procurement' as const, label: 'Procurement', icon: ShoppingCart },
+    { id: 'procurement' as const, label: 'Purchase Orders', icon: ShoppingCart },
+    { id: 'receiving' as const, label: 'Receiving', icon: PackageCheck },
+    { id: 'processing' as const, label: 'Processing', icon: Cog },
     { id: 'inventory' as const, label: 'Ready to Sell', icon: Package },
     { id: 'sales' as const, label: 'Sales Catalog', icon: DollarSign },
     { id: 'invoices' as const, label: 'Invoices', icon: TrendingUp },
@@ -122,6 +128,29 @@ export function ResaleWorkspace() {
               <p className="text-sm text-gray-600 mt-1">
                 Procure, process, and sell IT assets
               </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setActiveTab('procurement')}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Create Purchase Order
+              </button>
+              <button
+                onClick={() => setActiveTab('receiving')}
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+              >
+                <PackageCheck className="w-4 h-4" />
+                Receive Items
+              </button>
+              <button
+                onClick={() => setActiveTab('processing')}
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+              >
+                <Cog className="w-4 h-4" />
+                Process Queue
+              </button>
             </div>
           </div>
 
@@ -191,6 +220,8 @@ export function ResaleWorkspace() {
       <div className="flex-1 overflow-auto">
         <div className="max-w-7xl mx-auto">
           {activeTab === 'procurement' && <PurchaseOrders />}
+          {activeTab === 'receiving' && <SmartReceivingWorkflow />}
+          {activeTab === 'processing' && <Processing />}
           {activeTab === 'inventory' && <Inventory />}
           {activeTab === 'sales' && <UnifiedSalesCatalog />}
           {activeTab === 'invoices' && <SalesInvoices />}

@@ -9,6 +9,7 @@ import { ModernAppLauncher } from '../launchpad/ModernAppLauncher';
 import { EngineDrivenDashboard } from '../dashboard/EngineDrivenDashboard';
 import { CompanyOnboardingWizard } from '../onboarding/CompanyOnboardingWizard';
 import { InitialSetup } from '../onboarding/InitialSetup';
+import { EngineRepairPanel } from '../onboarding/EngineRepairPanel';
 
 interface ModularAppShellProps {
   children?: React.ReactNode;
@@ -17,9 +18,11 @@ interface ModularAppShellProps {
 export function ModularAppShell({ children }: ModularAppShellProps) {
   const { companies, selectedCompany, refreshCompanies, loading } = useCompany();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showEngineRepair, setShowEngineRepair] = useState(false);
 
   useEffect(() => {
     checkOnboarding();
+    checkEngineHealth();
   }, [selectedCompany]);
 
   const checkOnboarding = async () => {
@@ -41,9 +44,35 @@ export function ModularAppShell({ children }: ModularAppShellProps) {
     }
   };
 
+  const checkEngineHealth = async () => {
+    if (!selectedCompany) return;
+
+    try {
+      const { count, error } = await supabase
+        .from('engines')
+        .select('*', { count: 'exact', head: true })
+        .eq('company_id', selectedCompany.id);
+
+      if (error) throw error;
+
+      if (count === 0) {
+        console.warn('No engines found for company. Triggering repair.');
+        setShowEngineRepair(true);
+      }
+    } catch (error) {
+      console.error('Error checking engine health:', error);
+    }
+  };
+
   const handleOnboardingComplete = async () => {
     setShowOnboarding(false);
     await refreshCompanies();
+  };
+
+  const handleRepairComplete = async () => {
+    setShowEngineRepair(false);
+    await refreshCompanies();
+    window.location.reload();
   };
 
   // Show loading while checking for companies
@@ -61,6 +90,11 @@ export function ModularAppShell({ children }: ModularAppShellProps) {
   // Show initial setup if user has no companies
   if (companies.length === 0) {
     return <InitialSetup onComplete={handleOnboardingComplete} />;
+  }
+
+  // Show engine repair if company exists but has no engines
+  if (showEngineRepair && selectedCompany) {
+    return <EngineRepairPanel companyId={selectedCompany.id} onComplete={handleRepairComplete} />;
   }
 
   if (showOnboarding) {

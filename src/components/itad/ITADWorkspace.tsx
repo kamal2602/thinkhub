@@ -7,7 +7,9 @@ import {
   Award,
   FileText,
   TrendingUp,
-  Users
+  Users,
+  PackageCheck,
+  Plus
 } from 'lucide-react';
 import { useCompany } from '../../contexts/CompanyContext';
 import { supabase } from '../../lib/supabase';
@@ -18,6 +20,8 @@ import { Certificates } from './Certificates';
 import { EnvironmentalCompliance } from './EnvironmentalCompliance';
 import { ITADRevenueSettlements } from './ITADRevenueSettlements';
 import { DownstreamVendors } from './DownstreamVendors';
+import SmartReceivingWorkflow from '../receiving/SmartReceivingWorkflow';
+import { Processing } from '../processing/Processing';
 
 type TabKey = 'projects' | 'receiving' | 'processing' | 'wiping' | 'compliance' | 'certificates' | 'settlements' | 'vendors';
 
@@ -85,6 +89,8 @@ export function ITADWorkspace() {
 
   const tabs = [
     { id: 'projects' as const, label: 'Projects', icon: Building2 },
+    { id: 'receiving' as const, label: 'Receiving', icon: PackageCheck },
+    { id: 'processing' as const, label: 'Processing', icon: Cog },
     { id: 'wiping' as const, label: 'Data Wiping', icon: HardDrive },
     { id: 'compliance' as const, label: 'Compliance', icon: FileText },
     { id: 'certificates' as const, label: 'Certificates', icon: Award },
@@ -129,6 +135,36 @@ export function ITADWorkspace() {
               <p className="text-sm text-gray-600 mt-1">
                 IT Asset Disposition - Complete lifecycle management
               </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setActiveTab('projects')}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Create Project
+              </button>
+              <button
+                onClick={() => setActiveTab('receiving')}
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+              >
+                <PackageCheck className="w-4 h-4" />
+                Receiving
+              </button>
+              <button
+                onClick={() => setActiveTab('processing')}
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+              >
+                <Cog className="w-4 h-4" />
+                Processing
+              </button>
+              <button
+                onClick={() => setActiveTab('wiping')}
+                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+              >
+                <HardDrive className="w-4 h-4" />
+                Wiping Queue
+              </button>
             </div>
           </div>
 
@@ -198,6 +234,8 @@ export function ITADWorkspace() {
       <div className="flex-1 overflow-auto">
         <div className="max-w-7xl mx-auto">
           {activeTab === 'projects' && <ITADProjects />}
+          {activeTab === 'receiving' && <SmartReceivingWorkflow />}
+          {activeTab === 'processing' && <Processing />}
           {activeTab === 'wiping' && <WipingQueue />}
           {activeTab === 'compliance' && <EnvironmentalCompliance />}
           {activeTab === 'certificates' && <Certificates />}
