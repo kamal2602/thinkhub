@@ -1,3 +1,14 @@
+/**
+ * @deprecated This service is deprecated. Use engineRegistryService instead.
+ *
+ * The modules/company_modules tables are legacy and no longer used for
+ * navigation or module visibility. All module management should use the
+ * engines table via engineRegistryService.
+ *
+ * This file is kept only for backward compatibility and will be removed
+ * in a future version.
+ */
+
 import { supabase } from '../lib/supabase';
 
 export interface ModuleCategory {

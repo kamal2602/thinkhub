@@ -9,7 +9,7 @@ interface ModuleGuardProps {
 }
 
 export function ModuleGuard({ children }: ModuleGuardProps) {
-  const { moduleKey } = useParams<{ moduleKey: string }>();
+  const { engineKey } = useParams<{ engineKey: string }>();
   const { selectedCompany } = useCompany();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -18,16 +18,16 @@ export function ModuleGuard({ children }: ModuleGuardProps) {
 
   useEffect(() => {
     checkModuleAccess();
-  }, [moduleKey, selectedCompany]);
+  }, [engineKey, selectedCompany]);
 
   const checkModuleAccess = async () => {
-    if (!selectedCompany || !moduleKey) {
+    if (!selectedCompany || !engineKey) {
       setLoading(false);
       return;
     }
 
     try {
-      const engine = await engineRegistryService.getModuleByKey(selectedCompany.id, moduleKey);
+      const engine = await engineRegistryService.getModuleByKey(selectedCompany.id, engineKey);
 
       if (!engine) {
         navigate('/');

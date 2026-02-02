@@ -1,9 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as Icons from 'lucide-react';
-import { moduleRegistryService, Module, ModuleCategory } from '../../services/moduleRegistryService';
+import { engineRegistryService, Engine } from '../../services/engineRegistryService';
 import { useCompany } from '../../contexts/CompanyContext';
 import { useAuth } from '../../contexts/AuthContext';
+
+interface ModuleCategory {
+  code: string;
+  name: string;
+  icon: string;
+  color: string;
+  sort_order: number;
+}
+
+interface Module {
+  name: string;
+  display_name: string;
+  description: string | null;
+  category: string;
+  icon: string;
+  route: string | null;
+  color: string | null;
+  is_core: boolean;
+  is_enabled: boolean;
+  depends_on: string[];
+  sort_order: number;
+  version: string;
+  id: string;
+}
 
 interface ModulesByCategory {
   category: ModuleCategory;
@@ -30,15 +54,37 @@ export function ModularHomeDashboard() {
 
     try {
       setError(null);
-      const [categories, enabledModules] = await Promise.all([
-        moduleRegistryService.getModuleCategories(),
-        moduleRegistryService.getEnabledModules(company.id)
-      ]);
+      const engineGroups = await engineRegistryService.getEnabledEngineGroups(company.id);
 
-      const grouped = categories
-        .map(category => ({
-          category,
-          modules: enabledModules.filter(m => m.category === category.code && m.name !== 'dashboard')
+      const categoryMap: Record<string, { name: string; icon: string; color: string; sort_order: number }> = {
+        operations: { name: 'Operations', icon: 'Box', color: 'blue', sort_order: 0 },
+        sales: { name: 'Sales Channels', icon: 'ShoppingCart', color: 'green', sort_order: 1 },
+        business: { name: 'Business', icon: 'Briefcase', color: 'orange', sort_order: 2 },
+        system: { name: 'System', icon: 'Settings', color: 'gray', sort_order: 3 },
+        admin: { name: 'Administration', icon: 'Shield', color: 'gray', sort_order: 4 }
+      };
+
+      const grouped = Object.entries(engineGroups)
+        .map(([key, engines]) => ({
+          category: {
+            code: key,
+            ...categoryMap[key],
+          },
+          modules: engines.map(e => ({
+            name: e.key,
+            display_name: e.title,
+            description: e.description,
+            category: e.category,
+            icon: e.icon,
+            route: e.workspace_route,
+            color: null,
+            is_core: e.is_core,
+            is_enabled: e.is_enabled,
+            depends_on: e.depends_on,
+            sort_order: e.sort_order,
+            version: e.version,
+            id: e.id
+          }))
         }))
         .filter(group => group.modules.length > 0);
 

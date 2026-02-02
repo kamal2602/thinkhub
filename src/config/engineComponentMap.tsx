@@ -1,0 +1,37 @@
+import { lazy, LazyExoticComponent, ComponentType } from 'react';
+
+export const ENGINE_COMPONENT_MAP: Record<string, LazyExoticComponent<ComponentType<any>>> = {
+  'inventory': lazy(() => import('../components/inventory/Inventory').then(m => ({ default: m.Inventory }))),
+  'processing': lazy(() => import('../components/processing/Processing').then(m => ({ default: m.Processing }))),
+  'receiving': lazy(() => import('../components/receiving/SmartReceivingWorkflow').then(m => ({ default: m.SmartReceivingWorkflow }))),
+  'lots': lazy(() => import('../components/purchase-lots/PurchaseLots').then(m => ({ default: m.PurchaseLots }))),
+  'recycling': lazy(() => import('../components/esg/ESGDashboard').then(m => ({ default: m.ESGDashboard }))),
+  'repairs': lazy(() => import('../components/repairs/Repairs').then(m => ({ default: m.Repairs }))),
+
+  'auction': lazy(() => import('../components/auctions/AuctionManagement').then(m => ({ default: m.AuctionManagement }))),
+  'reseller': lazy(() => import('../components/sales/UnifiedSalesCatalog').then(m => ({ default: m.UnifiedSalesCatalog }))),
+  'website': lazy(() => import('../components/website/WebsiteDashboard').then(m => ({ default: m.WebsiteDashboard }))),
+
+  'crm': lazy(() => import('../components/crm/CRMDashboard').then(m => ({ default: m.CRMDashboard }))),
+  'accounting': lazy(() => import('../components/accounting/ChartOfAccounts').then(m => ({ default: m.ChartOfAccounts }))),
+  'itad': lazy(() => import('../components/itad/ITADCompliance').then(m => ({ default: m.ITADCompliance }))),
+  'contacts': lazy(() => import('../components/settings/PartyDirectory').then(m => ({ default: m.PartyDirectory }))),
+  'orders': lazy(() => import('../components/purchases/PurchaseOrders').then(m => ({ default: m.PurchaseOrders }))),
+  'invoices': lazy(() => import('../components/sales/SalesInvoices').then(m => ({ default: m.SalesInvoices }))),
+  'payments': lazy(() => import('../components/finance/Page_Payments').then(m => ({ default: m.Page_Payments }))),
+
+  'reports': lazy(() => import('../components/reports/Reports').then(m => ({ default: m.Reports }))),
+  'users': lazy(() => import('../components/users/Users').then(m => ({ default: m.Users }))),
+
+  'apps': lazy(() => import('../components/apps/AppsInstaller').then(m => ({ default: m.AppsInstaller }))),
+  'settings': lazy(() => import('../components/settings/SystemConfig').then(m => ({ default: m.SystemConfig }))),
+  'company': lazy(() => import('../components/companies/Companies').then(m => ({ default: m.Companies }))),
+};
+
+export function hasEngineComponent(engineKey: string): boolean {
+  return engineKey in ENGINE_COMPONENT_MAP;
+}
+
+export function getEngineComponent(engineKey: string): LazyExoticComponent<ComponentType<any>> | null {
+  return ENGINE_COMPONENT_MAP[engineKey] || null;
+}
