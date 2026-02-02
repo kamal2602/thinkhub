@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { GlobalTopBar } from './GlobalTopBar';
-import { RegistryDrivenSidebar } from './RegistryDrivenSidebar';
+import { EnhancedTopBar } from './EnhancedTopBar';
 import { EngineRouter } from './EngineRouter';
 import { useCompany } from '../../contexts/CompanyContext';
 import { supabase } from '../../lib/supabase';
-import { AppLauncher } from '../launcher/AppLauncher';
+import { OdooStyleLauncher } from '../launchpad/OdooStyleLauncher';
 import { EngineDrivenDashboard } from '../dashboard/EngineDrivenDashboard';
 import { CompanyOnboardingWizard } from '../onboarding/CompanyOnboardingWizard';
 import { InitialSetup } from '../onboarding/InitialSetup';
@@ -103,17 +102,14 @@ export function ModularAppShell({ children }: ModularAppShellProps) {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
-      <GlobalTopBar />
-      <div className="flex-1 flex overflow-hidden">
-        <RegistryDrivenSidebar />
-        <main className="flex-1 overflow-auto">
-          <Routes>
-            <Route path="/" element={<AppLauncher />} />
-            <Route path="/dashboard" element={<EngineDrivenDashboard />} />
-            <Route path="/*" element={<EngineRouter />} />
-          </Routes>
-        </main>
-      </div>
+      <EnhancedTopBar />
+      <main className="flex-1 overflow-auto">
+        <Routes>
+          <Route path="/" element={<OdooStyleLauncher />} />
+          <Route path="/dashboard" element={<EngineDrivenDashboard />} />
+          <Route path="/*" element={<EngineRouter />} />
+        </Routes>
+      </main>
     </div>
   );
 }
