@@ -19,13 +19,13 @@ export function HomeLaunchpad({ onNavigate }: { onNavigate: (path: string) => vo
           assetsResult,
           auctionsResult,
           salesOrdersResult,
-          partiesResult,
+          contactsResult,
         ] = await Promise.all([
           supabase.from('purchase_lots').select('id', { count: 'exact', head: true }),
           supabase.from('assets').select('id', { count: 'exact', head: true }),
           supabase.from('auctions').select('id', { count: 'exact', head: true }),
           supabase.from('sales_orders').select('id', { count: 'exact', head: true }),
-          supabase.from('parties').select('id', { count: 'exact', head: true }),
+          supabase.from('contacts').select('id', { count: 'exact', head: true }),
         ]);
 
         setCounts({
@@ -33,7 +33,7 @@ export function HomeLaunchpad({ onNavigate }: { onNavigate: (path: string) => vo
           assets: assetsResult.count || 0,
           auctions: auctionsResult.count || 0,
           salesOrders: salesOrdersResult.count || 0,
-          parties: partiesResult.count || 0,
+          contacts: contactsResult.count || 0,
         });
       } catch (error) {
         console.error('Error loading counts:', error);
@@ -220,7 +220,7 @@ export function HomeLaunchpad({ onNavigate }: { onNavigate: (path: string) => vo
       icon: ERP_ICONS.businessDirectory.icon,
       path: 'parties',
       onNavigate,
-      count: counts.parties,
+      count: counts.contacts,
     },
     {
       id: 'organizations-entities',

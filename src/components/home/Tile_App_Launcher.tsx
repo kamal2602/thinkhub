@@ -69,7 +69,7 @@ export function Tile_App_Launcher({ onNavigate }: TileAppLauncherProps) {
         },
         {
           id: 'parties',
-          name: 'Parties',
+          name: 'Contacts',
           icon: Users,
           description: 'All people & companies',
           color: 'cyan',

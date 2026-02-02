@@ -132,7 +132,7 @@ export function PartyLinksWidget({ partyType, partyId, partyName }: PartyLinksWi
           <div className="text-sm text-slate-600">
             <p className="font-medium mb-1">No identity links found</p>
             <p className="text-slate-500">
-              This {partyType} is not linked to any other records. Link it to leads, buyer accounts,
+              This contact is not linked to any other records. Link it to leads, buyer accounts,
               or other identity records to unify customer data across engines.
             </p>
           </div>
@@ -255,7 +255,7 @@ export function PartyLinksWidget({ partyType, partyId, partyName }: PartyLinksWi
 
       {links.length > 0 && (
         <div className="mt-3 text-xs text-slate-500">
-          {links.length} {links.length === 1 ? 'record' : 'records'} linked to this {partyType}
+          {links.length} {links.length === 1 ? 'record' : 'records'} linked to this contact
         </div>
       )}
     </div>

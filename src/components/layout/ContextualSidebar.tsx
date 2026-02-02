@@ -120,10 +120,10 @@ const SIDEBAR_CONFIGS: Record<WorkspaceId, SidebarConfig> = {
   parties: {
     sections: [
       {
-        title: 'Parties',
+        title: 'Contacts',
         items: [
           { id: 'overview', label: 'Overview', icon: LayoutGrid, path: '/parties' },
-          { id: 'directory', label: 'Directory', icon: Users, path: '/parties/directory' },
+          { id: 'directory', label: 'Contact Directory', icon: Users, path: '/parties/directory' },
           { id: 'customers', label: 'Customers', icon: Users, path: '/parties/customers' },
           { id: 'suppliers', label: 'Suppliers', icon: Truck, path: '/parties/suppliers' }
         ]

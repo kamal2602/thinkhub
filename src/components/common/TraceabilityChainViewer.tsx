@@ -252,7 +252,7 @@ export function TraceabilityChainViewer({ entityType, entityId }: TraceabilityCh
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
         <div className="bg-blue-50 p-4 rounded-lg">
           <Users className="w-6 h-6 text-blue-600 mb-2" />
-          <div className="text-sm text-gray-600">Parties</div>
+          <div className="text-sm text-gray-600">Contacts</div>
           <div className="text-2xl font-bold text-gray-900">
             {chain.nodes.filter(n => n.type === 'party').length}
           </div>

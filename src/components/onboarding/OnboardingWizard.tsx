@@ -273,7 +273,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                   <ul className="space-y-2 text-sm text-blue-700">
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span>Party types configured (Customer, Supplier, Contact)</span>
+                      <span>Contact types configured (Customer, Supplier, Individual, Company)</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
