@@ -6,6 +6,7 @@ export * from './componentHarvestingService';
 export * from './itadRevenueService';
 export * from './inventoryService';
 export * from './purchaseOrderService';
+export * from './procurementService';
 export * from './supplierService';
 export * from './customerService';
 export * from './salesInvoiceService';

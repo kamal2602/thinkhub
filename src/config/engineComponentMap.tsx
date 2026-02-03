@@ -17,7 +17,8 @@ export const ENGINE_COMPONENT_MAP: Record<string, LazyExoticComponent<ComponentT
   'itad': lazy(() => import('../components/itad/ITADWorkspace').then(m => ({ default: m.ITADWorkspace }))),
   'esg': lazy(() => import('../components/esg/ESGDashboard').then(m => ({ default: m.ESGDashboard }))),
   'contacts': lazy(() => import('../components/contacts/ContactsDirectory').then(m => ({ default: m.ContactsDirectory }))),
-  'orders': lazy(() => import('../components/purchases/PurchaseOrders').then(m => ({ default: m.PurchaseOrders }))),
+  'procurement': lazy(() => import('../components/procurement/ProcurementApp').then(m => ({ default: m.ProcurementApp }))),
+  'orders': lazy(() => import('../components/procurement/ProcurementApp').then(m => ({ default: m.ProcurementApp }))),
   'invoices': lazy(() => import('../components/sales/SalesInvoices').then(m => ({ default: m.SalesInvoices }))),
   'payments': lazy(() => import('../components/finance/Page_Payments').then(m => ({ default: m.Page_Payments }))),
 

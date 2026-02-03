@@ -15,6 +15,7 @@ export interface FilterState {
   stages: string[];
   productTypes: string[];
   assignedTo: string[];
+  intakeType: 'resale' | 'itad' | 'recycling' | null;
   isPriority: boolean | null;
   isStale: boolean | null;
   dateRange: { from: string; to: string } | null;
@@ -34,6 +35,7 @@ export function FilterPanel({
     stages: [],
     productTypes: [],
     assignedTo: [],
+    intakeType: null,
     isPriority: null,
     isStale: null,
     dateRange: null,
@@ -52,6 +54,7 @@ export function FilterPanel({
       stages: [],
       productTypes: [],
       assignedTo: [],
+      intakeType: null,
       isPriority: null,
       isStale: null,
       dateRange: null,
@@ -65,6 +68,7 @@ export function FilterPanel({
     filters.stages.length,
     filters.productTypes.length,
     filters.assignedTo.length,
+    filters.intakeType !== null ? 1 : 0,
     filters.isPriority !== null ? 1 : 0,
     filters.isStale !== null ? 1 : 0,
     filters.dateRange ? 1 : 0,
@@ -124,6 +128,54 @@ export function FilterPanel({
       {isOpen && (
         <div className="mt-3 bg-white border border-gray-200 rounded-lg shadow-lg p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Intake Type</h3>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={filters.intakeType === null}
+                    onChange={() => updateFilters({ intakeType: null })}
+                    className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">All Types</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={filters.intakeType === 'resale'}
+                    onChange={() => updateFilters({ intakeType: 'resale' })}
+                    className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700 flex items-center gap-1">
+                    Resale
+                  </span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={filters.intakeType === 'itad'}
+                    onChange={() => updateFilters({ intakeType: 'itad' })}
+                    className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700 flex items-center gap-1">
+                    ITAD
+                  </span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={filters.intakeType === 'recycling'}
+                    onChange={() => updateFilters({ intakeType: 'recycling' })}
+                    className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700 flex items-center gap-1">
+                    Recycling
+                  </span>
+                </label>
+              </div>
+            </div>
+
             {grades.length > 0 && (
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Cosmetic Grade</h3>

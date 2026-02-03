@@ -13,6 +13,7 @@ export interface AssetFilters {
   locationId?: string;
   purchaseLotId?: string;
   processingStage?: string;
+  intakeType?: 'resale' | 'itad' | 'recycling';
   limit?: number;
   offset?: number;
 }
@@ -59,6 +60,10 @@ export class AssetService extends BaseService {
 
       if (filters?.purchaseLotId) {
         query = query.eq('purchase_lot_id', filters.purchaseLotId);
+      }
+
+      if (filters?.intakeType) {
+        query = query.eq('intake_type', filters.intakeType);
       }
 
       if (filters?.limit) {

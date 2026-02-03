@@ -33,6 +33,7 @@ interface Asset {
   processing_notes: string;
   purchase_lot_id?: string | null;
   itad_project_id?: string | null;
+  intake_type?: 'resale' | 'itad' | 'recycling' | null;
   product_types?: {
     name: string;
   };
@@ -245,6 +246,10 @@ export function Processing() {
       filtered = filtered.filter((asset) =>
         asset.assigned_technician_id && filters.assignedTo.includes(asset.assigned_technician_id)
       );
+    }
+
+    if (filters.intakeType) {
+      filtered = filtered.filter((asset) => asset.intake_type === filters.intakeType);
     }
 
     if (filters.isPriority === true) {

@@ -8,6 +8,11 @@ export const APP_COLORS: Record<string, { bg: string; text: string; gradient?: s
     text: 'text-sky-500',
     gradient: 'from-sky-400 to-sky-600',
   },
+  'procurement': {
+    bg: 'bg-blue-600',
+    text: 'text-blue-600',
+    gradient: 'from-blue-500 to-blue-700',
+  },
   'orders': {
     bg: 'bg-blue-600',
     text: 'text-blue-600',
