@@ -26,6 +26,24 @@ export function PartyDirectory() {
     legal_name: '',
   });
 
+  const [companyFormData, setCompanyFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    website: '',
+    tax_id: '',
+    legal_name: '',
+    roles: ['customer'] as string[],
+  });
+
+  const [individualFormData, setIndividualFormData] = useState({
+    name: '',
+    parent_contact_id: null as string | null,
+    email: '',
+    phone: '',
+    roles: ['customer'] as string[],
+  });
+
   const resetForm = (resetContactType: boolean = true) => {
     setNewContact({
       name: '',
@@ -37,8 +55,72 @@ export function PartyDirectory() {
       legal_name: '',
     });
     setSelectedRoles(['customer']);
+    setCompanyFormData({
+      name: '',
+      email: '',
+      phone: '',
+      website: '',
+      tax_id: '',
+      legal_name: '',
+      roles: ['customer'],
+    });
+    setIndividualFormData({
+      name: '',
+      parent_contact_id: null,
+      email: '',
+      phone: '',
+      roles: ['customer'],
+    });
     if (resetContactType) {
       setContactType('company');
+    }
+  };
+
+  const saveCurrentFormData = () => {
+    if (contactType === 'company') {
+      setCompanyFormData({
+        name: newContact.name,
+        email: newContact.email,
+        phone: newContact.phone,
+        website: newContact.website,
+        tax_id: newContact.tax_id,
+        legal_name: newContact.legal_name,
+        roles: selectedRoles,
+      });
+    } else {
+      setIndividualFormData({
+        name: newContact.name,
+        parent_contact_id: newContact.parent_contact_id,
+        email: newContact.email,
+        phone: newContact.phone,
+        roles: selectedRoles,
+      });
+    }
+  };
+
+  const loadFormDataForType = (type: 'company' | 'individual') => {
+    if (type === 'company') {
+      setNewContact({
+        name: companyFormData.name,
+        parent_contact_id: null,
+        email: companyFormData.email,
+        phone: companyFormData.phone,
+        website: companyFormData.website,
+        tax_id: companyFormData.tax_id,
+        legal_name: companyFormData.legal_name,
+      });
+      setSelectedRoles(companyFormData.roles);
+    } else {
+      setNewContact({
+        name: individualFormData.name,
+        parent_contact_id: individualFormData.parent_contact_id,
+        email: individualFormData.email,
+        phone: individualFormData.phone,
+        website: '',
+        tax_id: '',
+        legal_name: '',
+      });
+      setSelectedRoles(individualFormData.roles);
     }
   };
 
@@ -164,7 +246,10 @@ export function PartyDirectory() {
           </p>
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={() => {
+            resetForm();
+            setShowAddModal(true);
+          }}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           <Plus className="w-5 h-5" />
@@ -479,8 +564,9 @@ export function PartyDirectory() {
                     type="button"
                     onClick={() => {
                       if (contactType !== 'company') {
-                        resetForm(false);
+                        saveCurrentFormData();
                         setContactType('company');
+                        loadFormDataForType('company');
                       }
                     }}
                     className={`flex-1 px-4 py-3 border-2 rounded-lg transition-colors ${
@@ -496,8 +582,9 @@ export function PartyDirectory() {
                     type="button"
                     onClick={() => {
                       if (contactType !== 'individual') {
-                        resetForm(false);
+                        saveCurrentFormData();
                         setContactType('individual');
+                        loadFormDataForType('individual');
                       }
                     }}
                     className={`flex-1 px-4 py-3 border-2 rounded-lg transition-colors ${
