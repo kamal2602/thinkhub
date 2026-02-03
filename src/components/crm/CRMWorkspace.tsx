@@ -24,6 +24,7 @@ export function CRMWorkspace() {
   const { selectedCompany } = useCompany();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showNewLeadModal, setShowNewLeadModal] = useState(false);
 
   useEffect(() => {
     if (selectedCompany) {
@@ -64,7 +65,10 @@ export function CRMWorkspace() {
               <h1 className="text-2xl font-bold text-gray-900">CRM Pipeline</h1>
               <p className="text-sm text-gray-600 mt-1">Manage leads and opportunities</p>
             </div>
-            <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            <button
+              onClick={() => setShowNewLeadModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
               <Plus className="w-4 h-4" />
               New Lead
             </button>

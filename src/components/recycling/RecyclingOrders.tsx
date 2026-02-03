@@ -25,6 +25,7 @@ export function RecyclingOrders({ onRefresh }: Props) {
   const { addToast } = useToast();
   const [orders, setOrders] = useState<RecyclingOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showNewOrderModal, setShowNewOrderModal] = useState(false);
 
   useEffect(() => {
     if (selectedCompany) {
@@ -81,7 +82,10 @@ export function RecyclingOrders({ onRefresh }: Props) {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-semibold text-gray-900">Recycling Orders</h2>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+        <button
+          onClick={() => setShowNewOrderModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
           <Plus className="w-4 h-4" />
           New Order
         </button>
@@ -92,7 +96,10 @@ export function RecyclingOrders({ onRefresh }: Props) {
           <Package className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <h3 className="text-lg font-medium text-gray-900 mb-1">No recycling orders yet</h3>
           <p className="text-gray-600 mb-4">Create your first recycling order to get started</p>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          <button
+            onClick={() => setShowNewOrderModal(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
             Create Order
           </button>
         </div>

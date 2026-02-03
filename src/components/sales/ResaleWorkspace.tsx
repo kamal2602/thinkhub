@@ -29,7 +29,7 @@ interface KPIData {
 
 export function ResaleWorkspace() {
   const { selectedCompany } = useCompany();
-  const [activeTab, setActiveTab] = useState<TabKey>('inventory');
+  const [activeTab, setActiveTab] = useState<TabKey>('sales');
   const [kpiData, setKpiData] = useState<KPIData>({
     totalPurchaseOrders: 0,
     readyToSell: 0,
@@ -131,25 +131,25 @@ export function ResaleWorkspace() {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => setActiveTab('procurement')}
+                onClick={() => setActiveTab('sales')}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
               >
-                <Plus className="w-4 h-4" />
-                Create Purchase Order
+                <DollarSign className="w-4 h-4" />
+                View Sales Catalog
               </button>
               <button
-                onClick={() => setActiveTab('receiving')}
+                onClick={() => setActiveTab('invoices')}
                 className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
               >
-                <PackageCheck className="w-4 h-4" />
-                Receive Items
+                <TrendingUp className="w-4 h-4" />
+                Manage Invoices
               </button>
               <button
-                onClick={() => setActiveTab('processing')}
+                onClick={() => setActiveTab('inventory')}
                 className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
               >
-                <Cog className="w-4 h-4" />
-                Process Queue
+                <Package className="w-4 h-4" />
+                Ready to Sell
               </button>
             </div>
           </div>

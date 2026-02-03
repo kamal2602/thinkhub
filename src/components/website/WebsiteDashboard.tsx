@@ -27,15 +27,29 @@ export function WebsiteDashboard() {
 
     setLoading(true);
     try {
-      const [statsData, pagesData, menusData] = await Promise.all([
+      const [statsData, pagesData, menusData] = await Promise.allSettled([
         websiteService.getPageStats(currentCompany.id),
         websiteService.getPages(currentCompany.id),
         websiteService.getMenus(currentCompany.id),
       ]);
 
-      setStats(statsData);
-      setRecentPages(pagesData.slice(0, 5));
-      setMenus(menusData);
+      if (statsData.status === 'fulfilled') {
+        setStats(statsData.value);
+      } else {
+        console.error('Failed to load stats:', statsData.reason);
+      }
+
+      if (pagesData.status === 'fulfilled') {
+        setRecentPages(pagesData.value.slice(0, 5));
+      } else {
+        console.error('Failed to load pages:', pagesData.reason);
+      }
+
+      if (menusData.status === 'fulfilled') {
+        setMenus(menusData.value);
+      } else {
+        console.error('Failed to load menus:', menusData.reason);
+      }
     } catch (error) {
       addToast('Failed to load website dashboard', 'error');
       console.error(error);

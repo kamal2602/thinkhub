@@ -26,6 +26,17 @@ export abstract class BaseService {
     throw new AppError(`Failed to ${operation}`, error);
   }
 
+  protected async executeQuery<T>(
+    queryFn: () => Promise<T>,
+    errorMessage: string
+  ): Promise<T> {
+    try {
+      return await queryFn();
+    } catch (error) {
+      this.handleError(error, errorMessage);
+    }
+  }
+
   protected get supabase() {
     return supabase;
   }
