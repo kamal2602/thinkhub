@@ -1,0 +1,16 @@
+Serial Number,Product Type,Brand,Model,Processor,RAM,Storage,Cosmetic Grade,Functional Status,Purchase Price,Notes
+DLLL12345001,Laptop,Dell,Latitude 5420,Intel Core i5-1145G7,16GB,256GB SSD,B,Working,285.00,Clean unit with minor scratches
+DLLL12345002,Laptop,Dell,Latitude 5420,Intel Core i5-1145G7,16GB,256GB SSD,B,Working,285.00,
+DLLL12345003,Laptop,Dell,Latitude 5420,Intel Core i5-1145G7,16GB,512GB SSD,A,Working,310.00,Excellent condition
+DLLL12345004,Laptop,Dell,Latitude 7420,Intel Core i7-1185G7,16GB,512GB SSD,A,Working,425.00,Premium model
+DLLL12345005,Laptop,Dell,Latitude 7420,Intel Core i7-1185G7,32GB,1TB SSD,A,Working,485.00,Premium model with upgraded specs
+DLLL12345006,Laptop,Dell,Latitude 5420,Intel Core i5-1145G7,8GB,256GB SSD,C,Working,210.00,Heavy wear on palmrest
+DLLL12345007,Laptop,Dell,Latitude 5420,Intel Core i5-1145G7,16GB,256GB SSD,B,Working,285.00,
+DLLL12345008,Laptop,Dell,XPS 13 9310,Intel Core i7-1165G7,16GB,512GB SSD,A,Working,625.00,Premium ultrabook
+DLLL12345009,Laptop,Dell,XPS 13 9310,Intel Core i7-1165G7,16GB,512GB SSD,B,Working,565.00,Minor scuffs on lid
+DLLL12345010,Laptop,Dell,Latitude 5420,Intel Core i5-1145G7,16GB,256GB SSD,B,Not Working,125.00,No power - for parts
+DLLL12345011,Laptop,Dell,Latitude 7420,Intel Core i7-1185G7,16GB,512GB SSD,A,Working,425.00,
+DLLL12345012,Laptop,Dell,Latitude 7420,Intel Core i7-1185G7,16GB,512GB SSD,B,Working,385.00,
+DLLL12345013,Laptop,Dell,Latitude 5420,Intel Core i5-1145G7,16GB,256GB SSD,B,Working,285.00,
+DLLL12345014,Laptop,Dell,Latitude 5420,Intel Core i5-1145G7,16GB,256GB SSD,A,Working,310.00,
+DLLL12345015,Laptop,Dell,Latitude 5420,Intel Core i5-1145G7,8GB,256GB SSD,B,Working,245.00,Base configuration

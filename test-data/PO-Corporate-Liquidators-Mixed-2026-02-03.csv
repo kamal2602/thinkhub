@@ -1,0 +1,21 @@
+Serial Number,Brand,Model,Product Type,Processor,RAM,Storage Type,Storage Capacity,Screen Size,Grade,Condition,Unit Price,Supplier Notes
+LNV98765001,Lenovo,ThinkPad X1 Carbon Gen 9,Laptop,Intel Core i7-1165G7,16GB,SSD,512GB,,A,Excellent,565.00,Ex-corporate fleet
+LNV98765002,Lenovo,ThinkPad X1 Carbon Gen 9,Laptop,Intel Core i7-1165G7,16GB,SSD,512GB,,B,Good,485.00,Light wear
+LNV98765003,Lenovo,ThinkPad T14 Gen 2,Laptop,Intel Core i5-1135G7,16GB,SSD,256GB,,B,Good,385.00,
+LNV98765004,Lenovo,ThinkPad T14 Gen 2,Laptop,Intel Core i5-1135G7,8GB,SSD,256GB,,C,Fair,285.00,Heavy wear
+APL76543001,Apple,MacBook Pro 13,Laptop,Apple M1,8GB,SSD,256GB,,A,Excellent,765.00,2020 model
+APL76543002,Apple,MacBook Pro 13,Laptop,Apple M1,8GB,SSD,256GB,,B,Good,685.00,Minor scratches
+APL76543003,Apple,MacBook Air,Laptop,Apple M1,8GB,SSD,256GB,,A,Excellent,625.00,Like new
+APL76543004,Apple,iMac 24,Desktop,Apple M1,8GB,SSD,256GB,24,A,Excellent,885.00,2021 model
+DELL87654001,Dell,UltraSharp U2720Q,Monitor,,,,,27,A,Excellent,325.00,4K USB-C
+DELL87654002,Dell,UltraSharp U2720Q,Monitor,,,,,27,A,Excellent,325.00,
+DELL87654003,Dell,P2422H,Monitor,,,,,24,B,Good,115.00,FHD
+LG9876543001,LG,27UK850,Monitor,,,,,27,A,Excellent,285.00,4K HDR
+MSFT12340001,Microsoft,Surface Laptop 4,Laptop,Intel Core i5-1135G7,8GB,SSD,256GB,13.5,A,Excellent,525.00,Touchscreen
+MSFT12340002,Microsoft,Surface Laptop 4,Laptop,Intel Core i7-1185G7,16GB,SSD,512GB,13.5,A,Excellent,685.00,Premium config
+ASUS11223001,ASUS,ZenBook 14,Laptop,Intel Core i5-1135G7,8GB,SSD,512GB,,B,Good,425.00,
+LNV98765005,Lenovo,ThinkPad X1 Carbon Gen 9,Laptop,Intel Core i7-1165G7,16GB,SSD,512GB,,B,Good,485.00,
+LNV98765006,Lenovo,ThinkPad T14 Gen 2,Laptop,Intel Core i5-1135G7,16GB,SSD,256GB,,B,Good,385.00,
+APL76543005,Apple,MacBook Air,Laptop,Apple M1,8GB,SSD,256GB,,B,Good,565.00,2020 model
+DELL87654004,Dell,P2422H,Monitor,,,,,24,A,Excellent,135.00,
+LNV98765007,Lenovo,ThinkCentre M720,Desktop,Intel Core i5-9500,8GB,SSD,256GB,,B,Good,285.00,SFF
