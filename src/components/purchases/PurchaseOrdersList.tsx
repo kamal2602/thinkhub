@@ -5,7 +5,7 @@ import { useCompany } from '../../contexts/CompanyContext';
 import { useToast } from '../../contexts/ToastContext';
 import { PurchaseOrderForm } from './PurchaseOrderForm';
 import { checkPOReceivingStatus } from '../../lib/purchaseOrderUtils';
-import { SourceTypeBadge } from '../common/SourceTypeBadge';
+import { IntakeTypeBadge } from '../common/IntakeTypeBadge';
 
 interface PO {
   id: string;
@@ -17,16 +17,10 @@ interface PO {
   total_items_ordered: number;
   total_items_received: number;
   purchase_lot_id?: string;
-  itad_project_id?: string;
+  intake_type?: string;
   suppliers: {
     name: string;
   };
-  itad_projects?: {
-    project_number: string;
-    customers: {
-      name: string;
-    };
-  } | null;
   purchase_lots?: {
     lot_number: string;
   } | null;
@@ -56,7 +50,6 @@ export function PurchaseOrdersList() {
         .select(`
           *,
           suppliers(name),
-          itad_projects(project_number, customers(name)),
           purchase_lots(lot_number)
         `)
         .eq('company_id', selectedCompany?.id)
@@ -70,6 +63,7 @@ export function PurchaseOrdersList() {
       if (error) throw error;
       setPos(data || []);
     } catch (error: any) {
+      console.error('Error loading purchase orders:', error);
       showToast('Error loading purchase orders', 'error');
     } finally {
       setLoading(false);
@@ -301,21 +295,13 @@ export function PurchaseOrdersList() {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {pos.map((po) => {
-                const poType = po.itad_project_id ? 'itad' : po.purchase_lot_id ? 'lot' : 'resell';
-                const displayName = po.itad_project_id
-                  ? po.itad_projects?.customers?.name || 'ITAD Customer'
-                  : po.suppliers?.name;
+                const displayName = po.suppliers?.name;
 
                 return (
                   <tr key={po.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <div className="flex flex-col gap-1">
                         <span className="font-medium text-gray-900">{po.po_number}</span>
-                        {po.itad_project_id && po.itad_projects && (
-                          <span className="text-xs text-gray-500">
-                            Project: {po.itad_projects.project_number}
-                          </span>
-                        )}
                         {po.purchase_lot_id && po.purchase_lots && (
                           <span className="text-xs text-gray-500">
                             Lot: {po.purchase_lots.lot_number}
@@ -324,7 +310,9 @@ export function PurchaseOrdersList() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <SourceTypeBadge type={poType} size="sm" />
+                      {po.intake_type && (
+                        <IntakeTypeBadge type={po.intake_type as 'resale' | 'itad' | 'recycling'} size="sm" />
+                      )}
                     </td>
                     <td className="px-4 py-3 text-gray-700">{displayName}</td>
                     <td className="px-4 py-3 text-gray-700">
