@@ -1,11 +1,12 @@
 import { supabase } from './auth';
 
+export { supabase };
+
 export async function createTestCompany(name: string = 'Test Company') {
   const { data, error } = await supabase
     .from('companies')
     .insert({
-      name,
-      code: `TEST-${Date.now()}`,
+      name: `${name} ${Date.now()}`,
       created_at: new Date().toISOString(),
     })
     .select()

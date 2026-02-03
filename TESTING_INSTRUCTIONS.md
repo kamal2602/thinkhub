@@ -9,6 +9,25 @@ I just ran integration tests and confirmed:
 - All test files and fixtures are in place
 - Build completes successfully
 
+## ⚙️ Prerequisites
+
+Before running E2E tests, you need to add your Supabase service role key to `.env`:
+
+```bash
+# Add this to your .env file:
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+```
+
+**Where to find it:**
+1. Go to your Supabase project dashboard
+2. Click Settings → API
+3. Copy the "service_role" key (keep it secret!)
+
+**Why it's needed:**
+- E2E tests need admin access to create/delete test users
+- The anon key doesn't have permission for admin operations
+- Without it, you'll see "User not allowed" errors
+
 ## 🧪 Testing Options
 
 ### 1. Quick Verification (Already Done)
@@ -199,6 +218,12 @@ npm run test:e2e:ui
 ## 🐛 Troubleshooting
 
 ### Playwright Tests Fail
+
+**Issue**: "User not allowed" when creating test users
+**Fix**: Add `SUPABASE_SERVICE_ROLE_KEY` to your `.env` file (see Prerequisites above)
+
+**Issue**: "Could not find the 'code' column"
+**Fix**: This has been fixed. The test fixtures now use the correct schema.
 
 **Issue**: "Cannot find module '@supabase/supabase-js'"
 **Fix**: Run `npm install`

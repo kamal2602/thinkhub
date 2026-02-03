@@ -1,0 +1,52 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - img [ref=e8]
+      - heading "StockFlow" [level=1] [ref=e12]
+    - heading "IT Asset Refurbishment & Inventory" [level=2] [ref=e13]
+    - paragraph [ref=e14]: Complete refurbishment workflow with role-based access. Process devices from receiving to sales-ready with full traceability.
+    - generic [ref=e15]:
+      - generic [ref=e19]:
+        - heading "Role-Based Access" [level=3] [ref=e20]
+        - paragraph [ref=e21]: Admin, Manager, Technician, and Sales roles with specific permissions and views.
+      - generic [ref=e25]:
+        - heading "Scan & Assign Workflow" [level=3] [ref=e26]
+        - paragraph [ref=e27]: Technicians scan serial numbers to instantly claim and process assets.
+      - generic [ref=e31]:
+        - heading "Quality Control" [level=3] [ref=e32]
+        - paragraph [ref=e33]: Only fully refurbished and QC-passed assets become available for sales.
+  - generic [ref=e35]:
+    - img [ref=e37]
+    - heading "First Time Setup" [level=2] [ref=e39]
+    - paragraph [ref=e40]: Create your Super Admin account to get started
+    - generic [ref=e41]:
+      - generic [ref=e42]:
+        - paragraph [ref=e43]: Welcome to StockFlow!
+        - paragraph [ref=e44]: This account will be created as a Super Administrator with full system access.
+      - generic [ref=e45]:
+        - generic [ref=e47]:
+          - img [ref=e48]
+          - generic [ref=e52]: Company Name
+        - textbox "Company Name" [active] [ref=e53]:
+          - /placeholder: Your Company Name
+      - generic [ref=e54]:
+        - generic [ref=e55]: Full Name
+        - textbox "Full Name" [ref=e56]:
+          - /placeholder: John Doe
+      - generic [ref=e57]:
+        - generic [ref=e58]: Email Address
+        - textbox "Email Address" [ref=e59]:
+          - /placeholder: you@example.com
+          - text: invalid@example.com
+      - generic [ref=e60]:
+        - generic [ref=e61]: Password
+        - textbox "Password" [ref=e62]:
+          - /placeholder: ••••••••
+          - text: wrongpassword
+        - paragraph [ref=e63]: Minimum 6 characters
+      - button "Create Super Admin Account" [ref=e64] [cursor=pointer]
+    - button "Already have an account? Sign in" [ref=e66] [cursor=pointer]
+```
