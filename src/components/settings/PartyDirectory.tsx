@@ -15,16 +15,30 @@ export function PartyDirectory() {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [contactType, setContactType] = useState<'company' | 'individual'>('company');
+  const [selectedRoles, setSelectedRoles] = useState<string[]>(['customer']);
   const [newContact, setNewContact] = useState({
     name: '',
-    type: 'customer' as 'supplier' | 'customer' | 'both',
-    contact_type: 'company' as 'company' | 'individual',
     parent_contact_id: null as string | null,
     email: '',
     phone: '',
     website: '',
     tax_id: '',
+    legal_name: '',
   });
+
+  const resetForm = () => {
+    setNewContact({
+      name: '',
+      parent_contact_id: null,
+      email: '',
+      phone: '',
+      website: '',
+      tax_id: '',
+      legal_name: '',
+    });
+    setSelectedRoles(['customer']);
+    setContactType('company');
+  };
 
   useEffect(() => {
     if (currentCompany) {
@@ -63,43 +77,39 @@ export function PartyDirectory() {
   };
 
   const handleCreateContact = async () => {
-    if (!currentCompany || !newContact.name) {
-      showToast('Please fill in required fields', 'error');
+    if (!currentCompany || !newContact.name.trim()) {
+      showToast('Please fill in required fields (Name is required)', 'error');
+      return;
+    }
+
+    if (selectedRoles.length === 0) {
+      showToast('Please select at least one role (Customer, Vendor, etc.)', 'error');
       return;
     }
 
     try {
       const contactData: any = {
-        name: newContact.name,
-        type: newContact.type,
-        contact_type: contactType,
-        email: newContact.email || undefined,
-        phone: newContact.phone || undefined,
-        website: newContact.website || undefined,
-        tax_id: newContact.tax_id || undefined,
+        name: newContact.name.trim(),
+        type: contactType,
+        email: newContact.email.trim() || undefined,
+        phone: newContact.phone.trim() || undefined,
+        website: newContact.website.trim() || undefined,
+        tax_id: newContact.tax_id.trim() || undefined,
+        legal_name: newContact.legal_name.trim() || undefined,
       };
 
       if (contactType === 'individual' && newContact.parent_contact_id) {
         contactData.parent_contact_id = newContact.parent_contact_id;
       }
 
-      await contactService.createContact(currentCompany.id, contactData);
+      await contactService.createContact(currentCompany.id, contactData, selectedRoles);
       showToast(`${contactType === 'company' ? 'Company' : 'Individual'} contact created successfully`, 'success');
       setShowAddModal(false);
-      setContactType('company');
-      setNewContact({
-        name: '',
-        type: 'customer',
-        contact_type: 'company',
-        parent_contact_id: null,
-        email: '',
-        phone: '',
-        website: '',
-        tax_id: '',
-      });
+      resetForm();
       loadContacts();
-    } catch (error) {
-      showToast('Failed to create contact', 'error');
+    } catch (error: any) {
+      console.error('Error creating contact:', error);
+      showToast(error?.message || 'Failed to create contact', 'error');
     }
   };
 
@@ -447,7 +457,10 @@ export function PartyDirectory() {
             <div className="p-6 border-b border-slate-200 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-slate-900">Add New Contact</h3>
               <button
-                onClick={() => setShowAddModal(false)}
+                onClick={() => {
+                  setShowAddModal(false);
+                  resetForm();
+                }}
                 className="text-slate-400 hover:text-slate-600"
               >
                 <X className="w-5 h-5" />
@@ -464,7 +477,7 @@ export function PartyDirectory() {
                     type="button"
                     onClick={() => {
                       setContactType('company');
-                      setNewContact({ ...newContact, contact_type: 'company', parent_contact_id: null });
+                      setNewContact({ ...newContact, parent_contact_id: null });
                     }}
                     className={`flex-1 px-4 py-3 border-2 rounded-lg transition-colors ${
                       contactType === 'company'
@@ -479,7 +492,6 @@ export function PartyDirectory() {
                     type="button"
                     onClick={() => {
                       setContactType('individual');
-                      setNewContact({ ...newContact, contact_type: 'individual' });
                     }}
                     className={`flex-1 px-4 py-3 border-2 rounded-lg transition-colors ${
                       contactType === 'individual'
@@ -516,31 +528,68 @@ export function PartyDirectory() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Name <span className="text-red-500">*</span>
+                  {contactType === 'company' ? 'Company Name' : 'Full Name'} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={newContact.name}
                   onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
-                  placeholder={contactType === 'company' ? 'Company name' : 'Full name'}
+                  placeholder={contactType === 'company' ? 'e.g., Acme Corporation' : 'e.g., John Smith'}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 />
               </div>
 
+              {contactType === 'company' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Legal Name
+                  </label>
+                  <input
+                    type="text"
+                    value={newContact.legal_name}
+                    onChange={(e) => setNewContact({ ...newContact, legal_name: e.target.value })}
+                    placeholder="Full legal entity name (if different)"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Use if the legal name differs from the display name
+                  </p>
+                </div>
+              )}
+
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Relationship <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Business Roles <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={newContact.type}
-                  onChange={(e) => setNewContact({ ...newContact, type: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="customer">Customer</option>
-                  <option value="supplier">Supplier</option>
-                  <option value="both">Both Customer & Supplier</option>
-                </select>
+                <div className="space-y-2 bg-slate-50 rounded-lg p-3">
+                  {[
+                    { key: 'customer', label: 'Customer', color: 'blue' },
+                    { key: 'vendor', label: 'Vendor/Supplier', color: 'purple' },
+                    { key: 'carrier', label: 'Carrier/Shipper', color: 'green' },
+                    { key: 'broker', label: 'Broker', color: 'orange' },
+                    { key: 'recycler', label: 'Recycler', color: 'teal' },
+                  ].map((role) => (
+                    <label key={role.key} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedRoles.includes(role.key)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedRoles([...selectedRoles, role.key]);
+                          } else {
+                            setSelectedRoles(selectedRoles.filter(r => r !== role.key));
+                          }
+                        }}
+                        className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-2 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-slate-700">{role.label}</span>
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  Select all roles that apply to this contact
+                </p>
               </div>
 
               <div>
@@ -590,14 +639,18 @@ export function PartyDirectory() {
 
             <div className="p-6 border-t border-slate-200 flex justify-end gap-3">
               <button
-                onClick={() => setShowAddModal(false)}
+                onClick={() => {
+                  setShowAddModal(false);
+                  resetForm();
+                }}
                 className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateContact}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                disabled={!newContact.name.trim() || selectedRoles.length === 0}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-300 disabled:cursor-not-allowed"
               >
                 Create Contact
               </button>
