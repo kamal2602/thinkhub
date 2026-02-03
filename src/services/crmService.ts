@@ -164,7 +164,7 @@ export class CRMService extends BaseService {
   }): Promise<LeadWithParty[]> {
     try {
       let query = this.supabase
-        .from('leads')
+        .from('crm_leads')
         .select('*')
         .eq('company_id', companyId)
         .order('created_at', { ascending: false });
@@ -178,7 +178,7 @@ export class CRMService extends BaseService {
       }
 
       if (filters?.leadSource) {
-        query = query.eq('lead_source', filters.leadSource);
+        query = query.eq('source', filters.leadSource);
       }
 
       const { data, error } = await query;
@@ -186,6 +186,13 @@ export class CRMService extends BaseService {
 
       return (data || []).map(lead => ({
         ...lead,
+        lead_name: lead.name || '',
+        company_name: lead.company || '',
+        contact_email: lead.email || '',
+        contact_phone: lead.phone || '',
+        lead_source: lead.source || '',
+        qualification_score: 50,
+        party_id: lead.id,
         party_type: 'customer' as const,
       }));
     } catch (error) {
@@ -196,7 +203,7 @@ export class CRMService extends BaseService {
   async getLeadById(id: string, companyId: string): Promise<LeadWithParty | null> {
     try {
       const { data, error } = await this.supabase
-        .from('leads')
+        .from('crm_leads')
         .select('*')
         .eq('id', id)
         .eq('company_id', companyId)
@@ -207,6 +214,13 @@ export class CRMService extends BaseService {
 
       return {
         ...data,
+        lead_name: data.name || '',
+        company_name: data.company || '',
+        contact_email: data.email || '',
+        contact_phone: data.phone || '',
+        lead_source: data.source || '',
+        qualification_score: 50,
+        party_id: data.id,
         party_type: 'customer' as const,
       };
     } catch (error) {
@@ -217,21 +231,18 @@ export class CRMService extends BaseService {
   async createLead(input: CreateLeadInput): Promise<Lead> {
     try {
       const { data, error } = await this.supabase
-        .from('customers')
+        .from('crm_leads')
         .insert({
           company_id: input.company_id,
           name: input.lead_name,
+          company: input.company_name || '',
           email: input.contact_email || '',
           phone: input.contact_phone || '',
-          entity_type: 'prospect',
-          crm_metadata: {
-            company_name: input.company_name,
-            lead_source: input.lead_source,
-            status: input.status || 'new',
-            qualification_score: input.qualification_score,
-            assigned_to: input.assigned_to,
-            notes: input.notes,
-          },
+          source: input.lead_source || '',
+          status: input.status || 'new',
+          notes: input.notes || '',
+          assigned_to: input.assigned_to,
+          created_by: input.assigned_to,
         })
         .select()
         .single();
@@ -242,14 +253,14 @@ export class CRMService extends BaseService {
         id: data.id,
         company_id: data.company_id,
         lead_name: data.name,
-        company_name: data.crm_metadata?.company_name,
+        company_name: data.company,
         contact_email: data.email,
         contact_phone: data.phone,
-        lead_source: data.crm_metadata?.lead_source,
-        status: data.crm_metadata?.status || 'new',
-        qualification_score: data.crm_metadata?.qualification_score,
-        assigned_to: data.crm_metadata?.assigned_to,
-        notes: data.crm_metadata?.notes,
+        lead_source: data.source,
+        status: data.status || 'new',
+        qualification_score: 50,
+        assigned_to: data.assigned_to,
+        notes: data.notes,
         party_id: data.id,
         created_at: data.created_at,
         updated_at: data.updated_at,
@@ -264,22 +275,17 @@ export class CRMService extends BaseService {
       const current = await this.getLeadById(id, companyId);
       if (!current) throw new Error('Lead not found');
 
-      const crm_metadata = {
-        company_name: updates.company_name ?? current.company_name,
-        lead_source: updates.lead_source ?? current.lead_source,
-        status: updates.status ?? current.status,
-        qualification_score: updates.qualification_score ?? current.qualification_score,
-        assigned_to: updates.assigned_to ?? current.assigned_to,
-        notes: updates.notes ?? current.notes,
-      };
-
       const { data, error } = await this.supabase
-        .from('customers')
+        .from('crm_leads')
         .update({
           name: updates.lead_name ?? current.lead_name,
+          company: updates.company_name ?? current.company_name,
           email: updates.contact_email ?? current.contact_email,
           phone: updates.contact_phone ?? current.contact_phone,
-          crm_metadata,
+          source: updates.lead_source ?? current.lead_source,
+          status: updates.status ?? current.status,
+          notes: updates.notes ?? current.notes,
+          assigned_to: updates.assigned_to ?? current.assigned_to,
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
@@ -293,14 +299,14 @@ export class CRMService extends BaseService {
         id: data.id,
         company_id: data.company_id,
         lead_name: data.name,
-        company_name: data.crm_metadata?.company_name,
+        company_name: data.company,
         contact_email: data.email,
         contact_phone: data.phone,
-        lead_source: data.crm_metadata?.lead_source,
-        status: data.crm_metadata?.status || 'new',
-        qualification_score: data.crm_metadata?.qualification_score,
-        assigned_to: data.crm_metadata?.assigned_to,
-        notes: data.crm_metadata?.notes,
+        lead_source: data.source,
+        status: data.status || 'new',
+        qualification_score: 50,
+        assigned_to: data.assigned_to,
+        notes: data.notes,
         party_id: data.id,
         created_at: data.created_at,
         updated_at: data.updated_at,
@@ -313,11 +319,10 @@ export class CRMService extends BaseService {
   async deleteLead(id: string, companyId: string): Promise<void> {
     try {
       const { error } = await this.supabase
-        .from('customers')
+        .from('crm_leads')
         .delete()
         .eq('id', id)
-        .eq('company_id', companyId)
-        .eq('entity_type', 'prospect');
+        .eq('company_id', companyId);
 
       if (error) throw error;
     } catch (error) {
@@ -341,9 +346,54 @@ export class CRMService extends BaseService {
         throw new Error('Lead not found');
       }
 
+      // Auto-create contact from lead if not exists
+      let contactId: string | undefined;
+
+      // Check if a contact already exists for this lead (by email)
+      if (lead.contact_email) {
+        const { data: existingContact } = await this.supabase
+          .from('contacts')
+          .select('id')
+          .eq('company_id', companyId)
+          .eq('email', lead.contact_email)
+          .maybeSingle();
+
+        contactId = existingContact?.id;
+      }
+
+      // If no existing contact, create one
+      if (!contactId) {
+        const { data: newContact, error: contactError } = await this.supabase
+          .from('contacts')
+          .insert({
+            company_id: companyId,
+            name: lead.company_name || lead.lead_name,
+            type: lead.company_name ? 'company' : 'individual',
+            email: lead.contact_email || '',
+            phone: lead.contact_phone || '',
+            created_by: lead.assigned_to || lead.created_by,
+          })
+          .select('id')
+          .single();
+
+        if (contactError) throw contactError;
+        contactId = newContact.id;
+
+        // Add customer role to the new contact
+        await this.supabase
+          .from('contact_roles')
+          .insert({
+            company_id: companyId,
+            contact_id: contactId,
+            role_key: 'customer',
+            is_active: true,
+            created_by: lead.assigned_to || lead.created_by,
+          });
+      }
+
       const opportunity = await this.createOpportunity({
         company_id: companyId,
-        party_id: lead.party_id,
+        customer_id: contactId,
         title: opportunityData.title,
         value_estimate: opportunityData.value_estimate,
         stage: opportunityData.stage || 'prospecting',
@@ -379,7 +429,7 @@ export class CRMService extends BaseService {
   }): Promise<OpportunityWithParty[]> {
     try {
       let query = this.supabase
-        .from('opportunities')
+        .from('crm_opportunities')
         .select('*')
         .eq('company_id', companyId)
         .order('created_at', { ascending: false });
@@ -400,11 +450,11 @@ export class CRMService extends BaseService {
           let party = null;
           let party_type: 'customer' | 'supplier' | undefined;
 
-          if (opp.party_id) {
+          if (opp.customer_id) {
             const { data: customerData } = await this.supabase
-              .from('customers')
+              .from('contacts')
               .select('*')
-              .eq('id', opp.party_id)
+              .eq('id', opp.customer_id)
               .maybeSingle();
 
             if (customerData) {
@@ -415,6 +465,10 @@ export class CRMService extends BaseService {
 
           return {
             ...opp,
+            title: opp.name || 'Untitled Opportunity',
+            value_estimate: opp.value ? parseFloat(opp.value) : undefined,
+            probability_percent: opp.probability ? parseInt(opp.probability) : undefined,
+            party_id: opp.customer_id,
             party,
             party_type,
           };
@@ -430,7 +484,7 @@ export class CRMService extends BaseService {
   async getOpportunityById(id: string, companyId: string): Promise<OpportunityWithParty | null> {
     try {
       const { data, error } = await this.supabase
-        .from('opportunities')
+        .from('crm_opportunities')
         .select('*')
         .eq('id', id)
         .eq('company_id', companyId)
@@ -442,11 +496,11 @@ export class CRMService extends BaseService {
       let party = null;
       let party_type: 'customer' | 'supplier' | undefined;
 
-      if (data.party_id) {
+      if (data.customer_id) {
         const { data: customerData } = await this.supabase
-          .from('customers')
+          .from('contacts')
           .select('*')
-          .eq('id', data.party_id)
+          .eq('id', data.customer_id)
           .maybeSingle();
 
         if (customerData) {
@@ -457,6 +511,10 @@ export class CRMService extends BaseService {
 
       return {
         ...data,
+        title: data.name || 'Untitled Opportunity',
+        value_estimate: data.value ? parseFloat(data.value) : undefined,
+        probability_percent: data.probability ? parseInt(data.probability) : undefined,
+        party_id: data.customer_id,
         party,
         party_type,
       };
@@ -468,29 +526,31 @@ export class CRMService extends BaseService {
   async createOpportunity(input: CreateOpportunityInput): Promise<Opportunity> {
     try {
       const { data, error } = await this.supabase
-        .from('opportunities')
+        .from('crm_opportunities')
         .insert({
-          ...input,
+          company_id: input.company_id,
+          customer_id: input.customer_id || input.party_id,
+          name: input.title,
+          value: input.value_estimate,
+          probability: input.probability_percent || 50,
           stage: input.stage || 'prospecting',
-          probability_percent: input.probability_percent || 50,
+          expected_close_date: input.expected_close_date,
+          notes: input.notes,
+          assigned_to: input.assigned_to,
+          created_by: input.assigned_to,
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      if (input.party_id) {
-        await this.partyService.linkToParty(
-          input.company_id,
-          'opportunity',
-          data.id,
-          'customer',
-          input.party_id,
-          { method: 'manual' }
-        );
-      }
-
-      return data;
+      return {
+        ...data,
+        title: data.name,
+        value_estimate: data.value ? parseFloat(data.value) : undefined,
+        probability_percent: data.probability ? parseInt(data.probability) : undefined,
+        party_id: data.customer_id,
+      };
     } catch (error) {
       return this.handleError(error, 'create opportunity');
     }
@@ -498,19 +558,35 @@ export class CRMService extends BaseService {
 
   async updateOpportunity(id: string, companyId: string, updates: Partial<Opportunity>): Promise<Opportunity> {
     try {
+      const updateData: any = {
+        updated_at: new Date().toISOString(),
+      };
+
+      if (updates.title) updateData.name = updates.title;
+      if (updates.value_estimate !== undefined) updateData.value = updates.value_estimate;
+      if (updates.probability_percent !== undefined) updateData.probability = updates.probability_percent;
+      if (updates.stage) updateData.stage = updates.stage;
+      if (updates.expected_close_date) updateData.expected_close_date = updates.expected_close_date;
+      if (updates.notes) updateData.notes = updates.notes;
+      if (updates.assigned_to) updateData.assigned_to = updates.assigned_to;
+
       const { data, error } = await this.supabase
-        .from('opportunities')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString(),
-        })
+        .from('crm_opportunities')
+        .update(updateData)
         .eq('id', id)
         .eq('company_id', companyId)
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+
+      return {
+        ...data,
+        title: data.name,
+        value_estimate: data.value ? parseFloat(data.value) : undefined,
+        probability_percent: data.probability ? parseInt(data.probability) : undefined,
+        party_id: data.customer_id,
+      };
     } catch (error) {
       return this.handleError(error, 'update opportunity');
     }
@@ -519,7 +595,7 @@ export class CRMService extends BaseService {
   async deleteOpportunity(id: string, companyId: string): Promise<void> {
     try {
       const { error } = await this.supabase
-        .from('opportunities')
+        .from('crm_opportunities')
         .delete()
         .eq('id', id)
         .eq('company_id', companyId);
