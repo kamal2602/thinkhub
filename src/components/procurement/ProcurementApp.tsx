@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Upload } from 'lucide-react';
 import { IntakeWizard } from './IntakeWizard';
-import { PurchaseOrders } from '../purchases/PurchaseOrders';
+import { PurchaseOrdersList } from '../purchases/PurchaseOrdersList';
 import { SmartPOImport } from '../purchases/SmartPOImport';
 
 export function ProcurementApp() {
@@ -63,7 +63,7 @@ export function ProcurementApp() {
       )}
 
       <div className="flex-1 overflow-auto">
-        <PurchaseOrders key={refreshKey} />
+        <PurchaseOrdersList key={refreshKey} />
       </div>
     </div>
   );

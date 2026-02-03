@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Users, Target, TrendingUp, Calendar, Plus } from 'lucide-react';
 import { useCompany } from '../../contexts/CompanyContext';
 import { supabase } from '../../lib/supabase';
+import { NewLeadModal } from './NewLeadModal';
 
 interface Lead {
   id: string;
@@ -169,6 +170,12 @@ export function CRMWorkspace() {
           </div>
         </div>
       </div>
+
+      <NewLeadModal
+        isOpen={showNewLeadModal}
+        onClose={() => setShowNewLeadModal(false)}
+        onSuccess={loadLeads}
+      />
     </div>
   );
 }

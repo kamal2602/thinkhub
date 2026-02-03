@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Scale, Search, Layers, Leaf, FileText, Settings } from 'lucide-react';
+import { Scale, Search, Layers, Leaf, FileText, Settings, Plus } from 'lucide-react';
 import { useCompany } from '../../contexts/CompanyContext';
 import { supabase } from '../../lib/supabase';
 import { RecyclingOrders } from './RecyclingOrders';
+import { RecyclingOrderWizard } from './RecyclingOrderWizard';
 import { WeighStation } from './WeighStation';
 import { Inspection } from './Inspection';
 import { Outcomes } from './Outcomes';
@@ -21,6 +22,7 @@ interface KPIData {
 export function RecyclingWorkspace() {
   const { selectedCompany } = useCompany();
   const [activeTab, setActiveTab] = useState<TabKey>('orders');
+  const [showOrderWizard, setShowOrderWizard] = useState(false);
   const [kpiData, setKpiData] = useState<KPIData>({
     totalOrders: 0,
     activeOrders: 0,
@@ -115,6 +117,13 @@ export function RecyclingWorkspace() {
                 E-waste recycling and environmental compliance
               </p>
             </div>
+            <button
+              onClick={() => setShowOrderWizard(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              New Recycling Order
+            </button>
           </div>
 
           {loading ? (
@@ -190,6 +199,16 @@ export function RecyclingWorkspace() {
           {activeTab === 'settings' && <RecyclingSettings />}
         </div>
       </div>
+
+      <RecyclingOrderWizard
+        isOpen={showOrderWizard}
+        onClose={() => setShowOrderWizard(false)}
+        onSuccess={() => {
+          setShowOrderWizard(false);
+          loadKPIs();
+          setActiveTab('orders');
+        }}
+      />
     </div>
   );
 }

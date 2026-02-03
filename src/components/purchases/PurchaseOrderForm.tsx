@@ -56,6 +56,7 @@ export function PurchaseOrderForm({ po, onClose, onSuccess }: PurchaseOrderFormP
     source_currency: po?.source_currency || 'AED',
     exchange_rate: po?.exchange_rate || 1.0,
     local_currency: 'AED',
+    intake_type: po?.intake_type || 'resale',
   });
 
   const [lines, setLines] = useState<POLine[]>(
@@ -422,6 +423,23 @@ export function PurchaseOrderForm({ po, onClose, onSuccess }: PurchaseOrderFormP
                   </button>
                 )}
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Intake Type *
+              </label>
+              <select
+                value={formData.intake_type}
+                onChange={(e) => setFormData({ ...formData, intake_type: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                required
+                disabled={isViewOnly}
+              >
+                <option value="resale">Resale</option>
+                <option value="itad">ITAD</option>
+                <option value="recycling">Recycling</option>
+              </select>
             </div>
 
             <div>

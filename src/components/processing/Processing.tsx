@@ -80,6 +80,7 @@ export function Processing() {
     isPriority: null,
     isStale: null,
     dateRange: null,
+    intakeType: null,
   });
 
   const [showForm, setShowForm] = useState(false);

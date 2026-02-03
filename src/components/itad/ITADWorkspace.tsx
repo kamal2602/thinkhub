@@ -14,6 +14,7 @@ import {
 import { useCompany } from '../../contexts/CompanyContext';
 import { supabase } from '../../lib/supabase';
 import { ITADProjects } from './ITADProjects';
+import { ITADProjectWizard } from './ITADProjectWizard';
 import { WipingQueue } from './WipingQueue';
 import { DataSanitization } from './DataSanitization';
 import { Certificates } from './Certificates';
@@ -36,6 +37,7 @@ interface KPIData {
 export function ITADWorkspace() {
   const { selectedCompany } = useCompany();
   const [activeTab, setActiveTab] = useState<TabKey>('projects');
+  const [showProjectWizard, setShowProjectWizard] = useState(false);
   const [kpiData, setKpiData] = useState<KPIData>({
     totalProjects: 0,
     activeProjects: 0,
@@ -138,7 +140,7 @@ export function ITADWorkspace() {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => setActiveTab('projects')}
+                onClick={() => setShowProjectWizard(true)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
@@ -243,6 +245,16 @@ export function ITADWorkspace() {
           {activeTab === 'vendors' && <DownstreamVendors />}
         </div>
       </div>
+
+      <ITADProjectWizard
+        isOpen={showProjectWizard}
+        onClose={() => setShowProjectWizard(false)}
+        onSuccess={() => {
+          setShowProjectWizard(false);
+          loadKPIs();
+          setActiveTab('projects');
+        }}
+      />
     </div>
   );
 }

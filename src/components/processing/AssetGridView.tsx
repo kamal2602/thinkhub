@@ -1,4 +1,5 @@
 import { Package, Copy } from 'lucide-react';
+import { IntakeTypeBadge } from '../common/IntakeTypeBadge';
 
 interface Asset {
   id: string;
@@ -14,6 +15,7 @@ interface Asset {
   refurbishment_cost: number;
   selling_price: number;
   created_at: string;
+  intake_type?: 'resale' | 'itad' | 'recycling';
   product_types?: {
     name: string;
   };
@@ -101,6 +103,9 @@ export function AssetGridView({
               )}
 
               <div className="flex items-center gap-2 flex-wrap">
+                {asset.intake_type && (
+                  <IntakeTypeBadge type={asset.intake_type} size="sm" />
+                )}
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(asset.status)}`}
                   style={getStatusBadgeStyle(asset.status)}

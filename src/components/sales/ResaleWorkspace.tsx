@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useCompany } from '../../contexts/CompanyContext';
 import { supabase } from '../../lib/supabase';
-import { PurchaseOrders } from '../purchases/PurchaseOrders';
+import { PurchaseOrdersList } from '../purchases/PurchaseOrdersList';
 import { Inventory } from '../inventory/Inventory';
 import { UnifiedSalesCatalog } from './UnifiedSalesCatalog';
 import { SalesInvoices } from './SalesInvoices';
@@ -219,7 +219,7 @@ export function ResaleWorkspace() {
 
       <div className="flex-1 overflow-auto">
         <div className="max-w-7xl mx-auto">
-          {activeTab === 'procurement' && <PurchaseOrders />}
+          {activeTab === 'procurement' && <PurchaseOrdersList />}
           {activeTab === 'receiving' && <SmartReceivingWorkflow />}
           {activeTab === 'processing' && <Processing />}
           {activeTab === 'inventory' && <Inventory />}

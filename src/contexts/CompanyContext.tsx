@@ -14,6 +14,7 @@ interface Company {
 interface CompanyContextType {
   companies: Company[];
   selectedCompany: Company | null;
+  currentCompany: Company | null; // Backward compatibility alias
   company: Company | null;
   setSelectedCompany: (company: Company | null) => void;
   loading: boolean;
@@ -107,6 +108,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
       value={{
         companies,
         selectedCompany,
+        currentCompany: selectedCompany, // Backward compatibility alias
         company: selectedCompany,
         setSelectedCompany,
         loading,
