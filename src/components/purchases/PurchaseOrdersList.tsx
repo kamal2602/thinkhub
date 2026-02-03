@@ -18,9 +18,10 @@ interface PO {
   total_items_received: number;
   purchase_lot_id?: string;
   intake_type?: string;
-  suppliers: {
+  client_party_id?: string;
+  contacts?: {
     name: string;
-  };
+  } | null;
   purchase_lots?: {
     lot_number: string;
   } | null;
@@ -49,7 +50,7 @@ export function PurchaseOrdersList() {
         .from('purchase_orders')
         .select(`
           *,
-          suppliers(name),
+          contacts!client_party_id(name),
           purchase_lots(lot_number)
         `)
         .eq('company_id', selectedCompany?.id)
@@ -295,7 +296,7 @@ export function PurchaseOrdersList() {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {pos.map((po) => {
-                const displayName = po.suppliers?.name;
+                const displayName = po.contacts?.name || 'Unknown Supplier';
 
                 return (
                   <tr key={po.id} className="hover:bg-gray-50">

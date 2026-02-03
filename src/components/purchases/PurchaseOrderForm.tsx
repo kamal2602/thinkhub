@@ -36,6 +36,7 @@ export function PurchaseOrderForm({ po, onClose, onSuccess }: PurchaseOrderFormP
   const isViewOnly = !isEditable;
 
   const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [contacts, setContacts] = useState<any[]>([]);
   const [productTypes, setProductTypes] = useState<any[]>([]);
   const [paymentTerms, setPaymentTerms] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -44,7 +45,7 @@ export function PurchaseOrderForm({ po, onClose, onSuccess }: PurchaseOrderFormP
   const [showAddSupplier, setShowAddSupplier] = useState(false);
 
   const [formData, setFormData] = useState({
-    supplier_id: po?.supplier_id || '',
+    client_party_id: po?.client_party_id || po?.supplier_id || '',
     order_date: po?.order_date || new Date().toISOString().split('T')[0],
     expected_delivery_date: po?.expected_delivery_date || '',
     status: po?.status || 'draft',
@@ -98,21 +99,24 @@ export function PurchaseOrderForm({ po, onClose, onSuccess }: PurchaseOrderFormP
 
   const fetchSuppliers = async () => {
     const { data } = await supabase
-      .from('suppliers')
+      .from('contacts')
       .select('*')
       .eq('company_id', selectedCompany?.id)
+      .eq('type', 'supplier')
       .order('name');
-    setSuppliers(data || []);
+    setContacts(data || []);
+    setSuppliers(data || []); // Keep for backward compatibility
   };
 
   const handleAddSupplier = async (supplierName: string) => {
     if (!selectedCompany?.id) return;
 
     const { data, error } = await supabase
-      .from('suppliers')
+      .from('contacts')
       .insert({
         company_id: selectedCompany.id,
         name: supplierName,
+        type: 'supplier',
       })
       .select()
       .single();
@@ -120,7 +124,7 @@ export function PurchaseOrderForm({ po, onClose, onSuccess }: PurchaseOrderFormP
     if (error) throw error;
 
     await fetchSuppliers();
-    setFormData({ ...formData, supplier_id: data.id });
+    setFormData({ ...formData, client_party_id: data.id });
     showToast('Supplier added successfully', 'success');
   };
 
@@ -399,8 +403,8 @@ export function PurchaseOrderForm({ po, onClose, onSuccess }: PurchaseOrderFormP
               </label>
               <div className="flex gap-2">
                 <select
-                  value={formData.supplier_id}
-                  onChange={(e) => setFormData({ ...formData, supplier_id: e.target.value })}
+                  value={formData.client_party_id}
+                  onChange={(e) => setFormData({ ...formData, client_party_id: e.target.value })}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
                   required
                   disabled={isViewOnly}
@@ -727,7 +731,7 @@ export function PurchaseOrderForm({ po, onClose, onSuccess }: PurchaseOrderFormP
 
       {showBulkImport && (
         <SmartPOImport
-          supplierId={formData.supplier_id}
+          supplierId={formData.client_party_id}
           onClose={() => setShowBulkImport(false)}
           onImport={handleBulkImport}
         />
