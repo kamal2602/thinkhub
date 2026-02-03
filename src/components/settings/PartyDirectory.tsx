@@ -26,25 +26,7 @@ export function PartyDirectory() {
     legal_name: '',
   });
 
-  const [companyFormData, setCompanyFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    website: '',
-    tax_id: '',
-    legal_name: '',
-    roles: ['customer'] as string[],
-  });
-
-  const [individualFormData, setIndividualFormData] = useState({
-    name: '',
-    parent_contact_id: null as string | null,
-    email: '',
-    phone: '',
-    roles: ['customer'] as string[],
-  });
-
-  const resetForm = (resetContactType: boolean = true) => {
+  const resetForm = () => {
     setNewContact({
       name: '',
       parent_contact_id: null,
@@ -55,73 +37,7 @@ export function PartyDirectory() {
       legal_name: '',
     });
     setSelectedRoles(['customer']);
-    setCompanyFormData({
-      name: '',
-      email: '',
-      phone: '',
-      website: '',
-      tax_id: '',
-      legal_name: '',
-      roles: ['customer'],
-    });
-    setIndividualFormData({
-      name: '',
-      parent_contact_id: null,
-      email: '',
-      phone: '',
-      roles: ['customer'],
-    });
-    if (resetContactType) {
-      setContactType('company');
-    }
-  };
-
-  const saveCurrentFormData = () => {
-    if (contactType === 'company') {
-      setCompanyFormData({
-        name: newContact.name,
-        email: newContact.email,
-        phone: newContact.phone,
-        website: newContact.website,
-        tax_id: newContact.tax_id,
-        legal_name: newContact.legal_name,
-        roles: selectedRoles,
-      });
-    } else {
-      setIndividualFormData({
-        name: newContact.name,
-        parent_contact_id: newContact.parent_contact_id,
-        email: newContact.email,
-        phone: newContact.phone,
-        roles: selectedRoles,
-      });
-    }
-  };
-
-  const loadFormDataForType = (type: 'company' | 'individual') => {
-    if (type === 'company') {
-      setNewContact({
-        name: companyFormData.name,
-        parent_contact_id: null,
-        email: companyFormData.email,
-        phone: companyFormData.phone,
-        website: companyFormData.website,
-        tax_id: companyFormData.tax_id,
-        legal_name: companyFormData.legal_name,
-      });
-      setSelectedRoles(companyFormData.roles);
-    } else {
-      setNewContact({
-        name: individualFormData.name,
-        parent_contact_id: individualFormData.parent_contact_id,
-        email: individualFormData.email,
-        phone: individualFormData.phone,
-        website: '',
-        tax_id: '',
-        legal_name: '',
-      });
-      setSelectedRoles(individualFormData.roles);
-    }
+    setContactType('company');
   };
 
   useEffect(() => {
@@ -161,7 +77,23 @@ export function PartyDirectory() {
   };
 
   const handleCreateContact = async () => {
-    if (!currentCompany || !newContact.name.trim()) {
+    console.log('🔍 Contact Save Debug:', {
+      hasCompany: !!currentCompany,
+      contactType,
+      newContact,
+      selectedRoles,
+      nameValue: newContact.name,
+      nameLength: newContact.name?.length,
+      nameTrimmed: newContact.name?.trim(),
+      nameTrimmedLength: newContact.name?.trim()?.length
+    });
+
+    if (!currentCompany) {
+      showToast('No company selected', 'error');
+      return;
+    }
+
+    if (!newContact.name || !newContact.name.trim()) {
       showToast('Please fill in required fields (Name is required)', 'error');
       return;
     }
@@ -186,6 +118,7 @@ export function PartyDirectory() {
         contactData.parent_contact_id = newContact.parent_contact_id;
       }
 
+      console.log('📤 Sending contact data:', contactData);
       await contactService.createContact(currentCompany.id, contactData, selectedRoles);
       showToast(`${contactType === 'company' ? 'Company' : 'Individual'} contact created successfully`, 'success');
       setShowAddModal(false);
@@ -562,13 +495,7 @@ export function PartyDirectory() {
                 <div className="flex gap-4">
                   <button
                     type="button"
-                    onClick={() => {
-                      if (contactType !== 'company') {
-                        saveCurrentFormData();
-                        setContactType('company');
-                        loadFormDataForType('company');
-                      }
-                    }}
+                    onClick={() => setContactType('company')}
                     className={`flex-1 px-4 py-3 border-2 rounded-lg transition-colors ${
                       contactType === 'company'
                         ? 'border-blue-600 bg-blue-50 text-blue-900'
@@ -580,13 +507,7 @@ export function PartyDirectory() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (contactType !== 'individual') {
-                        saveCurrentFormData();
-                        setContactType('individual');
-                        loadFormDataForType('individual');
-                      }
-                    }}
+                    onClick={() => setContactType('individual')}
                     className={`flex-1 px-4 py-3 border-2 rounded-lg transition-colors ${
                       contactType === 'individual'
                         ? 'border-blue-600 bg-blue-50 text-blue-900'
