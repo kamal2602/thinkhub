@@ -26,7 +26,7 @@ export function PartyDirectory() {
     legal_name: '',
   });
 
-  const resetForm = () => {
+  const resetForm = (resetContactType: boolean = true) => {
     setNewContact({
       name: '',
       parent_contact_id: null,
@@ -37,7 +37,9 @@ export function PartyDirectory() {
       legal_name: '',
     });
     setSelectedRoles(['customer']);
-    setContactType('company');
+    if (resetContactType) {
+      setContactType('company');
+    }
   };
 
   useEffect(() => {
@@ -476,8 +478,10 @@ export function PartyDirectory() {
                   <button
                     type="button"
                     onClick={() => {
-                      setContactType('company');
-                      setNewContact({ ...newContact, parent_contact_id: null });
+                      if (contactType !== 'company') {
+                        resetForm(false);
+                        setContactType('company');
+                      }
                     }}
                     className={`flex-1 px-4 py-3 border-2 rounded-lg transition-colors ${
                       contactType === 'company'
@@ -491,7 +495,10 @@ export function PartyDirectory() {
                   <button
                     type="button"
                     onClick={() => {
-                      setContactType('individual');
+                      if (contactType !== 'individual') {
+                        resetForm(false);
+                        setContactType('individual');
+                      }
                     }}
                     className={`flex-1 px-4 py-3 border-2 rounded-lg transition-colors ${
                       contactType === 'individual'
