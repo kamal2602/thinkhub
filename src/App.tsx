@@ -4,6 +4,7 @@ import { CompanyProvider } from './contexts/CompanyContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { WorkspaceProvider } from './contexts/WorkspaceContext';
 import { CustomerPortalAuthProvider } from './contexts/CustomerPortalAuthContext';
+import { FeatureFlagProvider } from './contexts/FeatureFlagContext';
 import { AuthPage } from './pages/AuthPage';
 import { CustomerPortalPage } from './pages/CustomerPortalPage';
 import { PublicSitePage } from './pages/PublicSitePage';
@@ -58,12 +59,14 @@ function AppContent() {
 
   return (
     <CompanyProvider>
-      <WorkspaceProvider>
-        <ErrorBoundary>
-          <ModularAppShell />
-          <KeyboardShortcutsHelp />
-        </ErrorBoundary>
-      </WorkspaceProvider>
+      <FeatureFlagProvider>
+        <WorkspaceProvider>
+          <ErrorBoundary>
+            <ModularAppShell />
+            <KeyboardShortcutsHelp />
+          </ErrorBoundary>
+        </WorkspaceProvider>
+      </FeatureFlagProvider>
     </CompanyProvider>
   );
 }
