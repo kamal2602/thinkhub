@@ -14,9 +14,12 @@ export function PartyDirectory() {
   const [filterType, setFilterType] = useState<'all' | 'company' | 'individual' | 'customer' | 'vendor'>('all');
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [contactType, setContactType] = useState<'company' | 'individual'>('company');
   const [newContact, setNewContact] = useState({
     name: '',
     type: 'customer' as 'supplier' | 'customer' | 'both',
+    contact_type: 'company' as 'company' | 'individual',
+    parent_contact_id: null as string | null,
     email: '',
     phone: '',
     website: '',
@@ -66,12 +69,29 @@ export function PartyDirectory() {
     }
 
     try {
-      await contactService.createContact(currentCompany.id, newContact);
-      showToast('Contact created successfully', 'success');
+      const contactData: any = {
+        name: newContact.name,
+        type: newContact.type,
+        contact_type: contactType,
+        email: newContact.email || undefined,
+        phone: newContact.phone || undefined,
+        website: newContact.website || undefined,
+        tax_id: newContact.tax_id || undefined,
+      };
+
+      if (contactType === 'individual' && newContact.parent_contact_id) {
+        contactData.parent_contact_id = newContact.parent_contact_id;
+      }
+
+      await contactService.createContact(currentCompany.id, contactData);
+      showToast(`${contactType === 'company' ? 'Company' : 'Individual'} contact created successfully`, 'success');
       setShowAddModal(false);
+      setContactType('company');
       setNewContact({
         name: '',
         type: 'customer',
+        contact_type: 'company',
+        parent_contact_id: null,
         email: '',
         phone: '',
         website: '',
@@ -81,6 +101,14 @@ export function PartyDirectory() {
     } catch (error) {
       showToast('Failed to create contact', 'error');
     }
+  };
+
+  const getCompanyContacts = () => {
+    return contacts.filter(c => c.type === 'company');
+  };
+
+  const getChildContacts = (parentId: string) => {
+    return contacts.filter(c => c.parent_contact_id === parentId);
   };
 
   const getRoleBadges = (roles?: string[]) => {
@@ -228,41 +256,74 @@ export function PartyDirectory() {
               </div>
             ) : (
               <div className="divide-y divide-slate-200">
-                {contacts.map((contact) => (
-                  <button
-                    key={contact.id}
-                    onClick={() => handleSelectContact(contact)}
-                    className={`w-full text-left p-4 hover:bg-slate-50 transition-colors ${
-                      selectedContact?.id === contact.id ? 'bg-blue-50 border-l-4 border-l-blue-600' : ''
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          {contact.type === 'company' ? (
-                            <Building2 className="w-4 h-4 text-blue-600" />
-                          ) : (
-                            <UserCircle className="w-4 h-4 text-purple-600" />
-                          )}
-                          <span className="font-medium text-slate-900">{contact.name}</span>
-                          <span className="px-2 py-0.5 text-xs rounded-full bg-slate-100 text-slate-600">
-                            {contact.type}
-                          </span>
+                {contacts
+                  .filter(c => !c.parent_contact_id)
+                  .map((contact) => (
+                    <div key={contact.id}>
+                      <button
+                        onClick={() => handleSelectContact(contact)}
+                        className={`w-full text-left p-4 hover:bg-slate-50 transition-colors ${
+                          selectedContact?.id === contact.id ? 'bg-blue-50 border-l-4 border-l-blue-600' : ''
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              {contact.type === 'company' ? (
+                                <Building2 className="w-4 h-4 text-blue-600" />
+                              ) : (
+                                <UserCircle className="w-4 h-4 text-purple-600" />
+                              )}
+                              <span className="font-medium text-slate-900">{contact.name}</span>
+                              <span className="px-2 py-0.5 text-xs rounded-full bg-slate-100 text-slate-600">
+                                {contact.type}
+                              </span>
+                              {getChildContacts(contact.id).length > 0 && (
+                                <span className="px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700">
+                                  {getChildContacts(contact.id).length} {getChildContacts(contact.id).length === 1 ? 'person' : 'people'}
+                                </span>
+                              )}
+                            </div>
+                            {contact.email && (
+                              <p className="text-sm text-slate-600 mb-1">{contact.email}</p>
+                            )}
+                            {contact.phone && (
+                              <p className="text-sm text-slate-500">{contact.phone}</p>
+                            )}
+                            {contact.roles && contact.roles.length > 0 && (
+                              <div className="mt-2">{getRoleBadges(contact.roles)}</div>
+                            )}
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-slate-400 ml-2" />
                         </div>
-                        {contact.email && (
-                          <p className="text-sm text-slate-600 mb-1">{contact.email}</p>
-                        )}
-                        {contact.phone && (
-                          <p className="text-sm text-slate-500">{contact.phone}</p>
-                        )}
-                        {contact.roles && contact.roles.length > 0 && (
-                          <div className="mt-2">{getRoleBadges(contact.roles)}</div>
-                        )}
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-slate-400 ml-2" />
+                      </button>
+                      {getChildContacts(contact.id).map((child) => (
+                        <button
+                          key={child.id}
+                          onClick={() => handleSelectContact(child)}
+                          className={`w-full text-left pl-12 pr-4 py-3 hover:bg-slate-50 transition-colors border-l-2 border-l-slate-200 ${
+                            selectedContact?.id === child.id ? 'bg-blue-50 border-l-4 border-l-blue-600' : ''
+                          }`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <UserCircle className="w-4 h-4 text-purple-600" />
+                                <span className="font-medium text-slate-900">{child.name}</span>
+                                <span className="px-2 py-0.5 text-xs rounded-full bg-purple-50 text-purple-700">
+                                  contact
+                                </span>
+                              </div>
+                              {child.email && (
+                                <p className="text-sm text-slate-600">{child.email}</p>
+                              )}
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-slate-400 ml-2" />
+                          </div>
+                        </button>
+                      ))}
                     </div>
-                  </button>
-                ))}
+                  ))}
               </div>
             )}
           </div>
@@ -291,6 +352,25 @@ export function PartyDirectory() {
                       <span className="text-xs text-slate-500">Name</span>
                       <p className="text-sm font-medium text-slate-900">{selectedContact.name}</p>
                     </div>
+                    <div>
+                      <span className="text-xs text-slate-500">Contact Type</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        {selectedContact.type === 'company' ? (
+                          <Building2 className="w-4 h-4 text-blue-600" />
+                        ) : (
+                          <UserCircle className="w-4 h-4 text-purple-600" />
+                        )}
+                        <p className="text-sm text-slate-900 capitalize">{selectedContact.type}</p>
+                      </div>
+                    </div>
+                    {selectedContact.parent_contact_id && (
+                      <div>
+                        <span className="text-xs text-slate-500">Works at / Part of</span>
+                        <p className="text-sm text-slate-900">
+                          {contacts.find(c => c.id === selectedContact.parent_contact_id)?.name || 'Unknown'}
+                        </p>
+                      </div>
+                    )}
                     {selectedContact.email && (
                       <div>
                         <span className="text-xs text-slate-500">Email</span>
@@ -303,15 +383,9 @@ export function PartyDirectory() {
                         <p className="text-sm text-slate-900">{selectedContact.phone}</p>
                       </div>
                     )}
-                    <div>
-                      <span className="text-xs text-slate-500">Type</span>
-                      <p className="text-sm text-slate-900 capitalize">
-                        {selectedContact.type}
-                      </p>
-                    </div>
                     {selectedContact.roles && selectedContact.roles.length > 0 && (
                       <div>
-                        <span className="text-xs text-slate-500">Roles</span>
+                        <span className="text-xs text-slate-500">Business Roles</span>
                         <div className="mt-1">{getRoleBadges(selectedContact.roles)}</div>
                       </div>
                     )}
@@ -327,12 +401,34 @@ export function PartyDirectory() {
                         <p className="text-sm text-slate-900">{selectedContact.tax_id}</p>
                       </div>
                     )}
-                    <div>
-                      <span className="text-xs text-slate-500">Contact ID</span>
-                      <p className="text-xs font-mono text-slate-600">{selectedContact.id}</p>
-                    </div>
                   </div>
                 </div>
+
+                {selectedContact.type === 'company' && getChildContacts(selectedContact.id).length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-slate-500 mb-2">
+                      Associated Individuals ({getChildContacts(selectedContact.id).length})
+                    </h4>
+                    <div className="bg-slate-50 rounded-lg divide-y divide-slate-200">
+                      {getChildContacts(selectedContact.id).map(child => (
+                        <button
+                          key={child.id}
+                          onClick={() => setSelectedContact(child)}
+                          className="w-full text-left p-3 hover:bg-slate-100 transition-colors flex items-center gap-2"
+                        >
+                          <UserCircle className="w-4 h-4 text-purple-600" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-slate-900">{child.name}</p>
+                            {child.email && (
+                              <p className="text-xs text-slate-600">{child.email}</p>
+                            )}
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-slate-400" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="pt-4 border-t border-slate-200">
                   <p className="text-xs text-slate-500">
@@ -360,6 +456,65 @@ export function PartyDirectory() {
 
             <div className="p-6 space-y-4">
               <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Contact Type <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setContactType('company');
+                      setNewContact({ ...newContact, contact_type: 'company', parent_contact_id: null });
+                    }}
+                    className={`flex-1 px-4 py-3 border-2 rounded-lg transition-colors ${
+                      contactType === 'company'
+                        ? 'border-blue-600 bg-blue-50 text-blue-900'
+                        : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+                    }`}
+                  >
+                    <Building2 className="w-5 h-5 mx-auto mb-1" />
+                    <div className="text-sm font-medium">Company</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setContactType('individual');
+                      setNewContact({ ...newContact, contact_type: 'individual' });
+                    }}
+                    className={`flex-1 px-4 py-3 border-2 rounded-lg transition-colors ${
+                      contactType === 'individual'
+                        ? 'border-blue-600 bg-blue-50 text-blue-900'
+                        : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+                    }`}
+                  >
+                    <UserCircle className="w-5 h-5 mx-auto mb-1" />
+                    <div className="text-sm font-medium">Individual</div>
+                  </button>
+                </div>
+              </div>
+
+              {contactType === 'individual' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Company / Organization
+                  </label>
+                  <select
+                    value={newContact.parent_contact_id || ''}
+                    onChange={(e) => setNewContact({ ...newContact, parent_contact_id: e.target.value || null })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Independent (no company)</option>
+                    {getCompanyContacts().map(company => (
+                      <option key={company.id} value={company.id}>{company.name}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Link this individual to a company/organization
+                  </p>
+                </div>
+              )}
+
+              <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   Name <span className="text-red-500">*</span>
                 </label>
@@ -367,7 +522,7 @@ export function PartyDirectory() {
                   type="text"
                   value={newContact.name}
                   onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
-                  placeholder="Contact name"
+                  placeholder={contactType === 'company' ? 'Company name' : 'Full name'}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                 />
@@ -375,7 +530,7 @@ export function PartyDirectory() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Type <span className="text-red-500">*</span>
+                  Relationship <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={newContact.type}
@@ -384,7 +539,7 @@ export function PartyDirectory() {
                 >
                   <option value="customer">Customer</option>
                   <option value="supplier">Supplier</option>
-                  <option value="both">Both</option>
+                  <option value="both">Both Customer & Supplier</option>
                 </select>
               </div>
 
